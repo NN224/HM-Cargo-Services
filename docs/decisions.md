@@ -192,5 +192,12 @@ D-008 specified an automatic custom rule — `.01`-`.29` down, `.30`-`.99` up. T
 
 **Unchanged from D-008:** weight is never rounded, and batch cost and profit retain their cents.
 
-**Open detail:** the exact behaviour of the manual field — whether the operator types the adjustment, the final amount, or overrides a suggestion — is confirmed separately before implementation.
+**How the field behaves — confirmed 2026-07-20.** The operator types the **final amount the customer pays**, not an adjustment. Entering `92.00` against a computed `92.50` bills `92.00`. The operator never does mental arithmetic on a difference.
+
+The shipment therefore holds two figures:
+
+- the **computed charge** — exact total weight multiplied by the snapshotted route rate, kept to the cent and never overwritten;
+- the **final charge** — what the operator set.
+
+The rounding adjustment is the difference between them. It is derived rather than stored, so the two figures cannot drift out of agreement, and it stays visible on the shipment so any total can be explained during an audit.
 

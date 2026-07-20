@@ -16,11 +16,13 @@ class WarehouseForm
                     ->label('اسم المستودع')
                     ->required()
                     ->maxLength(255)
+                    ->extraInputAttributes(['dir' => 'auto'])
                     ->unique(ignoreRecord: true),
                 TextInput::make('location')
                     ->label('الموقع')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->extraInputAttributes(['dir' => 'auto']),
                 Toggle::make('is_active')
                     ->label('نشط')
                     ->helperText('المستودعات تُعطَّل ولا تُحذف نهائياً.')

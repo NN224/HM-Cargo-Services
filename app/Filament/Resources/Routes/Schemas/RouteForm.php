@@ -17,6 +17,7 @@ class RouteForm
                     ->label('اسم المسار')
                     ->required()
                     ->maxLength(255)
+                    ->extraInputAttributes(['dir' => 'auto'])
                     ->unique(ignoreRecord: true)
                     ->helperText('مثال: دبي ← سوريا (مباشر) أو دبي ← بيروت ← سوريا'),
 

@@ -15,14 +15,27 @@ class CustomerForm
                 TextInput::make('name')
                     ->label('اسم العميل')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    // dir="auto" lets the browser choose direction from the
+                    // first strong character, so an Arabic name reads
+                    // right-to-left and a Latin one left-to-right. A fixed
+                    // direction would mis-align one of the two.
+                    ->extraInputAttributes(['dir' => 'auto']),
 
                 TextInput::make('phone')
                     ->label('رقم الهاتف')
-                    ->tel()
                     ->required()
                     ->maxLength(32)
-                    ->unique(ignoreRecord: true),
+                    ->unique(ignoreRecord: true)
+                    // A phone number is always left-to-right, even in an RTL
+                    // form: "+971 50 123" must never be reordered on screen.
+                    ->extraInputAttributes(['dir' => 'ltr', 'style' => 'text-align:left'])
+                    ->rule('regex:/^\+?[0-9\s\-()]{7,}$/')
+                    ->validationMessages([
+                        'regex' => 'رقم الهاتف يجب أن يحتوي على أرقام فقط، ويمكن أن يبدأ بـ + ويحوي مسافات أو شرطات.',
+                        'unique' => 'رقم الهاتف مسجَّل لعميل آخر.',
+                    ])
+                    ->helperText('مثال: ‎+971501234567'),
 
                 Toggle::make('is_credit_customer')
                     ->label('عميل آجل')

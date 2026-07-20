@@ -86,7 +86,19 @@ Add the real constraint when PostgreSQL is provisioned.
 
 **Done when:** an administrator can configure the three initial routes from D-005 and per-customer rates for each.
 
-## Phase 3 - Shipments, packages, and barcodes
+## Phase 3 - Shipments, packages, and barcodes — DONE 2026-07-20
+
+Delivered: `shipments` and `packages`. Two separate identifiers — a readable
+`HM-2026-000001` reference for staff, and a 48-character random `public_token`
+for the tracking URL, because AGENTS.md forbids exposing a sequential id
+publicly. Weight is exact decimal end to end: `decimal(12,4)` columns, decimal
+casts, and summing in the database. Barcodes are random rather than
+timestamp-derived. Shipment and package statuses are separate fixed enums. No
+recipient address anywhere (D-019). Arabic Filament screen with a package
+repeater and a live weight total. Package changes recalculate the shipment
+total through model events, so any entry point stays consistent.
+
+**Not yet built in this phase:** A4 label printing and phone-camera scanning.
 
 1. Migrations: `shipments` (unguessable `public_token`, billing customer, recipient snapshot, status, nullable `rate_per_kg` snapshot, `total_weight` exact decimal, `total_amount` cents, `paid_amount` cents), `packages` (unique generated `barcode`, exact decimal weight, status).
 2. `ShipmentService::create()` — issues the shipment, its packages, and their barcodes in one transaction.
@@ -98,7 +110,25 @@ Add the real constraint when PostgreSQL is provisioned.
 
 **Done when:** a Dubai operator can create a multi-package shipment and print its labels.
 
-## Phase 4 - Batches, pricing, and the rounding rule
+## Phase 4 - Batches, pricing, and rounding — PARTIALLY DONE 2026-07-20
+
+**Done:** `batches` table and model with its own status enum; pricing columns
+on `shipments`; `BatchAssignmentService`. Assignment resolves the customer's
+rate for the batch's route, snapshots it, and computes the charge with `bcmul`
+so no cent is lost to floating point. It refuses rather than guessing when no
+rate exists, and leaves the shipment untouched on refusal. One transaction with
+both rows locked. A later rate change never rewrites an existing charge.
+
+Rounding follows D-020: the operator types the final amount; the computed
+charge is never overwritten; the adjustment is derived.
+
+**Still to do in this phase:** the Filament batch screen, the dispatch action
+that snapshots `cost_per_kg_cents` and locks ordinary edits, and the
+profitability widget (revenue, cost, outstanding, profit).
+
+## Phase 4 (original scope, for reference)
+
+> **Note.** Step 2 below describes the automatic `RoundingService` from D-008. That rule was **superseded by D-020** and the service was deleted. Rounding is entered manually. The rest of this section remains accurate.
 
 This is the commercial heart. Nothing here exists in the prototype.
 

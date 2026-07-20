@@ -6,6 +6,7 @@ These instructions apply to the entire repository. Every AI agent must read this
 
 Read in this order:
 
+0. `docs/current-state.md` - what is built, what is not, and what to do next. Read before planning.
 1. `docs/decisions.md` - owner-approved decisions that must not be changed implicitly.
 2. `docs/product-spec.md` - product scope, actors, features, and acceptance criteria.
 3. `docs/domain/shipment-lifecycle.md` - shipment, package, batch, and tracking behavior.
@@ -32,7 +33,7 @@ The system must remain simpler than the reference dashboard. Do not add generic 
 - The customer price is specific to a route. Direct Dubai-to-Syria and Dubai-to-Beirut-to-Syria are different routes and may have different rates.
 - A shipment receives its billable route from its batch. Final pricing occurs when the shipment is assigned to a batch.
 - Preserve the price-per-kilogram snapshot on the shipment. Later rate changes must not rewrite historical charges.
-- Customer total rounding is custom: fractional amounts from `.01` through `.29` round down; `.30` through `.99` round up. Exact whole-dollar totals remain unchanged.
+- Customer rounding is manual (D-020, supersedes D-008): amounts carry two decimals, and the operator types the final amount the customer pays. The system does not round automatically. The computed charge is never overwritten, and the adjustment is derived from the two.
 - Batch cost and profit retain cents; the custom customer rounding rule does not apply to batch cost.
 - A batch has one total cost-per-kilogram for its entire route, even when the route includes a transit warehouse.
 - A shipment may belong to only one active batch at a time.

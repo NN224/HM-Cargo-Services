@@ -33,7 +33,7 @@ mindmap
       Calculate customer charge
         Exact total weight times rate
         No minimum weight
-        Final rounding only
+        Final charge set manually (D-020)
           .01-.29 down
           .30-.99 up
       Batch cost

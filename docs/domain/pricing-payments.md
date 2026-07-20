@@ -28,6 +28,8 @@ Let:
 - `R` = shipment rate snapshot in USD per kilogram.
 - `raw_charge` = `W × R`.
 
+> **SUPERSEDED by D-020 (2026-07-20).** The automatic rule described in this section is no longer implemented. The operator types the final amount the customer pays; the computed charge is preserved and the adjustment is derived. Weight is still never rounded, and batch cost and profit still keep their cents. The text below is retained as a record of the original rule.
+
 Apply custom rounding only to the final customer charge:
 
 - Exact whole-dollar values stay unchanged.

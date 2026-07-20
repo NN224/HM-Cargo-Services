@@ -51,10 +51,10 @@ The billing customer owns rates, credit, balance, and statement. The recipient c
 
 Price uses exact total package weight multiplied by the billing customer's rate for the assigned batch route. No volumetric pricing and no minimum weight. Direct and transit routes may have different customer prices.
 
-## D-008: Custom customer rounding
+## D-008: Custom customer rounding — SUPERSEDED
 
 **Date:** 2026-07-18  
-**Status:** Approved by voice confirmation
+**Status:** SUPERSEDED on 2026-07-20 by [D-020](#d-020-rounding-is-entered-manually-not-calculated-by-a-rule). The automatic rule below is no longer implemented; rounding is entered by hand. Retained as a record. The clauses on weight and batch cost survive unchanged
 
 Do not round weight. On the final customer charge only, `.01-.29` rounds down and `.30-.99` rounds up. Batch cost and profit retain cents.
 
@@ -141,7 +141,7 @@ Version 1 targets a small operations team, not a regulated financial institution
 **Retained in full — these are business correctness, not ceremony.**
 
 - USD only.
-- Custom customer rounding: `.01`-`.29` down, `.30`-`.99` up; exact dollars unchanged.
+- Customer rounding — later replaced by manual entry in D-020. Weight is still never rounded and batch cost still keeps its cents.
 - Exact decimal weight with no rounding and no minimum billable weight.
 - Route-specific pricing and the price-per-kilogram snapshot taken at batch assignment.
 - Complete-package collection gate before a shipment may be collected.
@@ -149,7 +149,7 @@ Version 1 targets a small operations team, not a regulated financial institution
 - Money stored as integer cents.
 - Database constraints and migrations enforcing invariants.
 - Server-side authorization through backend policies.
-- No hard deletion of customers, shipments, packages, batches, or payments.
+- No hard deletion of a record anything depends on — narrowed by D-021 to permit deleting records nothing references.
 - Public tracking tokens are high-entropy and never expose sequential internal IDs.
 
 **Deferred past version 1.**

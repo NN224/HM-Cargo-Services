@@ -1,5 +1,7 @@
 # Documentation Index
 
+> **Picking this project up?** Start with [`current-state.md`](current-state.md) — what exists, what does not, and what to do next.
+
 This directory is the canonical product knowledge base for HM Cargo Services.
 
 ## Required reading for agents

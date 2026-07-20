@@ -90,6 +90,48 @@ class Shipment extends Model
         return $this->belongsTo(Customer::class);
     }
 
+    /** @return BelongsTo<Batch, $this> */
+    public function batch(): BelongsTo
+    {
+        return $this->belongsTo(Batch::class);
+    }
+
+    /**
+     * Set what the customer actually pays (D-020).
+     *
+     * The operator types the final amount, never an adjustment — no mental
+     * arithmetic on a difference. The computed charge is left untouched so the
+     * two figures together always explain the total.
+     */
+    public function setFinalCharge(int $cents): void
+    {
+        if ($cents < 0) {
+            throw new \InvalidArgumentException(
+                'المبلغ النهائي لا يمكن أن يكون سالباً. التصحيحات تُسجَّل كتسويات.'
+            );
+        }
+
+        $this->forceFill(['final_charge_cents' => $cents])->save();
+    }
+
+    /**
+     * The manual rounding, derived rather than stored.
+     *
+     * Negative means the customer was billed less than computed, positive
+     * more. Deriving it means the adjustment can never disagree with the two
+     * figures it sits between.
+     */
+    public function roundingAdjustmentCents(): int
+    {
+        return (int) $this->final_charge_cents - (int) $this->computed_charge_cents;
+    }
+
+    /** What remains unpaid on this shipment, in cents. */
+    public function outstandingCents(): int
+    {
+        return max(0, (int) $this->final_charge_cents - (int) $this->paid_amount_cents);
+    }
+
     /** @return HasMany<Package, $this> */
     public function packages(): HasMany
     {

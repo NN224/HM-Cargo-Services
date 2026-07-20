@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Warehouses\Tables;
 
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -35,6 +36,18 @@ class WarehousesTable
             ])
             ->recordActions([
                 EditAction::make(),
+                // Deactivation is the sanctioned removal path: AGENTS.md forbids
+                // hard-deleting operational records, so this replaces a delete
+                // button rather than sitting beside one.
+                Action::make('toggleActive')
+                    ->label(fn ($record): string => $record->is_active ? 'تعطيل' : 'تفعيل')
+                    ->icon(fn ($record): string => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
+                    ->color(fn ($record): string => $record->is_active ? 'danger' : 'success')
+                    ->requiresConfirmation()
+                    ->modalHeading(fn ($record): string => $record->is_active ? 'تعطيل السجل' : 'تفعيل السجل')
+                    ->modalDescription('السجلات تُعطَّل ولا تُحذف نهائياً، حفاظاً على السجل التاريخي.')
+                    ->visible(fn (): bool => auth()->user()?->isAdministrator() ?? false)
+                    ->action(fn ($record) => $record->update(['is_active' => ! $record->is_active])),
             ])
             // No delete or bulk-delete action. Operational records are never
             // hard-deleted; deactivate via the is_active toggle instead.

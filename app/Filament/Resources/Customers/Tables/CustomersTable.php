@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Customers\Tables;
 
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -36,7 +37,21 @@ class CustomersTable
                 TernaryFilter::make('is_active')->label('الحالة'),
             ])
             ->defaultSort('name')
-            ->recordActions([EditAction::make()])
+            ->recordActions([
+                EditAction::make(),
+                // Deactivation is the sanctioned removal path: AGENTS.md forbids
+                // hard-deleting operational records, so this replaces a delete
+                // button rather than sitting beside one.
+                Action::make('toggleActive')
+                    ->label(fn ($record): string => $record->is_active ? 'تعطيل' : 'تفعيل')
+                    ->icon(fn ($record): string => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
+                    ->color(fn ($record): string => $record->is_active ? 'danger' : 'success')
+                    ->requiresConfirmation()
+                    ->modalHeading(fn ($record): string => $record->is_active ? 'تعطيل السجل' : 'تفعيل السجل')
+                    ->modalDescription('السجلات تُعطَّل ولا تُحذف نهائياً، حفاظاً على السجل التاريخي.')
+                    ->visible(fn (): bool => auth()->user()?->isAdministrator() ?? false)
+                    ->action(fn ($record) => $record->update(['is_active' => ! $record->is_active])),
+            ])
             // Customers are deactivated, never hard-deleted (D-018).
             ->toolbarActions([]);
     }

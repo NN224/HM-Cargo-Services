@@ -27,6 +27,11 @@ class WarehouseResource extends Resource
 
     protected static ?string $pluralModelLabel = 'المستودعات';
 
+    protected static ?int $navigationSort = 40;
+
+
+
+
     /**
      * Scope every listing to what the signed-in user may see.
      *

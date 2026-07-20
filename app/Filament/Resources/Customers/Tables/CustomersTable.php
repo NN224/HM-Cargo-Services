@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Customers\Tables;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class CustomersTable
@@ -14,28 +15,29 @@ class CustomersTable
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->searchable(),
+                    ->label('اسم العميل')
+                    ->searchable()
+                    ->sortable(),
+
                 TextColumn::make('phone')
+                    ->label('رقم الهاتف')
                     ->searchable(),
+
                 IconColumn::make('is_credit_customer')
+                    ->label('آجل')
                     ->boolean(),
+
                 IconColumn::make('is_active')
+                    ->label('نشط')
                     ->boolean(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                TernaryFilter::make('is_credit_customer')->label('عميل آجل'),
+                TernaryFilter::make('is_active')->label('الحالة'),
             ])
-            ->recordActions([
-                EditAction::make(),
-            ])
+            ->defaultSort('name')
+            ->recordActions([EditAction::make()])
+            // Customers are deactivated, never hard-deleted (D-018).
             ->toolbarActions([]);
     }
 }

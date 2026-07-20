@@ -20,6 +20,14 @@ class CustomerRateResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    protected static ?string $navigationLabel = 'أسعار العملاء';
+
+    protected static ?string $modelLabel = 'سعر عميل';
+
+    protected static ?string $pluralModelLabel = 'أسعار العملاء';
+
+    protected static ?int $navigationSort = 30;
+
     public static function form(Schema $schema): Schema
     {
         return CustomerRateForm::configure($schema);

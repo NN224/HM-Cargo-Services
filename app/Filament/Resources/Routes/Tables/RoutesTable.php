@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Routes\Tables;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class RoutesTable
@@ -14,30 +15,30 @@ class RoutesTable
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->searchable(),
+                    ->label('اسم المسار')
+                    ->searchable()
+                    ->sortable(),
+
                 TextColumn::make('originWarehouse.name')
-                    ->searchable(),
-                TextColumn::make('destinationWarehouse.name')
-                    ->searchable(),
+                    ->label('المنشأ'),
+
                 TextColumn::make('transitWarehouse.name')
-                    ->searchable(),
+                    ->label('العبور')
+                    ->placeholder('مباشر'),
+
+                TextColumn::make('destinationWarehouse.name')
+                    ->label('الوجهة'),
+
                 IconColumn::make('is_active')
+                    ->label('نشط')
                     ->boolean(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                TernaryFilter::make('is_active')->label('الحالة'),
             ])
-            ->recordActions([
-                EditAction::make(),
-            ])
+            ->defaultSort('name')
+            ->recordActions([EditAction::make()])
+            // Routes are referenced by historical shipments; deactivate instead.
             ->toolbarActions([]);
     }
 }

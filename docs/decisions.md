@@ -162,3 +162,35 @@ Version 1 targets a small operations team, not a regulated financial institution
 
 Any deferred item may be reinstated by owner decision without changing a business rule.
 
+## D-019: Delivery stays outside the invoice, and the recipient is name and phone only
+
+**Date:** 2026-07-20  
+**Status:** Approved by voice confirmation. Reconfirms D-010 after reviewing the client's existing dashboard.
+
+The client's current system shows a `رسوم التوصيل` field on the pricing screen and a `عنوان المستلم` field on the recipient section. Both were reviewed and both are **excluded** from this system.
+
+**Delivery fees.** HM Cargo Services does not charge the customer a delivery fee and does not place one on the invoice. Delivery is settled directly between the recipient and the Beirut delivery company and never passes through this system. There is no delivery-fee field, and delivery never affects a shipment total, a customer balance, or batch profit.
+
+**Recipient address.** The recipient record carries **name and phone only**. No address is stored, for a concrete operational reason: different people may collect the same shipment, so an address captured at booking time is frequently wrong. The Beirut delivery team takes the address at handover, and details are confirmed with the delivery company directly.
+
+This closes the question rather than amending D-010: D-010 stands in full.
+
+## D-020: Rounding is entered manually, not calculated by a rule
+
+**Date:** 2026-07-20  
+**Status:** Approved by voice confirmation. **Supersedes the automatic rule in D-008.**
+
+D-008 specified an automatic custom rule — `.01`-`.29` down, `.30`-`.99` up. The owner has since determined that this is more complexity than the business needs.
+
+**What replaces it.** Amounts are held and displayed with two decimal places, for example `92.50`. A separate, independent field lets the operator set the rounding for that shipment by hand. The system does not round automatically.
+
+**What this changes.**
+
+- `App\Services\RoundingService` and its tests, added earlier on 2026-07-20, are removed. Nothing consumed them yet, so the change costs nothing.
+- Money is still stored as integer cents. Manual entry changes who decides the final figure, not how it is stored.
+- The rounding figure must remain visible and auditable on the shipment, so a total can always be explained.
+
+**Unchanged from D-008:** weight is never rounded, and batch cost and profit retain their cents.
+
+**Open detail:** the exact behaviour of the manual field — whether the operator types the adjustment, the final amount, or overrides a suggestion — is confirmed separately before implementation.
+

@@ -11,6 +11,11 @@ This directory is the canonical product knowledge base for HM Cargo Services.
 5. [`domain/pricing-payments.md`](domain/pricing-payments.md)
 6. [`architecture/data-model.md`](architecture/data-model.md)
 7. [`superpowers/specs/2026-07-18-hm-cargo-system-design.md`](superpowers/specs/2026-07-18-hm-cargo-system-design.md)
+8. [`implementation-plan-laravel.md`](implementation-plan-laravel.md) - the active build plan.
+
+## Superseded
+
+- [`implementation-plan-nodejs.md`](implementation-plan-nodejs.md) - rejected on 2026-07-20 by D-017. Retained as a record. Do not implement.
 
 ## Visual reference
 

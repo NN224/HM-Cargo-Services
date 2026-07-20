@@ -76,12 +76,12 @@ Version 1 excludes:
 - Use migrations and constraints to enforce invariants; do not rely only on UI validation.
 - Store money as integer cents. Never use binary floating point for money.
 - Store weight as an exact decimal with documented precision.
-- Financial mutations must be transactional and idempotent where retries are possible.
-- Use append-only audit/event records for status changes, payment reversals, repricing, and privileged edits.
+- Financial mutations must be transactional. Explicit idempotency keys are deferred past version 1 per D-018; rely on transactions plus unique constraints.
+- Record financial mutations, status transitions, and privileged edits in the append-only `audit_logs` table. Full event sourcing for every state change is deferred past version 1 per D-018.
 - Never expose sequential internal IDs in public tracking URLs.
 - Apply authorization in backend policies, not only by hiding UI elements.
 - Do not hard-delete customers, shipments, packages, batches, payments, status events, or audit records.
-- Add tests for every domain rule before implementation changes.
+- Add tests for every retained domain rule in D-018 and for every authorization boundary, before implementation changes. A global 80 percent coverage target does not apply to version 1; Filament scaffolding needs no coverage.
 - Keep files focused by responsibility and follow the implementation plan once approved.
 - Do not scaffold or implement product code until the owner approves the written specification and a task-level implementation plan exists.
 

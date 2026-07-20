@@ -114,3 +114,51 @@ Track every package separately. A shipment cannot be collected until all active 
 
 After dispatch, route or weight edits require an administrator and audit history. Include cancelled, missing, and damaged exception states. Financial corrections use adjustments, not deletion.
 
+## D-017: Reaffirm Laravel and Filament; retire the Node.js prototype
+
+**Date:** 2026-07-20  
+**Status:** Approved
+
+D-001 and D-002 stand unchanged. The product is built with Laravel and Filament, SQLite for local development and tests, and self-hosted PostgreSQL in production.
+
+**Background.** `docs/implementation-plan-nodejs.md` proposed replacing the stack with Express, React, and Drizzle because "the AI Studio environment strictly runs Node.js containers and does not support Laravel/PHP." That plan carried `Status: Proposed` and was never approved. Product code was scaffolded against it anyway, which contradicted D-001, D-002, and the AGENTS.md rule forbidding scaffolding before an approved task-level plan exists.
+
+**Why the deviation is void.** The environment constraint no longer applies. Development now runs on a local machine with PHP 8.5 available, so nothing prevents Laravel.
+
+**Impact.**
+
+- `docs/implementation-plan-nodejs.md` is marked Rejected and superseded. It is retained as a record, not deleted.
+- The Node.js prototype under `src/`, plus `server.ts`, `vite.config.ts`, `drizzle.config.ts`, and the committed `sqlite.db`, is treated as a throwaway prototype. It carries no authentication, tests, foreign keys, migrations, or business rules, and is removed at Phase 6 of the Laravel plan rather than migrated.
+- All canonical business documents remain valid without modification. They are the asset this project keeps.
+
+## D-018: Right-size version 1 engineering ceremony
+
+**Date:** 2026-07-20  
+**Status:** Approved
+
+Version 1 targets a small operations team, not a regulated financial institution. Engineering obligations are reduced so delivery stays fast, while every real business rule is preserved.
+
+**Retained in full — these are business correctness, not ceremony.**
+
+- USD only.
+- Custom customer rounding: `.01`-`.29` down, `.30`-`.99` up; exact dollars unchanged.
+- Exact decimal weight with no rounding and no minimum billable weight.
+- Route-specific pricing and the price-per-kilogram snapshot taken at batch assignment.
+- Complete-package collection gate before a shipment may be collected.
+- Customer credit accounts with oldest-outstanding-first allocation.
+- Money stored as integer cents.
+- Database constraints and migrations enforcing invariants.
+- Server-side authorization through backend policies.
+- No hard deletion of customers, shipments, packages, batches, or payments.
+- Public tracking tokens are high-entropy and never expose sequential internal IDs.
+
+**Deferred past version 1.**
+
+- Full append-only event sourcing for every state change. Version 1 keeps a single `audit_logs` table covering only financial mutations, status transitions, and privileged edits.
+- Guaranteed idempotency on all retryable mutations. Version 1 relies on database transactions plus unique constraints; explicit idempotency keys are added only if duplicate submissions are observed in practice.
+- The 80 percent global coverage mandate. Version 1 requires tests for the domain rules listed as retained above, and for authorization boundaries. Coverage of Filament UI scaffolding is not required.
+- Effective-dated customer rates. Version 1 stores one current rate per customer and route; the snapshot on the shipment already preserves history.
+- Rate limiting on public tracking. Deferred until the surface is publicly reachable.
+
+Any deferred item may be reinstated by owner decision without changing a business rule.
+

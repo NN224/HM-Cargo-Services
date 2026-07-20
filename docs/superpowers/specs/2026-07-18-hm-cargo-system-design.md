@@ -1,7 +1,16 @@
 # HM Cargo Services System Design
 
 **Date:** 2026-07-18  
-**Status:** Approved design baseline; awaiting owner review of written specification
+**Status:** Approved design baseline; partially superseded on 2026-07-20 by decision D-018.
+
+> **Superseded points.** [`decisions.md` D-018](../../decisions.md) defers four obligations stated below past version 1. Where this document and D-018 disagree, **D-018 governs for version 1**; the text here remains the target for a later version. The affected points, each marked inline:
+>
+> 1. §3 Persistence - append-only status, financial, and audit records - reduced to a single `audit_logs` table covering financial mutations, status transitions, and privileged edits.
+> 2. §4 Routes and rates - effective-dated customer rates - reduced to one current rate per customer and route. The snapshot taken at batch assignment already preserves history.
+> 3. §6 Error handling - idempotent retryable mutations - deferred; transactions plus unique constraints are relied on instead.
+> 4. §6 Error handling - rate-limited public tracking - deferred until the surface is publicly reachable.
+>
+> Every business rule in this document is unaffected. Only engineering ceremony was reduced.
 
 ## 1. Design goal
 
@@ -48,7 +57,7 @@ These services own transactions. Filament actions and public controllers call th
 - Self-hosted PostgreSQL for production.
 - Exact decimal weight and integer-cent money storage.
 - Database constraints for uniqueness, required relationships, positive values, and one active batch per shipment.
-- Append-only status, financial, and audit records.
+- Append-only status, financial, and audit records. *(Superseded by D-018 for version 1: a single `audit_logs` table covering financial mutations, status transitions, and privileged edits.)*
 
 ## 4. Major components
 
@@ -62,7 +71,7 @@ The billing customer owns route rates, credit, payments, and statements. Shipmen
 
 ### Routes and rates
 
-Routes are configurable records with origin, destination, and optional transit warehouse. Customer rates are route-specific and effective-dated. Batch assignment snapshots the selected route and rate.
+Routes are configurable records with origin, destination, and optional transit warehouse. Customer rates are route-specific and effective-dated. *(Superseded by D-018 for version 1: one current rate per customer and route, with no effective-dating. The rate snapshot taken at batch assignment already preserves historical charges.)* Batch assignment snapshots the selected route and rate.
 
 ### Shipments and packages
 
@@ -105,9 +114,9 @@ Shipment charges, adjustments, payments, reversals, and allocations form an audi
 - Reject employee actions outside the assigned warehouse.
 - Reject post-dispatch protected edits by employees.
 - Use transactions for scan/aggregate updates, pricing/posting, payment/allocation, reversal, collection, and repricing.
-- Make retryable mutations idempotent to prevent duplicate payments or scans.
+- Make retryable mutations idempotent to prevent duplicate payments or scans. *(Superseded by D-018 for version 1: explicit idempotency keys deferred; database transactions plus unique constraints are relied on instead.)*
 - Use compensating events/adjustments instead of destructive correction.
-- Rate-limit public tracking attempts and avoid revealing whether arbitrary sequential IDs exist.
+- Rate-limit public tracking attempts and avoid revealing whether arbitrary sequential IDs exist. *(Superseded by D-018 for version 1: rate limiting deferred until the surface is publicly reachable. Not exposing sequential IDs is retained and mandatory.)*
 
 ## 7. Security and privacy
 

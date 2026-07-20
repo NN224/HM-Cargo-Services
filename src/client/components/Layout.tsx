@@ -29,6 +29,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const navigation = [
     { name: 'الرئيسية', href: '/', icon: LayoutDashboard },
     { name: 'الشحنات', href: '/shipments', icon: Package },
+    { name: 'الطرود', href: '/packages', icon: Package },
     { name: 'الرحلات (Batches)', href: '/batches', icon: Truck },
     { name: 'العملاء', href: '/customers', icon: Users },
     { name: 'المستودعات', href: '/warehouses', icon: Warehouse },
@@ -39,7 +40,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex bg-gray-50 dark:bg-black text-right font-sans" dir="rtl">
       {/* Sidebar */}
-      <div className="w-64 bg-slate-900 dark:bg-[#0a0a0a] text-white flex flex-col border-l border-slate-800 dark:border-white/5">
+      <div className="w-64 bg-slate-900 dark:bg-black text-white flex flex-col border-l border-slate-800 dark:border-white/5">
         <div className="p-6 border-b border-slate-800 dark:border-white/5">
           <h1 className="text-2xl font-bold tracking-tight text-white">HM Cargo</h1>
           <p className="text-slate-400 text-sm mt-1">نظام إدارة الشحنات</p>
@@ -85,7 +86,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        <header className="bg-white dark:bg-[#0a0a0a] border-b border-gray-200 dark:border-white/5 h-16 flex items-center px-8 justify-between">
+        <header className="bg-white dark:bg-black border-b border-gray-200 dark:border-white/5 h-16 flex items-center px-8 justify-between">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
             {navigation.find(n => n.href === location.pathname)?.name || 'HM Cargo'}
           </h2>

@@ -45,7 +45,7 @@ export default function Warehouses() {
 
   return (
     <>
-      <div className="bg-white dark:bg-[#0a0a0a] rounded-xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/5 overflow-hidden">
+      <div className="bg-white dark:bg-black rounded-xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/5 overflow-hidden">
         <div className="p-6 border-b border-gray-100 dark:border-white/5 flex justify-between items-center">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">المستودعات</h3>
           <button 

@@ -1,16 +1,14 @@
-import { Routes, Route } from 'react-router-dom';
-import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
-import Customers from './pages/Customers';
-import Shipments from './pages/Shipments';
-import Packages from './pages/Packages';
-import Batches from './pages/Batches';
-import Warehouses from './pages/Warehouses';
-import Payments from './pages/Payments';
-import Settings from './pages/Settings';
-import PublicTracking from './pages/PublicTracking';
+const fs = require('fs');
+const appPath = 'src/client/App.tsx';
+let appContent = fs.readFileSync(appPath, 'utf8');
 
-function App() {
+// Add import PublicTracking
+if (!appContent.includes('import PublicTracking from')) {
+  appContent = appContent.replace("import Settings from './pages/Settings';", "import Settings from './pages/Settings';\nimport PublicTracking from './pages/PublicTracking';");
+}
+
+// Update routing
+const newRouting = `function App() {
   return (
     <Routes>
       <Route path="/track/:token" element={<PublicTracking />} />
@@ -31,7 +29,8 @@ function App() {
       } />
     </Routes>
   );
-}
+}`;
 
-export default App;
-
+appContent = appContent.replace(/function App\(\) \{[\s\S]*\}/, newRouting);
+fs.writeFileSync(appPath, appContent);
+console.log("Patched App route!");

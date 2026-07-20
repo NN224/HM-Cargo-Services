@@ -29,7 +29,7 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
-          <div key={stat.name} className="bg-white dark:bg-[#0a0a0a] rounded-xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/5 p-6 flex items-center gap-4">
+          <div key={stat.name} className="bg-white dark:bg-black rounded-xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/5 p-6 flex items-center gap-4">
             <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${stat.bg} ${stat.color}`}>
               <stat.icon className="w-6 h-6" />
             </div>
@@ -42,7 +42,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-[#0a0a0a] rounded-xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/5 p-6 overflow-hidden">
+        <div className="bg-white dark:bg-black rounded-xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/5 p-6 overflow-hidden">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">أحدث الشحنات</h3>
           </div>
@@ -73,7 +73,7 @@ export default function Dashboard() {
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">لا توجد بيانات حالياً</div>
           )}
         </div>
-        <div className="bg-white dark:bg-[#0a0a0a] rounded-xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/5 p-6 overflow-hidden">
+        <div className="bg-white dark:bg-black rounded-xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/5 p-6 overflow-hidden">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">الرحلات (Batches) النشطة</h3>
           </div>

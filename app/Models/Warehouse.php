@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\GuardsDeletion;
+
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Warehouse extends Model
 {
-    use HasFactory;
+    use GuardsDeletion, HasFactory;
 
     protected $fillable = ['name', 'location', 'is_active'];
 
@@ -42,5 +44,32 @@ class Warehouse extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    /**
+     * A warehouse is referenced by routes as origin or destination, and by
+     * the employees assigned to it.
+     *
+     * @return array<string, string>
+     */
+    protected function deletionDependencies(): array
+    {
+        return [
+            'مسارات' => 'routesAsOrigin',
+            'مسارات وجهة' => 'routesAsDestination',
+            'موظفين' => 'users',
+        ];
+    }
+
+    /** @return HasMany<Route, $this> */
+    public function routesAsOrigin(): HasMany
+    {
+        return $this->hasMany(Route::class, 'origin_warehouse_id');
+    }
+
+    /** @return HasMany<Route, $this> */
+    public function routesAsDestination(): HasMany
+    {
+        return $this->hasMany(Route::class, 'destination_warehouse_id');
     }
 }

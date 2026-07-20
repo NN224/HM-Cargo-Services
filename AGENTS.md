@@ -65,7 +65,7 @@ Version 1 excludes:
 - Multiple currencies or exchange rates.
 - Online payment processing.
 - Paid SaaS dependencies required for core operation.
-- Fine-grained permission matrices beyond administrator and warehouse employee.
+- User-defined roles and per-screen permission matrices. The two roles stand, extended only by the fixed list of capability switches in D-022.
 - A user-editable workflow/status engine.
 - SMTP configuration and automated email delivery.
 - Carrier APIs, label purchasing, and third-party courier integrations.
@@ -80,7 +80,7 @@ Version 1 excludes:
 - Record financial mutations, status transitions, and privileged edits in the append-only `audit_logs` table. Full event sourcing for every state change is deferred past version 1 per D-018.
 - Never expose sequential internal IDs in public tracking URLs.
 - Apply authorization in backend policies, not only by hiding UI elements.
-- Do not hard-delete customers, shipments, packages, batches, payments, status events, or audit records.
+- Do not hard-delete a record that anything else depends on; deactivate it instead. An administrator may permanently delete a record only when nothing references it (D-021). Completed payments, reversals, status events and audit records are never deletable regardless of dependencies.
 - Add tests for every retained domain rule in D-018 and for every authorization boundary, before implementation changes. A global 80 percent coverage target does not apply to version 1; Filament scaffolding needs no coverage.
 - Keep files focused by responsibility and follow the implementation plan once approved.
 - Do not scaffold or implement product code until the owner approves the written specification and a task-level implementation plan exists.

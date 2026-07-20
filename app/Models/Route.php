@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\GuardsDeletion;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,7 +19,7 @@ use InvalidArgumentException;
  */
 class Route extends Model
 {
-    use HasFactory;
+    use GuardsDeletion, HasFactory;
 
     protected $fillable = [
         'name',
@@ -91,5 +93,22 @@ class Route extends Model
     public function hasTransit(): bool
     {
         return $this->transit_warehouse_id !== null;
+    }
+
+    /**
+     * Batches carry historical cost against a route, and customer rates are
+     * agreed per route.
+     *
+     * @return array<string, string>
+     */
+    protected function deletionDependencies(): array
+    {
+        return ['رحلات' => 'batches', 'أسعار عملاء' => 'customerRates'];
+    }
+
+    /** @return HasMany<Batch, $this> */
+    public function batches(): HasMany
+    {
+        return $this->hasMany(Batch::class);
     }
 }

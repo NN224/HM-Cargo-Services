@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Capability;
 use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role', 'warehouse_id', 'is_active'])]
+#[Fillable(['name', 'email', 'password', 'role', 'warehouse_id', 'is_active', 'capabilities'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
@@ -36,6 +37,7 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
+            'capabilities' => 'array',
             'is_active' => 'boolean',
         ];
     }
@@ -72,5 +74,54 @@ class User extends Authenticatable implements FilamentUser
 
         // An employee with no assignment is scoped to nothing, not everything.
         return $warehouseId !== null && $this->warehouse_id === $warehouseId;
+    }
+
+    /**
+     * Whether this user may perform a specific privileged action (D-022).
+     *
+     * Capabilities grant an action, never another warehouse's data — warehouse
+     * scoping is a separate check that a capability can never widen.
+     */
+    public function hasCapability(Capability $capability): bool
+    {
+        if ($this->isAdministrator()) {
+            return true;
+        }
+
+        return in_array($capability->value, $this->capabilityList(), true);
+    }
+
+    /**
+     * The capabilities actually granted, ignoring anything unrecognised.
+     *
+     * A value that does not match the fixed enum is discarded rather than
+     * trusted, so a hand-edited row cannot grant something that does not
+     * exist.
+     *
+     * @return array<int, string>
+     */
+    public function capabilityList(): array
+    {
+        $valid = array_column(Capability::cases(), 'value');
+
+        return array_values(array_intersect((array) ($this->capabilities ?? []), $valid));
+    }
+
+    public function grantCapability(Capability $capability): void
+    {
+        $this->forceFill([
+            'capabilities' => array_values(array_unique(
+                [...$this->capabilityList(), $capability->value]
+            )),
+        ])->save();
+    }
+
+    public function revokeCapability(Capability $capability): void
+    {
+        $this->forceFill([
+            'capabilities' => array_values(
+                array_diff($this->capabilityList(), [$capability->value])
+            ),
+        ])->save();
     }
 }

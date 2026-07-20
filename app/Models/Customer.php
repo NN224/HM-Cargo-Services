@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\GuardsDeletion;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Customer extends Model
 {
-    use HasFactory;
+    use GuardsDeletion, HasFactory;
 
     protected $fillable = ['name', 'phone', 'is_credit_customer', 'is_active'];
 
@@ -46,5 +48,22 @@ class Customer extends Model
     public function rateForRoute(Route $route): ?CustomerRate
     {
         return $this->rates()->where('route_id', $route->id)->first();
+    }
+
+    /**
+     * Shipments and rates both reference a customer; deleting one holding
+     * either would orphan invoices and statements.
+     *
+     * @return array<string, string>
+     */
+    protected function deletionDependencies(): array
+    {
+        return ['شحنات' => 'shipments', 'أسعار' => 'rates'];
+    }
+
+    /** @return HasMany<Shipment, $this> */
+    public function shipments(): HasMany
+    {
+        return $this->hasMany(Shipment::class);
     }
 }

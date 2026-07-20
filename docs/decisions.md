@@ -201,3 +201,35 @@ The shipment therefore holds two figures:
 
 The rounding adjustment is the difference between them. It is derived rather than stored, so the two figures cannot drift out of agreement, and it stays visible on the shipment so any total can be explained during an audit.
 
+## D-021: Deletion is allowed only where nothing depends on the record
+
+**Date:** 2026-07-20  
+**Status:** Approved. Refines the blanket no-hard-delete rule in AGENTS.md and D-018.
+
+The owner asked for the administrator to be able to delete records. The blanket prohibition existed to protect history, not to obstruct correction, and it was too strict: a customer created by mistake with no shipments carries no history worth protecting.
+
+**The rule.** An administrator may permanently delete a record **only when no other record depends on it**. A customer with no shipments, a shipment with no payments, a route no batch has used, a batch with no shipments — all deletable. The moment anything references the record, deletion is refused and the system explains which records are blocking it, offering deactivation instead.
+
+**Why this and not free deletion.** Deleting a customer with forty shipments would leave every historical invoice, statement and batch report pointing at a customer that no longer exists. The figures would not merely be wrong, they would be unexplainable. This rule gives the administrator genuine control over mistakes while making it impossible to corrupt settled history.
+
+**Never deletable regardless of dependencies:** completed payments and their reversals. Financial records are corrected by compensating entries, never removed (D-016).
+
+## D-022: Two roles, plus explicit capability switches per employee
+
+**Date:** 2026-07-20  
+**Status:** Approved. Refines D-003 and narrows the AGENTS.md exclusion of permission matrices.
+
+The owner asked to add employees and grant permissions as he sees fit. A full permission matrix — user-defined roles with per-screen, per-action grants — is the exact complexity the client asked to be rid of, so it stays excluded.
+
+**What is built instead.** The two roles from D-003 remain the foundation: administrator sees everything, warehouse employee is scoped to one warehouse. On top of that, each employee carries a small fixed set of capability switches the administrator toggles:
+
+- may price shipments and assign them to batches
+- may record payments
+- may edit a shipment after its batch has been dispatched
+- may delete records, subject to D-021
+- may manage customers and rates
+
+Switches are additive and only ever grant beyond the base employee role. An administrator implicitly holds all of them. The list is fixed in code and does not grow without an owner decision, so it cannot drift into the matrix this decision rejects.
+
+**Why not the full matrix.** These five switches cover the real cases — keeping a junior clerk away from pricing and payments — at a fraction of the cost, and with no screen for inventing roles that nobody maintains.
+

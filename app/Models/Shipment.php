@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\GuardsDeletion;
+
 use App\Enums\ShipmentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +21,7 @@ use Illuminate\Support\Str;
  */
 class Shipment extends Model
 {
-    use HasFactory;
+    use GuardsDeletion, HasFactory;
 
     /** Bytes of randomness behind the public tracking token. */
     private const TOKEN_BYTES = 24;
@@ -168,5 +170,17 @@ class Shipment extends Model
             ->map(fn ($status) => $status->value)
             ->values()
             ->all();
+    }
+
+    /**
+     * Packages are part of a shipment and are removed with it, so they do not
+     * block. A batch does: once priced, the shipment is part of that batch's
+     * revenue and profit.
+     *
+     * @return array<string, string>
+     */
+    protected function deletionDependencies(): array
+    {
+        return ['رحلة' => 'batch'];
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\GuardsDeletion;
+
 use App\Enums\BatchStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Batch extends Model
 {
-    use HasFactory;
+    use GuardsDeletion, HasFactory;
 
     protected $fillable = [
         'reference', 'route_id', 'status',
@@ -91,5 +93,15 @@ class Batch extends Model
     public function profitCents(): int
     {
         return $this->revenueCents() - $this->costCents();
+    }
+
+    /**
+     * A batch holding shipments carries their pricing history.
+     *
+     * @return array<string, string>
+     */
+    protected function deletionDependencies(): array
+    {
+        return ['شحنات' => 'shipments'];
     }
 }

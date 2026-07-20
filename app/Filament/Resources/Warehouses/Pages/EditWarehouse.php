@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Warehouses\Pages;
 
 use App\Filament\Resources\Warehouses\WarehouseResource;
-use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
 class EditWarehouse extends EditRecord
@@ -12,8 +11,7 @@ class EditWarehouse extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [
-            DeleteAction::make(),
-        ];
+        // No delete action: records are deactivated, never hard-deleted.
+        return [];
     }
 }

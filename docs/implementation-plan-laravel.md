@@ -58,7 +58,24 @@ the unassigned-employee case and the no-hard-delete rule.
 
 **Done when:** login works, and warehouse scoping is enforced in policies rather than by hiding UI.
 
-## Phase 2 - Customers, routes, and rates
+## Phase 2 - Customers, routes, and rates — DONE 2026-07-20
+
+Delivered: `customers`, `routes`, `customer_rates` with foreign keys on every
+relationship and a unique rate per customer+route. Money is `rate_per_kg_cents`,
+integer cents only. Arabic Filament resources; the rate form takes dollars and
+converts to cents on save, so no operator ever types a cent value. Delete and
+bulk-delete removed from customers, warehouses and routes; rates stay deletable
+as pricing configuration, since charge history is preserved by the shipment
+snapshot. 9 domain tests pass, covering direct-vs-transit route distinctness,
+per-route pricing, rate uniqueness, positive-money enforcement, and the rule
+that a missing rate reports null rather than defaulting.
+
+**Deviation to revisit in Phase 7:** the "origin must differ from destination"
+invariant is enforced in `Route::booted()`, not as a database CHECK. Laravel has
+no portable `check()` helper and SQLite cannot add one post-creation; emitting
+SQLite-only trigger SQL would have broken the PostgreSQL parity D-002 requires.
+Add the real constraint when PostgreSQL is provisioned.
+
 
 1. Migrations: `customers` (`is_credit_customer`, credit terms), `routes` (origin, destination, nullable transit warehouse, `base_cost_per_kg` in cents), `customer_rates` (customer, route, `rate_per_kg` in cents, unique on customer+route per D-018).
 2. Foreign keys and check constraints on every relationship and on positive money values. **The prototype declared none.**

@@ -13,12 +13,13 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class CustomerRateResource extends Resource
 {
     protected static ?string $model = CustomerRate::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
 
     protected static ?string $navigationLabel = 'أسعار العملاء';
 
@@ -26,7 +27,9 @@ class CustomerRateResource extends Resource
 
     protected static ?string $pluralModelLabel = 'أسعار العملاء';
 
-    protected static ?int $navigationSort = 30;
+    protected static string|UnitEnum|null $navigationGroup = 'العملاء والمال';
+
+    protected static ?int $navigationSort = 2;
 
     public static function form(Schema $schema): Schema
     {

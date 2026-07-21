@@ -9,11 +9,12 @@ use App\Filament\Resources\Payments\Schemas\PaymentForm;
 use App\Filament\Resources\Payments\Tables\PaymentsTable;
 use App\Models\Payment;
 use BackedEnum;
-use Illuminate\Database\Eloquent\Model;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
+use UnitEnum;
 
 class PaymentResource extends Resource
 {
@@ -27,7 +28,9 @@ class PaymentResource extends Resource
 
     protected static ?string $pluralModelLabel = 'المدفوعات';
 
-    protected static ?int $navigationSort = 20;
+    protected static string|UnitEnum|null $navigationGroup = 'العملاء والمال';
+
+    protected static ?int $navigationSort = 3;
 
     public static function canViewAny(): bool
     {

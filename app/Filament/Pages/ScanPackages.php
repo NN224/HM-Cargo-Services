@@ -22,6 +22,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\HtmlString;
+use UnitEnum;
 
 class ScanPackages extends Page
 {
@@ -33,7 +34,9 @@ class ScanPackages extends Page
 
     protected static ?string $slug = 'scan-packages';
 
-    protected static ?int $navigationSort = 3;
+    protected static string|UnitEnum|null $navigationGroup = 'العمليات';
+
+    protected static ?int $navigationSort = 2;
 
     public ?array $data = [];
 

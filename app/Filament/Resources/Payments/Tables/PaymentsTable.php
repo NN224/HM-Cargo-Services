@@ -4,8 +4,8 @@ namespace App\Filament\Resources\Payments\Tables;
 
 use App\Models\Payment;
 use App\Services\PaymentService;
-use Filament\Forms\Components\Textarea;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -83,10 +83,9 @@ class PaymentsTable
                         $service->reversePayment($record, auth()->user(), $data['reason']);
                     })
                     // Only administrators can reverse payments, and only standard payments can be reversed (not reversals themselves, and not already reversed)
-                    ->visible(fn (Payment $record) => 
-                        auth()->user()->isAdministrator() && 
-                        !$record->isReversal() && 
-                        !Payment::where('reverses_payment_id', $record->id)->exists()
+                    ->visible(fn (Payment $record) => auth()->user()->isAdministrator() &&
+                        ! $record->isReversal() &&
+                        ! Payment::where('reverses_payment_id', $record->id)->exists()
                     ),
             ])
             ->defaultSort('collected_at', 'desc');

@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Batches\Pages;
 
 use App\Filament\Resources\Batches\BatchResource;
-use App\Models\Batch;
 use App\Services\BatchReportService;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;

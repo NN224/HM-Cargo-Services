@@ -7,7 +7,6 @@ use App\Models\Shipment;
 use App\Services\PaymentService;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 
 class CreatePayment extends CreateRecord
 {
@@ -28,13 +27,13 @@ class CreatePayment extends CreateRecord
         $data['warehouse_id'] = auth()->user()->warehouse_id ?? ($data['warehouse_id'] ?? null);
 
         $targetShipment = null;
-        if (!empty($data['shipment_id'])) {
+        if (! empty($data['shipment_id'])) {
             $targetShipment = Shipment::find($data['shipment_id']);
         }
         unset($data['shipment_id']);
 
         $service = app(PaymentService::class);
-        
+
         return $service->recordPayment($data, $targetShipment);
     }
 }

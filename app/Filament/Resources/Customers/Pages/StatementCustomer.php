@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Customers\Pages;
 
 use App\Filament\Resources\Customers\CustomerResource;
-use App\Models\Customer;
 use App\Services\CustomerStatementService;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section;

@@ -14,12 +14,13 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 class WarehouseResource extends Resource
 {
     protected static ?string $model = Warehouse::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;
 
     protected static ?string $navigationLabel = 'المستودعات';
 
@@ -27,10 +28,9 @@ class WarehouseResource extends Resource
 
     protected static ?string $pluralModelLabel = 'المستودعات';
 
-    protected static ?int $navigationSort = 40;
+    protected static string|UnitEnum|null $navigationGroup = 'الإعدادات';
 
-
-
+    protected static ?int $navigationSort = 2;
 
     /**
      * Scope every listing to what the signed-in user may see.

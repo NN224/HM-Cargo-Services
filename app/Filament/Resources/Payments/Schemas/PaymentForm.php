@@ -11,8 +11,8 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Schema;
 
 class PaymentForm
 {
@@ -39,7 +39,7 @@ class PaymentForm
                             )
                             ->searchable()
                             ->nullable()
-                            ->disabled(fn (Get $get) => !$get('customer_id'))
+                            ->disabled(fn (Get $get) => ! $get('customer_id'))
                             ->helperText('اتركه فارغاً للتخصيص التلقائي من الأقدم للأحدث.'),
 
                         // Shown only to a user without a warehouse of their

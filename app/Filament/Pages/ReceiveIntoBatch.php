@@ -27,6 +27,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 /**
  * Receiving cargo into a batch that is already open.
@@ -40,6 +41,10 @@ class ReceiveIntoBatch extends Page
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-inbox-arrow-down';
 
     protected static ?string $navigationLabel = 'استلام بضاعة';
+
+    protected static string|UnitEnum|null $navigationGroup = 'العمليات';
+
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $title = 'استلام بضاعة في رحلة';
 

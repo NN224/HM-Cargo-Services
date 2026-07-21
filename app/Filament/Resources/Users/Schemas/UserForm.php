@@ -4,11 +4,12 @@ namespace App\Filament\Resources\Users\Schemas;
 
 use App\Enums\Capability;
 use App\Enums\UserRole;
+use App\Models\User;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Hash;
 
@@ -17,7 +18,7 @@ class UserForm
     public static function configure(Schema $schema): Schema
     {
         $capabilityToggles = [];
-        
+
         // Capabilities are defined as an enum list, avoiding the trap of a
         // complex permission matrix. We map them explicitly to visual toggles.
         foreach (Capability::cases() as $capability) {
@@ -26,7 +27,7 @@ class UserForm
                 ->helperText($capability->description())
                 // The underlying capabilities column is a list of strings.
                 // We hydrate the toggle by checking if the user holds that capability.
-                ->formatStateUsing(fn (?\App\Models\User $record): bool => $record ? $record->hasCapability($capability) : false);
+                ->formatStateUsing(fn (?User $record): bool => $record ? $record->hasCapability($capability) : false);
         }
 
         return $schema

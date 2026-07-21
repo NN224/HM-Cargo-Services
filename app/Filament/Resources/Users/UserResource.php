@@ -14,12 +14,13 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use UnitEnum;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedIdentification;
 
     protected static ?string $navigationLabel = 'الموظفون';
 
@@ -27,7 +28,9 @@ class UserResource extends Resource
 
     protected static ?string $pluralModelLabel = 'الموظفون';
 
-    protected static ?int $navigationSort = 11;
+    protected static string|UnitEnum|null $navigationGroup = 'الإعدادات';
+
+    protected static ?int $navigationSort = 3;
 
     /**
      * D-022: Only administrators may access this screen.

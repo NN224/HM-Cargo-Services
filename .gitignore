@@ -27,7 +27,6 @@ Homestead.yaml
 Thumbs.db
 
 # HM Cargo - project specific
-/legacy-node-prototype/node_modules
 *.sqlite
 *.sqlite-journal
 sqlite.db

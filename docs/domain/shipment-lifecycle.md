@@ -161,6 +161,7 @@ After batch dispatch:
 - Mark only the missing package.
 - Set the parent shipment to `exception`.
 - Prevent collection until the package arrives, is cancelled, or the exception is resolved by an administrator.
+- Do not automatically change the charge. The package stays in the shipment's billable weight until an administrator resolves it, exactly as for a damaged package (D-023).
 
 ### Damaged package
 

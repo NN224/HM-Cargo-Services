@@ -1,8 +1,7 @@
 # Current State — Handoff
 
-**Last updated:** 2026-07-20, end of session
-**Commit:** `95ed2aa`
-**Tests:** 86 passing, 198 assertions, working tree clean
+**Last updated:** 2026-07-21, end of session
+**Tests:** 155 passing, 495 assertions, working tree clean
 
 Read this first if you are picking the project up. It says what exists, what
 does not, and what to do next. The binding rules live in [`../AGENTS.md`](../AGENTS.md)
@@ -12,18 +11,23 @@ and [`decisions.md`](decisions.md); this file only reports status.
 
 ## What the system can do today
 
-Log in, and manage the reference data a shipment needs: warehouses, customers,
-routes, per-customer rates. Create a shipment with multiple packages and an
-exact total weight. Price a shipment by assigning it to a batch.
+The operational spine now runs end to end. Log in and manage warehouses,
+customers, routes and per-customer rates. Create a multi-package shipment with
+an exact total weight. Assign it to a batch, which prices it. Dispatch the
+batch and see revenue, cost and profit. Scan packages in at transit and
+destination warehouses, with shipment status derived from the package rows
+rather than declared. Collect a shipment only once every active package has
+arrived. Record full, partial and account-level payments with oldest-first
+allocation and reversals. Follow a shipment from the public tracking page
+without logging in.
 
 ## What it cannot do yet
 
-No batch screen, no scanning, no collection, no payments, no customer
-statements, no public tracking page, no WhatsApp handoff, no profitability
-report, no barcode labels. **Roughly half the product remains, and it is the
-operational half.**
+No A4 barcode labels, no WhatsApp handoff, no customer statements, no
+operational reports. The Node prototype has not been removed and production
+still runs on SQLite rather than PostgreSQL.
 
-Do not describe this system as nearly ready.
+What remains is real, but it is no longer the operational half.
 
 ---
 
@@ -33,19 +37,18 @@ Do not describe this system as nearly ready.
 |---|---|
 | Laravel 13.20 + Filament 5.7 + Pest 4.7, Arabic RTL | done |
 | Authentication, two roles, warehouse scoping | done |
-| Five capability switches per employee (D-022) | done, no UI yet |
-| Safe deletion — blocked when depended upon (D-021) | done, no UI yet |
+| Five capability switches per employee (D-022) | done, with screen |
+| Safe deletion — blocked when depended upon (D-021) | done, with buttons |
 | Customers, routes, per-route rates | done, with screens |
 | Shipments and packages, exact weight, safe identifiers | done, with screen |
-| Batch model and pricing on assignment | done, **no screen** |
+| Batch pricing on assignment, dispatch, profitability widget | done, with screen |
+| Package scanning and `package_status_events` | done, with mobile screen |
+| Collection gate — all active packages must have arrived | done |
+| Payments, oldest-first allocation, reversals | done, with screen |
+| Public tracking on `/track/{token}`, rate limited | done |
 
 ## Not built
 
-- Filament screen for batches, the dispatch action, profitability widget
-- Employee management screen with the capability toggles
-- Delete buttons wired to `deleteSafely()`
-- Package scanning, collection gate, payments, credit allocation
-- Public tracking page on `/track/{token}`
 - A4 labels, WhatsApp link, statements, reports
 - Removal of `legacy-node-prototype/` (Phase 6)
 - PostgreSQL (Phase 7)
@@ -54,12 +57,11 @@ Do not describe this system as nearly ready.
 
 ## Suggested next step
 
-Finish Phase 4: the batch screen, a dispatch action that snapshots
-`cost_per_kg_cents` and locks ordinary edits, and the profitability widget.
-This is the first point where the owner can see pricing working end to end.
+Phase 6: remove `legacy-node-prototype/`. It is dead weight that has already
+misled one review into auditing it as if it were the product.
 
-Then Phase 5, in this order: scanning → collection gate → payments → public
-tracking.
+Then the remaining operator conveniences — A4 labels and the WhatsApp link —
+before PostgreSQL in Phase 7.
 
 ---
 
@@ -76,6 +78,7 @@ rules, so do not act on the originals without reading these.
 | D-020 | **The automatic rounding rule in D-008 is gone.** The operator types the final amount |
 | D-021 | Deletion allowed only when nothing depends on the record |
 | D-022 | Two roles plus five fixed capability switches — not a permission matrix |
+| D-023 | A missing or damaged package stays in the billable weight. Only cancellation removes it |
 
 ---
 
@@ -94,6 +97,19 @@ total to sit at zero with no error. Derived columns are assigned directly.
 
 **Filament tables render through Livewire.** Column headers are not in the
 initial page HTML, so assert them with `Livewire::test(...)`, not `get()`.
+
+**A green suite proves only that the written tests pass.** Two real defects
+survived a full green run this session, both because nothing asserted the rule:
+`isActive()` was changed and silently moved billable weight, and an
+administrator — who has no `warehouse_id` — could not record a payment at all,
+because the form copied their empty warehouse into a not-null column. When a
+predicate is shared by pricing and by an operational gate, change it only with
+a test on each side.
+
+**Read before you write, including files another agent just touched.** Work
+here often runs several agents against one working tree. A file that looks
+original may have been rewritten minutes ago, and `git status` is the only
+honest answer about what is actually modified.
 
 **Verification.** Two false "✓" results this session came from shell fallbacks
 (`grep ... || echo ok`) firing on a shell error rather than a real match. Check

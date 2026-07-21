@@ -24,7 +24,7 @@ This document is the canonical source for all financial calculations.
 
 Let:
 
-- `W` = sum of exact weights for active, non-cancelled packages.
+- `W` = sum of exact weights for active packages. Active means everything except cancelled: a missing or damaged package still counts toward `W` and does not reduce the charge by itself (D-023). Its financial resolution is an explicit administrator adjustment.
 - `R` = shipment rate snapshot in USD per kilogram.
 - `raw_charge` = `W × R`.
 

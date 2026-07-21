@@ -233,3 +233,18 @@ Switches are additive and only ever grant beyond the base employee role. An admi
 
 **Why not the full matrix.** These five switches cover the real cases — keeping a junior clerk away from pricing and payments — at a fraction of the cost, and with no screen for inventing roles that nobody maintains.
 
+## D-023: A missing or damaged package does not reduce the charge by itself
+
+**Date:** 2026-07-21  
+**Status:** Approved by owner confirmation. Resolves a contradiction between code and specification; clarifies D-015 and D-016.
+
+A package that is missing or damaged stays part of the shipment's billable weight. The charge does not move on its own. The shipment is blocked from collection and marked `exception`, and an administrator decides what to do about the money — credit the customer, discount the shipment, wait for the package to turn up, or leave the charge standing. Whatever they choose is recorded as an explicit adjustment with an author and a reason.
+
+**The contradiction this settles.** `PackageStatus::isActive()` used to exclude missing and damaged packages, citing D-015. That silently shrank the customer's charge the moment a package was flagged — while `shipment-lifecycle.md` §10 already said the opposite for damaged packages: "do not automatically change the charge; financial handling is an explicit adjustment." The code and the specification disagreed, and no test guarded either behaviour, so the disagreement went unnoticed until an agent changed the predicate for an unrelated reason.
+
+**Why this way.** An invoice the customer may already have seen must not rewrite itself because of an operational event. Every movement of money in this system has a person and a reason attached; a silent deduction has neither. It is also reversible in the right direction: if the package is found, nothing needs undoing, because nothing was changed.
+
+**What D-015 actually governs.** D-015 gates *collection*, not *pricing*. A shipment cannot be released until every non-cancelled package has arrived — and a missing package is precisely what should hold that gate shut. Only an explicit cancellation removes a package from the shipment's obligations.
+
+**Scope.** `isActive()` now excludes cancelled packages only. Missing and damaged packages remain active: they count toward billable weight and they block collection until an administrator resolves the exception.
+

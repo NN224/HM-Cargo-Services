@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\Shipments\Tables;
 
+use App\Enums\Capability;
 use App\Enums\ShipmentStatus;
 use App\Models\Shipment;
 use App\Services\WhatsAppMessageService;
+use DomainException;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
@@ -91,6 +93,34 @@ class ShipmentsTable
                     ->visible(fn (Shipment $record): bool => $record->status === ShipmentStatus::ReadyForCollection)
                     ->url(fn (Shipment $record): string => (new WhatsAppMessageService)->buildUrl($record))
                     ->openUrlInNewTab(),
+
+                // A shipment leaves only while nothing depends on it: once it
+                // is in a batch, its weight and revenue are already counted
+                // there, so deleteSafely() refuses and names the batch.
+                Action::make('delete')
+                    ->label('حذف')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->visible(fn (): bool => auth()->user()?->hasCapability(Capability::DeleteRecords) ?? false)
+                    ->authorize(fn ($record): bool => auth()->user()?->hasCapability(Capability::DeleteRecords) ?? false)
+                    ->requiresConfirmation()
+                    ->modalHeading('حذف الشحنة')
+                    ->modalDescription('سيُحذف معها طرودها. لا يمكن التراجع عن هذا الإجراء.')
+                    ->action(function ($record): void {
+                        try {
+                            $record->deleteSafely();
+                            Notification::make()
+                                ->title('تم الحذف')
+                                ->success()
+                                ->send();
+                        } catch (DomainException $e) {
+                            Notification::make()
+                                ->title('لا يمكن الحذف')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
             ])
             ->toolbarActions([]);
     }

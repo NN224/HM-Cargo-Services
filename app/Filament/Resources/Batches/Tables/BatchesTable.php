@@ -3,8 +3,12 @@
 namespace App\Filament\Resources\Batches\Tables;
 
 use App\Enums\BatchStatus;
+use App\Enums\Capability;
+use DomainException;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -66,6 +70,33 @@ class BatchesTable
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
+
+                // Only an empty batch may go. One holding shipments carries
+                // their pricing history, so deleteSafely() refuses.
+                Action::make('delete')
+                    ->label('حذف')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->visible(fn (): bool => auth()->user()?->hasCapability(Capability::DeleteRecords) ?? false)
+                    ->authorize(fn ($record): bool => auth()->user()?->hasCapability(Capability::DeleteRecords) ?? false)
+                    ->requiresConfirmation()
+                    ->modalHeading('حذف الرحلة')
+                    ->modalDescription('هل أنت متأكد من حذف هذه الرحلة نهائياً؟ لا يمكن التراجع عن هذا الإجراء.')
+                    ->action(function ($record): void {
+                        try {
+                            $record->deleteSafely();
+                            Notification::make()
+                                ->title('تم الحذف')
+                                ->success()
+                                ->send();
+                        } catch (DomainException $e) {
+                            Notification::make()
+                                ->title('لا يمكن الحذف')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
             ])
             ->toolbarActions([]);
     }

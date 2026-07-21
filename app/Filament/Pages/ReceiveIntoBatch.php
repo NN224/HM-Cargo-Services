@@ -84,7 +84,30 @@ class ReceiveIntoBatch extends Page
                             ->searchable()
                             ->required()
                             ->live()
-                            ->afterStateUpdated(fn (Get $get, Set $set) => $set('rate_per_kg', self::agreedRatePerKg($get))),
+                            ->afterStateUpdated(fn (Get $get, Set $set) => $set('rate_per_kg', self::agreedRatePerKg($get)))
+                            // A walk-in customer should not send the operator to
+                            // another screen mid-intake. The gate lives on the
+                            // action itself via ->authorize(), the same pattern
+                            // used for delete actions elsewhere (e.g.
+                            // CustomersTable) — Filament re-evaluates it on every
+                            // mount and call, so the option is truly absent for
+                            // an unauthorized user, not merely hidden by a form
+                            // schema that returns null (a crafted request could
+                            // still reach the handler behind that).
+                            ->createOptionForm([
+                                TextInput::make('name')
+                                    ->label('اسم العميل')
+                                    ->required(),
+                                TextInput::make('phone')
+                                    ->label('رقم الهاتف')
+                                    ->required(),
+                            ])
+                            ->createOptionUsing(fn (array $data): int => Customer::create([
+                                'name' => $data['name'],
+                                'phone' => $data['phone'],
+                            ])->id)
+                            ->createOptionAction(fn (Action $action): Action => $action
+                                ->authorize(fn (): bool => auth()->user()?->hasCapability(Capability::ManageCustomers) ?? false)),
 
                         Checkbox::make('recipient_is_customer')
                             ->label('المستلم هو العميل')

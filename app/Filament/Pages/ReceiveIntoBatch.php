@@ -114,6 +114,18 @@ class ReceiveIntoBatch extends Page
                             ->visible(fn (): bool => auth()->user()?->hasCapability(Capability::PriceShipments) ?? false)
                             ->helperText('سعر العميل المتفق عليه على مسار هذه الرحلة.'),
 
+                        // Shown only when this customer has no agreed rate for
+                        // this route yet, and only to someone entitled to
+                        // record the agreement. Everyone else is refused with
+                        // a message naming who can supply it.
+                        TextInput::make('agreed_rate_per_kg_cents')
+                            ->label('سعر الكيلو المتفق عليه (سنت)')
+                            ->numeric()
+                            ->minValue(1)
+                            ->visible(fn (Get $get): bool => $this->needsAgreedRate($get))
+                            ->required(fn (Get $get): bool => $this->needsAgreedRate($get))
+                            ->helperText('لا يوجد سعر متفق عليه لهذا العميل على مسار هذه الرحلة.'),
+
                         Repeater::make('packages')
                             ->label('الطرود')
                             ->schema([
@@ -171,6 +183,36 @@ class ReceiveIntoBatch extends Page
         $rate = $customer->rateForRoute($batch->route);
 
         return $rate === null ? null : number_format($rate->ratePerKgDollars(), 2, '.', '');
+    }
+
+    /**
+     * Whether the form must ask for a first agreed rate.
+     *
+     * Only for a user holding manage_customers. Without it the intake is
+     * refused by the service, and offering a field they may not use would be
+     * a worse experience than a clear message.
+     */
+    private function needsAgreedRate(Get $get): bool
+    {
+        if (! (auth()->user()?->hasCapability(Capability::ManageCustomers) ?? false)) {
+            return false;
+        }
+
+        $batchId = $get('batch_id');
+        $customerId = $get('customer_id');
+
+        if (! $batchId || ! $customerId) {
+            return false;
+        }
+
+        $batch = Batch::find($batchId);
+        $customer = Customer::find($customerId);
+
+        if (! $batch || ! $customer) {
+            return false;
+        }
+
+        return $customer->rateForRoute($batch->route) === null;
     }
 
     public function receive(): void

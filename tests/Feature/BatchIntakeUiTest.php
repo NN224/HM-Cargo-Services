@@ -81,6 +81,17 @@ test('the rate is offered to a user who may price', function () {
         ->assertFormFieldVisible('rate_per_kg');
 });
 
+test('the rate shows the customer\'s agreed rate for the batch\'s route', function () {
+    // 300 stored cents must render as dollars, not the raw cent count.
+    Livewire::actingAs($this->admin)
+        ->test(ReceiveIntoBatch::class)
+        ->fillForm([
+            'batch_id' => $this->batch->id,
+            'customer_id' => $this->customer->id,
+        ])
+        ->assertFormSet(['rate_per_kg' => '3.00']);
+});
+
 test('a different recipient is accepted when the box is unticked', function () {
     Livewire::actingAs($this->clerk)
         ->test(ReceiveIntoBatch::class)

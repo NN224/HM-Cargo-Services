@@ -22,6 +22,7 @@ use Filament\Schemas\Components\EmbeddedSchema;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 
@@ -68,7 +69,11 @@ class ReceiveIntoBatch extends Page
                                 ->pluck('reference', 'id')
                                 ->all())
                             ->searchable()
-                            ->required(),
+                            ->required()
+                            // The rate depends on this batch's route, so a
+                            // change here must refresh it same as customer_id.
+                            ->live()
+                            ->afterStateUpdated(fn (Get $get, Set $set) => $set('rate_per_kg', self::agreedRatePerKg($get))),
 
                         Select::make('customer_id')
                             ->label('العميل')
@@ -78,7 +83,8 @@ class ReceiveIntoBatch extends Page
                                 ->all())
                             ->searchable()
                             ->required()
-                            ->live(),
+                            ->live()
+                            ->afterStateUpdated(fn (Get $get, Set $set) => $set('rate_per_kg', self::agreedRatePerKg($get))),
 
                         Checkbox::make('recipient_is_customer')
                             ->label('المستلم هو العميل')
@@ -96,7 +102,10 @@ class ReceiveIntoBatch extends Page
                             ->required(fn (Get $get): bool => ! $get('recipient_is_customer')),
 
                         // Only a user who may price sees a price. For everyone
-                        // else the figure does not exist on this screen.
+                        // else the figure does not exist on this screen. It is
+                        // read-only display only — the rate itself is applied
+                        // server-side at intake (BatchIntakeService), never
+                        // taken from this field, so it cannot be tampered with.
                         TextInput::make('rate_per_kg')
                             ->label('سعر الكيلو (دولار)')
                             ->numeric()
@@ -141,6 +150,27 @@ class ReceiveIntoBatch extends Page
                     ])->fullWidth(),
                 ]),
         ]);
+    }
+
+    /**
+     * The customer's agreed rate for the selected batch's route, formatted
+     * in dollars for display only — never fed back into arithmetic (D-007).
+     *
+     * Null whenever either select is empty or no rate exists for the pair,
+     * so the field renders blank rather than a stale or misleading figure.
+     */
+    private static function agreedRatePerKg(Get $get): ?string
+    {
+        $batch = Batch::find($get('batch_id'));
+        $customer = Customer::find($get('customer_id'));
+
+        if (! $batch || ! $customer) {
+            return null;
+        }
+
+        $rate = $customer->rateForRoute($batch->route);
+
+        return $rate === null ? null : number_format($rate->ratePerKgDollars(), 2, '.', '');
     }
 
     public function receive(): void

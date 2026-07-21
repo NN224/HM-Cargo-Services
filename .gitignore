@@ -31,3 +31,4 @@ Thumbs.db
 *.sqlite-journal
 sqlite.db
 .DS_Store
+.superpowers/

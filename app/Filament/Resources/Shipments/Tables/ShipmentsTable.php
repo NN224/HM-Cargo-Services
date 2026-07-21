@@ -3,8 +3,11 @@
 namespace App\Filament\Resources\Shipments\Tables;
 
 use App\Enums\ShipmentStatus;
+use App\Models\Shipment;
+use App\Services\WhatsAppMessageService;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -45,11 +48,14 @@ class ShipmentsTable
                     ->badge()
                     ->formatStateUsing(fn (ShipmentStatus $state): string => $state->label())
                     ->color(fn (ShipmentStatus $state): string => match ($state) {
+                        ShipmentStatus::Draft, ShipmentStatus::AwaitingBatch, ShipmentStatus::Assigned => 'gray',
                         ShipmentStatus::Pending => 'warning',
-                        ShipmentStatus::InTransit => 'info',
-                        ShipmentStatus::Arrived => 'primary',
+                        ShipmentStatus::InTransit, ShipmentStatus::PartialAtTransit, ShipmentStatus::AtTransit => 'info',
+                        ShipmentStatus::PartialAtDestination => 'info',
+                        ShipmentStatus::ReadyForCollection, ShipmentStatus::Arrived => 'primary',
                         ShipmentStatus::Collected => 'success',
                         ShipmentStatus::Cancelled => 'danger',
+                        ShipmentStatus::Exception => 'danger',
                     }),
 
                 TextColumn::make('created_at')
@@ -66,8 +72,6 @@ class ShipmentsTable
             ->recordActions([
                 EditAction::make(),
 
-                // The public link is the only safe way to share a shipment:
-                // it carries the random token, never the readable reference.
                 Action::make('copyTrackingLink')
                     ->label('رابط التتبع')
                     ->icon('heroicon-o-link')
@@ -79,9 +83,15 @@ class ShipmentsTable
                         'x-on:click' => 'navigator.clipboard.writeText('
                             .json_encode(url('/track/'.$record->public_token)).')',
                     ]),
+
+                Action::make('whatsapp')
+                    ->label('واتساب')
+                    ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                    ->color('success')
+                    ->visible(fn (Shipment $record): bool => $record->status === ShipmentStatus::ReadyForCollection)
+                    ->url(fn (Shipment $record): string => (new WhatsAppMessageService)->buildUrl($record))
+                    ->openUrlInNewTab(),
             ])
-            // Shipments are never hard-deleted: payments, packages and history
-            // all hang off them (AGENTS.md).
             ->toolbarActions([]);
     }
 }

@@ -34,6 +34,31 @@ class EditCustomerRate extends EditRecord
     }
 
     /**
+     * The confirmation modal must be the last gate, not the first: an
+     * operator who types an invalid rate should see the field error
+     * immediately, not be asked "change 3.00 to X?" and only learn it was
+     * invalid after confirming. Left alone, mounting the "save" action here
+     * just opens the modal — the form's own validation (required,
+     * minValue(0.01), ...) doesn't run until save() executes inside
+     * callMountedAction(), i.e. after the operator has already confirmed.
+     *
+     * Running the same validation the form already performs (via
+     * $this->form->getState(), the identical call save() makes) before
+     * mounting proceeds means an invalid value throws here instead: Livewire
+     * turns that into the usual inline field error, and — because an
+     * exception aborts this method — the parent mountAction() below never
+     * runs, so the confirmation action never mounts and no modal appears.
+     */
+    public function mountAction(string $name, array $arguments = [], array $context = []): mixed
+    {
+        if ($name === 'save') {
+            $this->form->getState();
+        }
+
+        return parent::mountAction($name, $arguments, $context);
+    }
+
+    /**
      * A rate is a standing agreement, not a per-load figure: a slipped
      * decimal here does not spoil one shipment, it becomes the customer's
      * price until somebody notices. Confirming names both figures so the

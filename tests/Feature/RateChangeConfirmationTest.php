@@ -69,6 +69,30 @@ test('the confirmation modal names the old and new figures', function () {
         ->assertMountedActionModalSee('3.50');
 });
 
+test('an invalid rate shows a validation error and never raises the confirmation modal', function () {
+    // The confirmation modal is the LAST gate, not the first: an operator who
+    // types an invalid rate must see the field error immediately, and must
+    // never be asked to confirm a change that cannot be saved anyway. Before
+    // the fix, ->action(fn () => $this->save()) only validates once the
+    // modal is confirmed and callMountedAction() runs save() — so mounting
+    // the action here would wrongly succeed (and show a modal) even though
+    // 0 fails the field's minValue(0.01) rule.
+    // ->assertHasFormErrors() defaults to the *mounted action's own* schema
+    // once an action is mounted (see TestsForms::assertHasFormErrors()), and
+    // the "save" action has no schema of its own — so the page's own form
+    // schema must be named explicitly here, or the assertion resolves the
+    // wrong (nonexistent) schema.
+    Livewire::actingAs($this->admin)
+        ->test(EditCustomerRate::class, ['record' => $this->rate->getRouteKey()])
+        ->fillForm(['rate_per_kg_cents' => '0'])
+        ->mountAction(TestAction::make('save')->schemaComponent(true, 'content'))
+        ->assertHasFormErrors(['rate_per_kg_cents'], form: 'form')
+        ->assertActionNotMounted(TestAction::make('save')->schemaComponent(true, 'content'));
+
+    // The stored rate must be untouched — an invalid submission never saves.
+    expect($this->rate->fresh()->rate_per_kg_cents)->toBe(300);
+});
+
 test('a confirmed change is saved', function () {
     // Exercise the actual UI path (mount → confirm → callMountedAction),
     // not a direct ->call('save'). The Save button's click handler was

@@ -127,4 +127,20 @@ One click. Enough to catch a slipped decimal, not enough to be ceremony.
   `ManageCustomers`, refused with a clear message otherwise, and in the
   refusal nothing is written.
 - Changing an existing rate on the rates screen requires the confirmation,
-  and the previous rate is preserved with its effective date.
+  and charges already posted keep the figure they were priced at.
+
+## A note on rate history
+
+`data-model.md` §5 describes `CustomerRouteRate` as effective-dated with
+historical rates preserved. The implementation has no such dating: one row
+per customer and route, replaced in place.
+
+That gap does not endanger money. A shipment snapshots
+`rate_per_kg_cents` when it is assigned to a batch, so a charge already
+posted keeps its figure no matter what the rate becomes afterwards — which is
+the guarantee the effective dating existed to provide.
+
+Effective dating is therefore not in scope here. It buys the ability to
+answer "what was Ahmad's rate in March", which nobody has asked for, and
+D-018 reduced exactly this kind of ceremony. Recorded so the divergence is a
+known choice rather than an oversight.

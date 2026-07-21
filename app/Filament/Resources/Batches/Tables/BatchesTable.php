@@ -4,6 +4,8 @@ namespace App\Filament\Resources\Batches\Tables;
 
 use App\Enums\BatchStatus;
 use App\Enums\Capability;
+use App\Filament\Resources\Routes\RouteResource;
+use App\Models\Route;
 use DomainException;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
@@ -65,6 +67,27 @@ class BatchesTable
                 SelectFilter::make('status')
                     ->label('الحالة')
                     ->options(BatchStatus::options()),
+            ])
+            // A batch cannot exist without a route: the form's route field is
+            // required and its options come from that table. On a fresh
+            // install both lists are empty, so the operator meets an empty
+            // screen and a create form that cannot be satisfied, with nothing
+            // explaining why. Name the missing prerequisite instead.
+            ->emptyStateHeading(fn (): string => Route::query()->exists()
+                ? 'لا توجد رحلات بعد'
+                : 'لا يوجد أي مسار بعد')
+            ->emptyStateDescription(fn (): ?string => Route::query()->exists()
+                ? 'الرحلة هي الحمولة المسافرة: تختار لها مساراً، ثم تستلم فيها بضاعة العملاء حتى موعد إرسالها.'
+                : 'الرحلة تسير على مسار، والمسار يحدد مستودع المنشأ والوجهة. أنشئ مساراً واحداً أولاً ثم عد إلى هنا.')
+            ->emptyStateActions([
+                Action::make('createRoute')
+                    ->label('أنشئ مساراً')
+                    ->icon('heroicon-o-map')
+                    ->url(RouteResource::getUrl('create'))
+                    // Only while the prerequisite is actually missing. Once a
+                    // route exists this button would send the operator away
+                    // from the thing they came here to create.
+                    ->visible(fn (): bool => ! Route::query()->exists()),
             ])
             ->defaultSort('created_at', 'desc')
             ->recordActions([

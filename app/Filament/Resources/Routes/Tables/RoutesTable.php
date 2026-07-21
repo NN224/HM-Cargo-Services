@@ -40,6 +40,11 @@ class RoutesTable
             ->filters([
                 TernaryFilter::make('is_active')->label('الحالة'),
             ])
+            // Everything downstream waits on this table, so an operator who
+            // lands here first should learn what a route is for rather than
+            // read "no records".
+            ->emptyStateHeading('لا توجد مسارات بعد')
+            ->emptyStateDescription('المسار هو الطريق الذي تسلكه البضاعة: من أي مستودع تنطلق، وعبر أي مستودع تمر، وأين تصل. الرحلات وأسعار العملاء كلاهما مبني عليه.')
             ->defaultSort('name')
             ->recordActions([
                 EditAction::make(),

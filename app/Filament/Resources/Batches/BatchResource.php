@@ -111,9 +111,20 @@ class BatchResource extends Resource
             ->orWhere('destination_warehouse_id', $user->warehouse_id ?? 0));
     }
 
-    public static function canUseRoute(Route $route): bool
+    /**
+     * Whether a user may operate on a batch travelling this route.
+     *
+     * @param  ?User  $user  Defaults to the current request's user for every
+     *                       existing Filament call site. BatchIntakeService
+     *                       passes its own $actor explicitly instead, matching
+     *                       that service's rule that authorization must be
+     *                       checked against the actor it was given, never
+     *                       against global auth() state, so the guard is
+     *                       testable with an arbitrary actor.
+     */
+    public static function canUseRoute(Route $route, ?User $user = null): bool
     {
-        $user = auth()->user();
+        $user ??= auth()->user();
 
         if (! $user instanceof User) {
             return false;

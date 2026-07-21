@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Enums\BatchStatus;
 use App\Enums\Capability;
+use App\Filament\Resources\Batches\BatchResource;
 use App\Models\Batch;
 use App\Models\Customer;
 use App\Models\User;
@@ -25,6 +26,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Receiving cargo into a batch that is already open.
@@ -51,7 +53,14 @@ class ReceiveIntoBatch extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->user() instanceof User;
+        $user = auth()->user();
+
+        // AGENTS.md: a warehouse employee operates only their assigned
+        // warehouse. Same gate as ScanPackages — an administrator always
+        // qualifies, otherwise a warehouse assignment is required, so a
+        // user with none cannot open this page at all.
+        return $user instanceof User
+            && ($user->isAdministrator() || $user->warehouse_id !== null);
     }
 
     public function form(Schema $schema): Schema
@@ -65,6 +74,13 @@ class ReceiveIntoBatch extends Page
                             ->label('الرحلة')
                             ->options(fn (): array => Batch::query()
                                 ->where('status', BatchStatus::Open)
+                                // Same route scope BatchResource applies to
+                                // its own index (getEloquentQuery()) and to
+                                // BatchForm's route select — reused here
+                                // rather than a parallel rule, so a warehouse
+                                // employee is offered only batches whose route
+                                // touches their warehouse.
+                                ->whereHas('route', fn (Builder $route): Builder => BatchResource::scopeRouteQuery($route))
                                 ->orderByDesc('created_at')
                                 ->pluck('reference', 'id')
                                 ->all())
@@ -262,6 +278,13 @@ class ReceiveIntoBatch extends Page
         $actor = auth()->user();
 
         try {
+            // The options list above already excludes a batch outside the
+            // employee's warehouse (and Filament's own Select validation
+            // would reject a tampered value against that same scoped list
+            // before this line ever runs). Neither of those is the real
+            // guard: BatchIntakeService checks the resolved batch's route
+            // against $actor directly, so a caller that reaches the service
+            // by any other path is refused there too, not just here.
             $shipment = app(BatchIntakeService::class)->receive($batch, $state, $actor);
 
             Notification::make()

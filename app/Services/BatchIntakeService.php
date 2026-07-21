@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\Capability;
+use App\Filament\Resources\Batches\BatchResource;
 use App\Models\Batch;
 use App\Models\Customer;
 use App\Models\CustomerRate;
@@ -42,6 +43,8 @@ class BatchIntakeService
     public function receive(Batch $batch, array $data, User $actor): Shipment
     {
         return DB::transaction(function () use ($batch, $data, $actor): Shipment {
+            $this->guardActorCanUseBatch($batch, $actor);
+
             $packages = $data['packages'] ?? [];
 
             if ($packages === []) {
@@ -78,6 +81,34 @@ class BatchIntakeService
             // transaction unwinds — no half-received cargo.
             return $this->assignment->assign($shipment->fresh(), $batch);
         });
+    }
+
+    /**
+     * A warehouse employee operates only their assigned warehouse (AGENTS.md).
+     * A batch's route is relevant at its origin, transit and destination —
+     * the same rule BatchResource already applies to the batches list and to
+     * everything else batch-scoped, reused here via canUseRoute() rather than
+     * a parallel rule.
+     *
+     * The Filament page only offers a scoped list of batches, and Filament's
+     * own Select validation rejects a tampered id against that same list —
+     * but neither of those is authorization (AGENTS.md is explicit that it
+     * belongs in a backend guard). $actor is checked directly here so a
+     * caller reaching this service by any path other than the page, with any
+     * batch id, is refused identically.
+     *
+     * @throws DomainException when the actor's warehouse has no part in the
+     *                          batch's route
+     */
+    private function guardActorCanUseBatch(Batch $batch, User $actor): void
+    {
+        if (BatchResource::canUseRoute($batch->route, $actor)) {
+            return;
+        }
+
+        throw new DomainException(
+            "الرحلة {$batch->reference} خارج نطاق مستودعك، ولا يمكنك الاستلام فيها."
+        );
     }
 
     /**

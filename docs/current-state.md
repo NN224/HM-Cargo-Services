@@ -1,7 +1,7 @@
 # Current State — Handoff
 
 **Last updated:** 2026-07-21, end of session
-**Tests:** 177 passing, 563 assertions, working tree clean
+**Tests:** 207 passing, 655 assertions, working tree clean
 
 Read this first if you are picking the project up. It says what exists, what
 does not, and what to do next. The binding rules live in [`../AGENTS.md`](../AGENTS.md)
@@ -23,6 +23,10 @@ without logging in.
 
 It also prints A4 labels, hands off to WhatsApp, and produces a customer
 statement and a batch report.
+
+Cargo can be received the way it actually arrives: open the load that leaves
+on Thursday and add each customer's boxes as they come in, with destination,
+rate and barcodes filled in from what the batch already knows.
 
 ## What it cannot do yet
 
@@ -55,6 +59,7 @@ has tried the scan flow on a real phone in a real warehouse.
 | Customer statement, reconciled against the ledger | done |
 | Batch report — counts, weight, revenue, cost, profit | done |
 | Shipment destination, enforced against the batch route | done |
+| Batch-first intake — receive cargo into an open batch | done |
 
 ## Not built
 
@@ -66,7 +71,7 @@ has tried the scan flow on a real phone in a real warehouse.
 ## Suggested next step
 
 Try it against a real shipment before adding anything else. The feature list
-is close to complete and entirely unexercised: every one of the 177 tests was
+is close to complete and entirely unexercised: every one of the 207 tests was
 written by the same session that wrote the code it tests. A single real
 shipment — created in Dubai, priced into a batch, scanned in, collected and
 paid — will find more than the next feature would.
@@ -90,6 +95,7 @@ rules, so do not act on the originals without reading these.
 | D-021 | Deletion allowed only when nothing depends on the record |
 | D-022 | Two roles plus five fixed capability switches — not a permission matrix |
 | D-023 | A missing or damaged package stays in the billable weight. Only cancellation removes it |
+| D-024 | Receiving cargo applies an agreed rate — it is not a pricing decision |
 
 ---
 
@@ -153,7 +159,7 @@ a readable staff reference from a 48-character random public token.
 
 ```bash
 php artisan serve          # http://127.0.0.1:8000 redirects to /admin
-php artisan test           # 86 passing
+php artisan test           # 207 passing
 php artisan migrate:fresh --seed   # needs ADMIN_PASSWORD in .env
 ```
 

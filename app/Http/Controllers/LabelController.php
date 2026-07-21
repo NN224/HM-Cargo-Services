@@ -36,7 +36,9 @@ class LabelController extends Controller
         
         $packageSequence = "$currentIndex من $totalCount";
         
-        $destination = $shipment->batch?->route?->destinationWarehouse?->name ?? 'غير محدد';
+        $destination = $shipment->destinationWarehouse?->name 
+            ?? $shipment->batch?->route?->destinationWarehouse?->name 
+            ?? 'غير محدد';
         
         $labels = [
             [
@@ -61,7 +63,9 @@ class LabelController extends Controller
 
         $shipment->loadMissing(['packages', 'batch.route.destinationWarehouse']);
         
-        $destination = $shipment->batch?->route?->destinationWarehouse?->name ?? 'غير محدد';
+        $destination = $shipment->destinationWarehouse?->name 
+            ?? $shipment->batch?->route?->destinationWarehouse?->name 
+            ?? 'غير محدد';
         $packages = $shipment->packages()->orderBy('id')->get();
         $totalCount = $packages->count();
         

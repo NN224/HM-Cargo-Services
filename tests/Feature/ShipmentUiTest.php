@@ -12,6 +12,11 @@ use Livewire\Livewire;
 beforeEach(function () {
     $warehouse = Warehouse::create(['name' => 'Dubai', 'location' => 'UAE']);
 
+    // Where the cargo is going, as opposed to where it is accepted. A shipment
+    // declares this itself so that assigning it to a batch bound elsewhere can
+    // be refused (data-model.md §7).
+    $this->destination = Warehouse::create(['name' => 'Damascus', 'location' => 'Syria']);
+
     $this->admin = User::create([
         'name' => 'مدير', 'email' => 'admin@hmcargo.test',
         'password' => 'secret', 'role' => UserRole::Administrator,
@@ -29,6 +34,7 @@ test('a shipment with several packages can be created from the panel', function 
             'customer_id' => $this->customer->id,
             'recipient_name' => 'سامي',
             'recipient_phone' => '+9613000001',
+            'destination_warehouse_id' => $this->destination->id,
             'packages' => [
                 ['weight_kg' => 2.5, 'description' => 'ملابس'],
                 ['weight_kg' => 1.25, 'description' => 'أدوات'],
@@ -66,6 +72,7 @@ test('a shipment cannot be saved without at least one package', function () {
             'customer_id' => $this->customer->id,
             'recipient_name' => 'سامي',
             'recipient_phone' => '+9613000001',
+            'destination_warehouse_id' => $this->destination->id,
             'packages' => [],
         ])
         ->call('create')

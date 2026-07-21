@@ -34,6 +34,7 @@ class BatchAssignmentService
             $this->guardShipmentIsFree($shipment);
             $this->guardBatchAcceptsShipments($batch);
             $this->guardShipmentHasWeight($shipment);
+            $this->guardDestinationMatches($shipment, $batch);
 
             $rate = $this->resolveRate($shipment, $batch);
 
@@ -84,6 +85,22 @@ class BatchAssignmentService
         if ((float) $shipment->total_weight_kg <= 0) {
             throw new DomainException(
                 "الشحنة {$shipment->reference} بلا وزن. أضف طروداً قبل تسعيرها."
+            );
+        }
+    }
+
+    private function guardDestinationMatches(Shipment $shipment, Batch $batch): void
+    {
+        // Legacy shipments might not have a destination warehouse.
+        if ($shipment->destination_warehouse_id === null) {
+            return;
+        }
+
+        if ($shipment->destination_warehouse_id !== $batch->route->destination_warehouse_id) {
+            $shipmentDest = $shipment->destinationWarehouse->name;
+            $batchDest = $batch->route->destinationWarehouse->name;
+            throw new DomainException(
+                "الشحنة متجهة إلى {$shipmentDest}، بينما مسار الرحلة ينتهي في {$batchDest}. لا يمكن إسنادها."
             );
         }
     }

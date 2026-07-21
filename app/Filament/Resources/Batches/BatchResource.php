@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Batches;
 
 use App\Enums\BatchStatus;
 use App\Enums\Capability;
+use App\Filament\Resources\Batches\Pages\BatchReport;
 use App\Filament\Resources\Batches\Pages\CreateBatch;
 use App\Filament\Resources\Batches\Pages\EditBatch;
 use App\Filament\Resources\Batches\Pages\ListBatches;
@@ -160,6 +161,7 @@ class BatchResource extends Resource
             'create' => CreateBatch::route('/create'),
             'view' => ViewBatch::route('/{record}'),
             'edit' => EditBatch::route('/{record}/edit'),
+            'report' => BatchReport::route('/{record}/report'),
         ];
     }
 }

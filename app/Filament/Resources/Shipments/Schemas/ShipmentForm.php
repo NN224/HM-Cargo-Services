@@ -28,8 +28,16 @@ class ShipmentForm
                             ->required()
                             ->live()
                             ->helperText('العميل الذي تُحتسب عليه الفاتورة. قد يكون غير المستلم.'),
+
+                        Select::make('destination_warehouse_id')
+                            ->label('مستودع الوجهة')
+                            ->relationship('destinationWarehouse', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->required(fn (string $operation): bool => $operation === 'create')
+                            ->helperText('الوجهة النهائية للشحنة. إلزامي للشحنات الجديدة.'),
                     ])
-                    ->columns(1),
+                    ->columns(2),
 
                 Section::make('المستلم')
                     ->description('الاسم والهاتف فقط. العنوان يأخذه فريق التوصيل عند التسليم.')

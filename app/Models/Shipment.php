@@ -29,6 +29,7 @@ class Shipment extends Model
         'customer_id',
         'recipient_name',
         'recipient_phone',
+        'destination_warehouse_id',
         'status',
         'reference',
         'public_token',
@@ -95,6 +96,12 @@ class Shipment extends Model
     public function batch(): BelongsTo
     {
         return $this->belongsTo(Batch::class);
+    }
+
+    /** @return BelongsTo<Warehouse, $this> */
+    public function destinationWarehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class, 'destination_warehouse_id');
     }
 
     /**

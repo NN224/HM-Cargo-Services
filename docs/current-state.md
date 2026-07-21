@@ -1,7 +1,7 @@
 # Current State — Handoff
 
 **Last updated:** 2026-07-21, end of session
-**Tests:** 155 passing, 495 assertions, working tree clean
+**Tests:** 177 passing, 563 assertions, working tree clean
 
 Read this first if you are picking the project up. It says what exists, what
 does not, and what to do next. The binding rules live in [`../AGENTS.md`](../AGENTS.md)
@@ -21,13 +21,17 @@ arrived. Record full, partial and account-level payments with oldest-first
 allocation and reversals. Follow a shipment from the public tracking page
 without logging in.
 
+It also prints A4 labels, hands off to WhatsApp, and produces a customer
+statement and a batch report.
+
 ## What it cannot do yet
 
-No A4 barcode labels, no WhatsApp handoff, no customer statements, no
-operational reports. The Node prototype has not been removed and production
-still runs on SQLite rather than PostgreSQL.
+Operational reports by warehouse, route and date range are not built.
+Production still runs on SQLite rather than PostgreSQL.
 
-What remains is real, but it is no longer the operational half.
+The feature set specified for version 1 is otherwise complete. That is not the
+same as ready: none of it has been used against real cargo, and no operator
+has tried the scan flow on a real phone in a real warehouse.
 
 ---
 
@@ -46,22 +50,29 @@ What remains is real, but it is no longer the operational half.
 | Collection gate — all active packages must have arrived | done |
 | Payments, oldest-first allocation, reversals | done, with screen |
 | Public tracking on `/track/{token}`, rate limited | done |
+| A4 labels and phone barcode display, no price printed | done |
+| One-click WhatsApp arrival message, no paid API | done |
+| Customer statement, reconciled against the ledger | done |
+| Batch report — counts, weight, revenue, cost, profit | done |
+| Shipment destination, enforced against the batch route | done |
 
 ## Not built
 
-- A4 labels, WhatsApp link, statements, reports
-- Removal of `legacy-node-prototype/` (Phase 6)
+- Operational reports by warehouse, route and date range
 - PostgreSQL (Phase 7)
 
 ---
 
 ## Suggested next step
 
-Phase 6: remove `legacy-node-prototype/`. It is dead weight that has already
-misled one review into auditing it as if it were the product.
+Try it against a real shipment before adding anything else. The feature list
+is close to complete and entirely unexercised: every one of the 177 tests was
+written by the same session that wrote the code it tests. A single real
+shipment — created in Dubai, priced into a batch, scanned in, collected and
+paid — will find more than the next feature would.
 
-Then the remaining operator conveniences — A4 labels and the WhatsApp link —
-before PostgreSQL in Phase 7.
+Then PostgreSQL in Phase 7, and operational reports if they are still wanted
+once the statement and batch report have been used.
 
 ---
 

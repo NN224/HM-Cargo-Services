@@ -221,8 +221,12 @@ class ReceiveIntoBatch extends Page
 
         $batch = Batch::findOrFail($state['batch_id']);
 
+        // canAccess() already guarantees an authenticated App\Models\User for
+        // this page, so this is never null here.
+        $actor = auth()->user();
+
         try {
-            $shipment = app(BatchIntakeService::class)->receive($batch, $state);
+            $shipment = app(BatchIntakeService::class)->receive($batch, $state, $actor);
 
             Notification::make()
                 ->title('تم الاستلام')

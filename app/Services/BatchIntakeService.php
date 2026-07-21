@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Enums\Capability;
 use App\Models\Batch;
 use App\Models\Customer;
 use App\Models\CustomerRate;
 use App\Models\Shipment;
+use App\Models\User;
 use DomainException;
 use Illuminate\Support\Facades\DB;
 
@@ -30,12 +32,16 @@ class BatchIntakeService
 
     /**
      * @param  array<string, mixed>  $data
+     * @param  User  $actor  The user performing the intake. Required — not
+     *                       read from auth() — so the capability guard below
+     *                       is explicit and testable, matching
+     *                       PaymentService::reversePayment().
      *
      * @throws DomainException when the intake cannot be completed
      */
-    public function receive(Batch $batch, array $data): Shipment
+    public function receive(Batch $batch, array $data, User $actor): Shipment
     {
-        return DB::transaction(function () use ($batch, $data): Shipment {
+        return DB::transaction(function () use ($batch, $data, $actor): Shipment {
             $packages = $data['packages'] ?? [];
 
             if ($packages === []) {
@@ -44,7 +50,7 @@ class BatchIntakeService
 
             $customer = Customer::findOrFail($data['customer_id']);
 
-            $this->recordAgreedRateIfMissing($customer, $batch, $data);
+            $this->recordAgreedRateIfMissing($customer, $batch, $data, $actor);
 
             [$name, $phone] = $this->resolveRecipient($customer, $data);
 
@@ -99,9 +105,20 @@ class BatchIntakeService
      * the rates screen behind its confirmation, not to a side effect of
      * receiving boxes.
      *
+     * The Filament form only shows this field to a user holding
+     * Capability::ManageCustomers (see ReceiveIntoBatch::needsAgreedRate()),
+     * but that is a UI convenience, not authorization — AGENTS.md is explicit
+     * that authorization belongs in backend guards, never in hiding a field.
+     * A crafted Livewire property update could otherwise reach this method
+     * with a value for a user never entitled to set it, so the check is
+     * repeated here regardless of how the value arrived.
+     *
      * @param  array<string, mixed>  $data
+     *
+     * @throws DomainException when the acting user may not set a rate, or
+     *                          when the supplied value is invalid
      */
-    private function recordAgreedRateIfMissing(Customer $customer, Batch $batch, array $data): void
+    private function recordAgreedRateIfMissing(Customer $customer, Batch $batch, array $data, User $actor): void
     {
         $agreed = $data['agreed_rate_per_kg_cents'] ?? null;
 
@@ -111,6 +128,12 @@ class BatchIntakeService
 
         if ($customer->rateForRoute($batch->route) !== null) {
             return;
+        }
+
+        // An administrator holds every capability implicitly (D-022); the
+        // check below reflects that automatically via hasCapability().
+        if (! $actor->hasCapability(Capability::ManageCustomers)) {
+            throw new DomainException('لا يملك المستخدم صلاحية إدارة العملاء، ولا يمكنه تسجيل سعر متفق عليه.');
         }
 
         if ((int) $agreed <= 0) {

@@ -1,11 +1,13 @@
 <?php
 
 use App\Enums\BatchStatus;
+use App\Enums\UserRole;
 use App\Models\Batch;
 use App\Models\Customer;
 use App\Models\CustomerRate;
 use App\Models\Route;
 use App\Models\Shipment;
+use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\BatchIntakeService;
 
@@ -34,6 +36,14 @@ beforeEach(function () {
     ]);
 
     $this->service = app(BatchIntakeService::class);
+
+    // None of these tests record an agreed rate, so the acting user's
+    // capabilities are irrelevant here — any authenticated actor will do.
+    $this->actor = User::create([
+        'name' => 'موظف', 'email' => 'actor@hmcargo.test',
+        'password' => 'secret', 'role' => UserRole::WarehouseEmployee,
+        'warehouse_id' => $dubai->id,
+    ]);
 });
 
 test('intake creates a priced shipment attached to the batch', function () {
@@ -44,7 +54,7 @@ test('intake creates a priced shipment attached to the batch', function () {
             ['weight_kg' => 2.5, 'description' => 'ملابس'],
             ['weight_kg' => 1.5, 'description' => null],
         ],
-    ]);
+    ], $this->actor);
 
     expect($shipment->batch_id)->toBe($this->batch->id)
         ->and($shipment->packages)->toHaveCount(2)
@@ -59,7 +69,7 @@ test('the destination comes from the batch route, not from the caller', function
         'customer_id' => $this->customer->id,
         'recipient_is_customer' => true,
         'packages' => [['weight_kg' => 1.0, 'description' => null]],
-    ]);
+    ], $this->actor);
 
     expect($shipment->destination_warehouse_id)->toBe($this->damascus->id);
 });
@@ -69,7 +79,7 @@ test('the recipient defaults to the customer', function () {
         'customer_id' => $this->customer->id,
         'recipient_is_customer' => true,
         'packages' => [['weight_kg' => 1.0, 'description' => null]],
-    ]);
+    ], $this->actor);
 
     expect($shipment->recipient_name)->toBe('أحمد')
         ->and($shipment->recipient_phone)->toBe('+971500000001');
@@ -82,7 +92,7 @@ test('a different recipient is kept when given', function () {
         'recipient_name' => 'سامي',
         'recipient_phone' => '+9613000001',
         'packages' => [['weight_kg' => 1.0, 'description' => null]],
-    ]);
+    ], $this->actor);
 
     expect($shipment->recipient_name)->toBe('سامي')
         ->and($shipment->recipient_phone)->toBe('+9613000001');
@@ -96,7 +106,7 @@ test('every package gets its own barcode', function () {
             ['weight_kg' => 1.0, 'description' => null],
             ['weight_kg' => 2.0, 'description' => null],
         ],
-    ]);
+    ], $this->actor);
 
     $barcodes = $shipment->packages->pluck('barcode');
 
@@ -110,7 +120,7 @@ test('at least one package is required', function () {
         'customer_id' => $this->customer->id,
         'recipient_is_customer' => true,
         'packages' => [],
-    ]))->toThrow(DomainException::class);
+    ], $this->actor))->toThrow(DomainException::class);
 });
 
 test('a customer with no rate for this route is refused and nothing is written', function () {
@@ -122,7 +132,7 @@ test('a customer with no rate for this route is refused and nothing is written',
         'customer_id' => $stranger->id,
         'recipient_is_customer' => true,
         'packages' => [['weight_kg' => 1.0, 'description' => null]],
-    ]))->toThrow(DomainException::class);
+    ], $this->actor))->toThrow(DomainException::class);
 
     // The whole intake is one transaction: a refusal leaves no orphan
     // shipment or package behind.

@@ -1,4 +1,4 @@
-# Opening a Shipment, and Telling the Two Doors Apart
+# Child Records Belong Inside Their Parent
 
 **Date:** 2026-07-21
 **Status:** Approved by owner
@@ -90,3 +90,56 @@ show packages on a page.
 Recorded so the gap is a known, dated decision rather than something a later
 reader assumes was handled. It joins the same list as the ungated customer
 rates screen and the ungated batch profit report.
+
+---
+
+# Customer Rates Belong Inside the Customer
+
+The same complaint, one screen over: `العملاء` and `أسعار العملاء` are two
+navigation entries for one subject. A rate is a customer's agreed price on a
+route. It has no meaning apart from the customer, and there is no reason to
+hunt for it in a separate list.
+
+## What gets built
+
+A **read-only** rates table on the customer, listing each route and the agreed
+price per kilogram. `أسعار العملاء` stops appearing in the navigation.
+
+Read-only is the whole point of the design. Editing a rate keeps going to the
+existing `EditCustomerRate` page, reached by a link from the row.
+
+## Why not edit them in place
+
+Editing a rate raises a confirmation naming the old and new figures, and that
+confirmation was expensive to get right: `requiresConfirmation()` did not gate
+the real Save button at all, because Filament emits it as a native submit
+button with no Livewire click handler. It only started working once the form
+wrapper was removed and the action was rebuilt as a closure.
+
+An inline edit would be a modal, and a confirmation modal does not stack on a
+form modal the same way. The guard would have to be rebuilt on a different
+mechanism, and its failure mode is silent — the button saves, the modal never
+appears, and nobody notices until a mistyped rate has been billing a customer
+for a month.
+
+So the rate stays editable exactly where it is already tested. What changes is
+where you go looking for it.
+
+## Not in scope
+
+- Deleting `CustomerRateResource`. Its pages remain reachable and remain the
+  place a rate is created and changed; only its navigation entry goes.
+- A customer view page. The rates table attaches to the customer's existing
+  edit page rather than introducing a fourth page for customers.
+
+## Testing
+
+- A customer's rates appear on their page, one row per route, showing the
+  agreed price in dollars.
+- The table offers no inline create or edit — a rate is changed through the
+  page that carries the confirmation, and a test asserts the row's action
+  points there.
+- `أسعار العملاء` no longer registers in the navigation, while its routes stay
+  reachable — asserted separately, since a hidden resource whose pages also
+  disappeared would break the edit link this design depends on.
+- `NavigationTest` drops it from the list of navigation items it checks.

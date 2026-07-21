@@ -1,7 +1,7 @@
 # Current State — Handoff
 
 **Last updated:** 2026-07-21, end of session
-**Tests:** 207 passing, 655 assertions, working tree clean
+**Tests:** 213 passing, 679 assertions, working tree clean
 
 Read this first if you are picking the project up. It says what exists, what
 does not, and what to do next. The binding rules live in [`../AGENTS.md`](../AGENTS.md)
@@ -71,7 +71,7 @@ has tried the scan flow on a real phone in a real warehouse.
 ## Suggested next step
 
 Try it against a real shipment before adding anything else. The feature list
-is close to complete and entirely unexercised: every one of the 207 tests was
+is close to complete and entirely unexercised: every one of the 213 tests was
 written by the same session that wrote the code it tests. A single real
 shipment — created in Dubai, priced into a batch, scanned in, collected and
 paid — will find more than the next feature would.
@@ -159,7 +159,7 @@ a readable staff reference from a 48-character random public token.
 
 ```bash
 php artisan serve          # http://127.0.0.1:8000 redirects to /admin
-php artisan test           # 207 passing
+php artisan test           # 213 passing
 php artisan migrate:fresh --seed   # needs ADMIN_PASSWORD in .env
 ```
 

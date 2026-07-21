@@ -77,6 +77,25 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Whether this user may work on cargo travelling a given route.
+     *
+     * A route touches up to three warehouses, and standing at any one of them
+     * is reason enough: Dubai loads it, Beirut handles it in transit, Damascus
+     * receives it. An employee assigned to none of them has no business with
+     * that cargo.
+     *
+     * This lives on the user rather than on a Filament resource because both
+     * the panel and the intake service ask it, and a domain service must not
+     * have to reach into the presentation layer for a rule about permissions.
+     */
+    public function canUseRoute(Route $route): bool
+    {
+        return $this->canAccessWarehouse($route->origin_warehouse_id)
+            || $this->canAccessWarehouse($route->transit_warehouse_id)
+            || $this->canAccessWarehouse($route->destination_warehouse_id);
+    }
+
+    /**
      * Whether this user may perform a specific privileged action (D-022).
      *
      * Capabilities grant an action, never another warehouse's data — warehouse

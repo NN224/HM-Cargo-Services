@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\Capability;
-use App\Filament\Resources\Batches\BatchResource;
 use App\Models\Batch;
 use App\Models\Customer;
 use App\Models\CustomerRate;
@@ -86,9 +85,8 @@ class BatchIntakeService
     /**
      * A warehouse employee operates only their assigned warehouse (AGENTS.md).
      * A batch's route is relevant at its origin, transit and destination —
-     * the same rule BatchResource already applies to the batches list and to
-     * everything else batch-scoped, reused here via canUseRoute() rather than
-     * a parallel rule.
+     * the same rule the batches list applies, asked of the user directly
+     * rather than restated here.
      *
      * The Filament page only offers a scoped list of batches, and Filament's
      * own Select validation rejects a tampered id against that same list —
@@ -98,11 +96,11 @@ class BatchIntakeService
      * batch id, is refused identically.
      *
      * @throws DomainException when the actor's warehouse has no part in the
-     *                          batch's route
+     *                         batch's route
      */
     private function guardActorCanUseBatch(Batch $batch, User $actor): void
     {
-        if (BatchResource::canUseRoute($batch->route, $actor)) {
+        if ($actor->canUseRoute($batch->route)) {
             return;
         }
 
@@ -147,7 +145,7 @@ class BatchIntakeService
      * @param  array<string, mixed>  $data
      *
      * @throws DomainException when the acting user may not set a rate, or
-     *                          when the supplied value is invalid
+     *                         when the supplied value is invalid
      */
     private function recordAgreedRateIfMissing(Customer $customer, Batch $batch, array $data, User $actor): void
     {

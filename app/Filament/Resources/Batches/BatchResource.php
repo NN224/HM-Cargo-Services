@@ -130,9 +130,9 @@ class BatchResource extends Resource
             return false;
         }
 
-        return $user->canAccessWarehouse($route->origin_warehouse_id)
-            || $user->canAccessWarehouse($route->transit_warehouse_id)
-            || $user->canAccessWarehouse($route->destination_warehouse_id);
+        // The rule itself lives on User: it is about what a person may touch,
+        // not about how a panel renders. This stays as the panel's way in.
+        return $user->canUseRoute($route);
     }
 
     private static function currentUserCanPrice(): bool

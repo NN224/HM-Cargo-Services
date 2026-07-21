@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\CustomerRates\Pages;
 
 use App\Filament\Resources\CustomerRates\CustomerRateResource;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
@@ -15,6 +16,53 @@ class EditCustomerRate extends EditRecord
         return [
             DeleteAction::make(),
         ];
+    }
+
+    /**
+     * Filament's default Save button is a native `<form>` submit button
+     * (see `EditRecord::hasFormWrapper()`/`getFormContentComponent()`): its
+     * `wire:click` is disabled in favour of the surrounding `<form
+     * wire:submit="save">`, so `requiresConfirmation()` alone never gates
+     * it — clicking Save, or pressing Enter in any field, calls save()
+     * directly. Removing the form wrapper forces both paths through the
+     * Livewire action system instead, where confirmation is actually
+     * enforced before save() runs.
+     */
+    public function hasFormWrapper(): bool
+    {
+        return false;
+    }
+
+    /**
+     * A rate is a standing agreement, not a per-load figure: a slipped
+     * decimal here does not spoil one shipment, it becomes the customer's
+     * price until somebody notices. Confirming names both figures so the
+     * mistake is visible before it is saved.
+     */
+    protected function getSaveFormAction(): Action
+    {
+        return parent::getSaveFormAction()
+            // With hasFormWrapper() false, the parent already sets
+            // ->action('save') (a plain string). A string action is
+            // returned verbatim as the click handler and calls save()
+            // directly, bypassing confirmation — so it must be a Closure
+            // here, which forces the click handler to `mountAction('save')`
+            // and makes `requiresConfirmation()` take effect.
+            ->action(fn () => $this->save())
+            ->requiresConfirmation()
+            ->modalHeading('تغيير سعر متفق عليه')
+            ->modalDescription(function (): string {
+                $old = number_format($this->record->rate_per_kg_cents / 100, 2);
+
+                // The form's TextInput holds dollars in its live state; the
+                // cents conversion (dehydrateStateUsing) only runs inside
+                // save()'s form->getState() call, which happens after this
+                // description is rendered. So the pending value here is
+                // still a dollar amount, not cents — do not divide by 100.
+                $new = number_format((float) ($this->data['rate_per_kg_cents'] ?? 0), 2);
+
+                return "سعر {$this->record->customer->name} على {$this->record->route->name} كان \${$old} — هل تريد تغييره إلى \${$new}؟";
+            });
     }
 
     /**

@@ -248,3 +248,16 @@ A package that is missing or damaged stays part of the shipment's billable weigh
 
 **Scope.** `isActive()` now excludes cancelled packages only. Missing and damaged packages remain active: they count toward billable weight and they block collection until an administrator resolves the exception.
 
+
+## D-024: Receiving cargo is not a pricing decision
+
+**Date:** 2026-07-21  
+**Status:** Approved by owner. Refines D-022 and enables the batch-first intake in `superpowers/specs/2026-07-21-batch-first-intake-design.md`.
+
+A warehouse employee may receive a customer's packages into a batch without holding `price_shipments`. Doing so snapshots the customer's agreed rate and computes the charge, but the employee neither chooses nor sees a figure: the rate per kilogram and the shipment total are hidden from anyone without that capability.
+
+**Why this is not a loophole.** No package moves before its price is agreed with its owner. By the time cargo reaches the counter the number already exists, and the system only multiplies it by a weight. Gating that arithmetic behind the pricing capability would mean an employee without it could not receive cargo at all, which is most of the job.
+
+`price_shipments` therefore gates *setting and changing* a customer's rate, not applying one that is already agreed. Rate changes stay on the customer rates screen, and an existing rate cannot be replaced without a confirmation naming the old and new figures.
+
+**Where an employee may set a rate.** A customer with no rate for the route has no agreement yet, and the system must still refuse to invent one. An employee holding `manage_customers` may record the agreed rate inline while receiving; one without it is refused and told who can supply it. A shipment is never saved unpriced.

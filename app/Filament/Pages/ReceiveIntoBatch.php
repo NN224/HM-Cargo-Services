@@ -141,12 +141,25 @@ class ReceiveIntoBatch extends Page
                         // this route yet, and only to someone entitled to
                         // record the agreement. Everyone else is refused with
                         // a message naming who can supply it.
+                        //
+                        // Every other money field in this system takes dollars
+                        // from the operator and converts to integer cents at
+                        // the boundary (see CustomerRateForm::configure()) —
+                        // this field mirrors that exactly. The key keeps its
+                        // "_cents" name: dehydrateStateUsing() already turns
+                        // the typed dollars into cents before the form state
+                        // ever reaches BatchIntakeService, so the value behind
+                        // this key is cents the same as everywhere else it is
+                        // read.
                         TextInput::make('agreed_rate_per_kg_cents')
-                            ->label('سعر الكيلو المتفق عليه (سنت)')
+                            ->label('سعر الكيلو المتفق عليه (دولار)')
                             ->numeric()
-                            ->minValue(1)
+                            ->minValue(0.01)
+                            ->step(0.01)
+                            ->prefix('$')
                             ->visible(fn (Get $get): bool => $this->needsAgreedRate($get))
                             ->required(fn (Get $get): bool => $this->needsAgreedRate($get))
+                            ->dehydrateStateUsing(fn (?string $state): ?int => $state === null ? null : (int) round(((float) $state) * 100))
                             ->helperText('لا يوجد سعر متفق عليه لهذا العميل على مسار هذه الرحلة.'),
 
                         Repeater::make('packages')

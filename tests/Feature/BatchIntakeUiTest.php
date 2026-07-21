@@ -109,6 +109,37 @@ test('a different recipient is accepted when the box is unticked', function () {
     expect(Shipment::first()->recipient_name)->toBe('سامي');
 });
 
+test('a dollar amount typed for a first agreed rate is stored as cents, not truncated', function () {
+    // Every other money field in the system takes dollars and converts to
+    // cents at the boundary (CustomerRateForm). Before the fix, this field
+    // stored the typed string as-is: (int) "3.50" truncates to 3, pricing
+    // every future load on this route at 3 cents/kg instead of $3.50/kg.
+    $stranger = Customer::create(['name' => 'غريب', 'phone' => '+971500000099']);
+
+    Livewire::actingAs($this->admin)
+        ->test(ReceiveIntoBatch::class)
+        ->fillForm([
+            'batch_id' => $this->batch->id,
+            'customer_id' => $stranger->id,
+            'recipient_is_customer' => true,
+            'agreed_rate_per_kg_cents' => '3.50',
+            'packages' => [['weight_kg' => 2.0, 'description' => null]],
+        ])
+        ->call('receive')
+        ->assertHasNoFormErrors();
+
+    expect(CustomerRate::where('customer_id', $stranger->id)
+        ->where('route_id', $this->route->id)
+        ->value('rate_per_kg_cents'))->toBe(350);
+
+    $shipment = Shipment::where('customer_id', $stranger->id)->firstOrFail();
+
+    // 2.0 kg at 350 cents/kg = 700 cents, computed the same way
+    // BatchAssignmentService::computeCharge() does (bcmul, then round).
+    expect($shipment->rate_per_kg_cents)->toBe(350)
+        ->and($shipment->final_charge_cents)->toBe(700);
+});
+
 test('a customer with no agreed rate is refused and nothing is saved', function () {
     $stranger = Customer::create(['name' => 'غريب', 'phone' => '+971500000099']);
 

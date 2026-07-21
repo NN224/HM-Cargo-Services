@@ -10,9 +10,14 @@ namespace App\Enums;
  */
 enum PackageStatus: string
 {
+    case Created = 'created';
+    case ReceivedOrigin = 'received_origin';
     case Received = 'received';
     case InTransit = 'in_transit';
+    case ArrivedTransit = 'arrived_transit';
+    case DepartedTransit = 'departed_transit';
     case Arrived = 'arrived';
+    case ArrivedDestination = 'arrived_destination';
     case Collected = 'collected';
     case Missing = 'missing';
     case Damaged = 'damaged';
@@ -21,9 +26,14 @@ enum PackageStatus: string
     public function label(): string
     {
         return match ($this) {
+            self::Created => 'تم الإنشاء',
+            self::ReceivedOrigin => 'مستلم في مستودع المنشأ',
             self::Received => 'تم الاستلام',
             self::InTransit => 'في الطريق',
+            self::ArrivedTransit => 'وصل إلى مستودع العبور',
+            self::DepartedTransit => 'غادر مستودع العبور',
             self::Arrived => 'وصل',
+            self::ArrivedDestination => 'وصل إلى مستودع الوجهة',
             self::Collected => 'تم التسليم',
             self::Missing => 'مفقود',
             self::Damaged => 'تالف',
@@ -34,13 +44,18 @@ enum PackageStatus: string
     /**
      * A package that still counts toward its shipment's obligations.
      *
-     * Cancelled, missing and damaged packages are excluded: a shipment must
-     * not be held back from collection by a package that will never arrive
-     * (D-015 gates on active packages only).
+     * Missing and damaged packages remain active because they must block
+     * collection until an administrator resolves the exception. Only an
+     * explicitly cancelled package leaves the shipment obligation.
      */
     public function isActive(): bool
     {
-        return ! in_array($this, [self::Cancelled, self::Missing, self::Damaged], true);
+        return $this !== self::Cancelled;
+    }
+
+    public function isException(): bool
+    {
+        return in_array($this, [self::Missing, self::Damaged], true);
     }
 
     /** @return array<string, string> */

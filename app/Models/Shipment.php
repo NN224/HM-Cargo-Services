@@ -2,15 +2,14 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\GuardsDeletion;
-
+use App\Enums\PackageStatus;
 use App\Enums\ShipmentStatus;
+use App\Models\Concerns\GuardsDeletion;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 /**
  * A shipment: one or more physical packages, billed to one customer.
@@ -162,10 +161,85 @@ class Shipment extends Model
         $this->save();
     }
 
+    /**
+     * Derive the shipment stage from package facts after a scan.
+     *
+     * No batch action calls this to fabricate arrival. The only caller that
+     * advances physical arrival is PackageScanService after it has written the
+     * scanned package itself.
+     */
+    public function recalculateOperationalStatus(): void
+    {
+        $active = $this->packages()
+            ->where('status', '!=', PackageStatus::Cancelled->value);
+        $activeCount = (clone $active)->count();
+
+        if ($activeCount === 0) {
+            return;
+        }
+
+        $hasException = (clone $active)
+            ->whereIn('status', [
+                PackageStatus::Missing->value,
+                PackageStatus::Damaged->value,
+            ])
+            ->exists();
+
+        if ($hasException) {
+            $this->forceFill(['status' => ShipmentStatus::Exception])->save();
+
+            return;
+        }
+
+        $collectedCount = (clone $active)
+            ->where('status', PackageStatus::Collected->value)
+            ->count();
+
+        if ($collectedCount === $activeCount) {
+            $this->forceFill(['status' => ShipmentStatus::Collected])->save();
+
+            return;
+        }
+
+        $destinationCount = (clone $active)
+            ->whereIn('status', [
+                PackageStatus::ArrivedDestination->value,
+                PackageStatus::Collected->value,
+            ])
+            ->count();
+
+        if ($destinationCount === $activeCount) {
+            $this->forceFill(['status' => ShipmentStatus::ReadyForCollection])->save();
+
+            return;
+        }
+
+        if ($destinationCount > 0) {
+            $this->forceFill(['status' => ShipmentStatus::PartialAtDestination])->save();
+
+            return;
+        }
+
+        $transitCount = (clone $active)
+            ->whereIn('status', [
+                PackageStatus::ArrivedTransit->value,
+                PackageStatus::DepartedTransit->value,
+                PackageStatus::ArrivedDestination->value,
+                PackageStatus::Collected->value,
+            ])
+            ->count();
+
+        if ($transitCount === $activeCount) {
+            $this->forceFill(['status' => ShipmentStatus::AtTransit])->save();
+        } elseif ($transitCount > 0) {
+            $this->forceFill(['status' => ShipmentStatus::PartialAtTransit])->save();
+        }
+    }
+
     /** @return array<int, string> */
     private function activePackageStatuses(): array
     {
-        return collect(\App\Enums\PackageStatus::cases())
+        return collect(PackageStatus::cases())
             ->filter(fn ($status) => $status->isActive())
             ->map(fn ($status) => $status->value)
             ->values()

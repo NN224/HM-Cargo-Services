@@ -74,25 +74,39 @@ class Batch extends Model
     }
 
     /**
-     * What the batch cost the company, in cents.
+     * What the batch cost the company, in cents, or null when unknown.
      *
      * Keeps its cents: the manual customer rounding never applies here
      * (D-008, D-020), so profit stays exact.
+     *
+     * Null rather than zero when no rate has been entered. Zero would read as
+     * "this batch was free" and silently overstate profit by the entire
+     * revenue — the one wrong answer nobody would question.
      */
-    public function costCents(): int
+    public function costCents(): ?int
     {
         if ($this->cost_per_kg_cents === null) {
-            return 0;
+            return null;
         }
 
-        $weight = (float) $this->shipments()->sum('total_weight_kg');
+        // bcmul keeps the multiplication in decimal, matching how the customer
+        // charge is computed in BatchAssignmentService. The weight is summed
+        // in SQL because adding decimals in PHP reintroduces float error.
+        $weight = (string) $this->shipments()->sum('total_weight_kg');
 
-        return (int) round($weight * $this->cost_per_kg_cents);
+        return (int) round((float) bcmul($weight, (string) $this->cost_per_kg_cents, 6));
     }
 
-    public function profitCents(): int
+    /** Revenue minus cost, or null while the cost is still unknown. */
+    public function profitCents(): ?int
     {
-        return $this->revenueCents() - $this->costCents();
+        $cost = $this->costCents();
+
+        if ($cost === null) {
+            return null;
+        }
+
+        return $this->revenueCents() - $cost;
     }
 
     /**

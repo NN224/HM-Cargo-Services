@@ -96,4 +96,13 @@ class Package extends Model
     {
         return $this->status->isActive();
     }
+
+    /** Physical arrival at destination is established only by a package scan. */
+    public function hasArrivedAtDestination(): bool
+    {
+        return in_array($this->status, [
+            PackageStatus::ArrivedDestination,
+            PackageStatus::Collected,
+        ], true);
+    }
 }

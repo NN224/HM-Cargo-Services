@@ -2,8 +2,11 @@
 
 namespace App\Filament\Resources\Warehouses\Tables;
 
+use App\Enums\Capability;
+use DomainException;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
@@ -36,9 +39,6 @@ class WarehousesTable
             ])
             ->recordActions([
                 EditAction::make(),
-                // Deactivation is the sanctioned removal path: AGENTS.md forbids
-                // hard-deleting operational records, so this replaces a delete
-                // button rather than sitting beside one.
                 Action::make('toggleActive')
                     ->label(fn ($record): string => $record->is_active ? 'تعطيل' : 'تفعيل')
                     ->icon(fn ($record): string => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
@@ -48,9 +48,31 @@ class WarehousesTable
                     ->modalDescription('السجلات تُعطَّل ولا تُحذف نهائياً، حفاظاً على السجل التاريخي.')
                     ->visible(fn (): bool => auth()->user()?->isAdministrator() ?? false)
                     ->action(fn ($record) => $record->update(['is_active' => ! $record->is_active])),
+                Action::make('delete')
+                    ->label('حذف')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->visible(fn (): bool => auth()->user()?->hasCapability(Capability::DeleteRecords) ?? false)
+                    ->authorize(fn ($record): bool => auth()->user()?->hasCapability(Capability::DeleteRecords) ?? false)
+                    ->requiresConfirmation()
+                    ->modalHeading('حذف السجل')
+                    ->modalDescription('هل أنت متأكد من حذف هذا السجل نهائياً؟ لا يمكن التراجع عن هذا الإجراء.')
+                    ->action(function ($record): void {
+                        try {
+                            $record->deleteSafely();
+                            Notification::make()
+                                ->title('تم الحذف')
+                                ->success()
+                                ->send();
+                        } catch (DomainException $e) {
+                            Notification::make()
+                                ->title('لا يمكن الحذف')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
             ])
-            // No delete or bulk-delete action. Operational records are never
-            // hard-deleted; deactivate via the is_active toggle instead.
             ->toolbarActions([]);
     }
 }

@@ -102,10 +102,14 @@ class ViewShipment extends ViewRecord
 
     /**
      * Format a decimal(12,4) weight for display only; the stored value stays exact.
+     *
+     * Weight never travels as float in this project — it arrives here as the
+     * numeric string produced by the model's decimal:4 cast. number_format()
+     * accepts a numeric string directly, so no cast to float is needed.
      */
-    private function formatWeight(string|float $weightKg): string
+    private function formatWeight(string $weightKg): string
     {
-        $trimmed = rtrim(rtrim(number_format((float) $weightKg, 4, '.', ''), '0'), '.');
+        $trimmed = rtrim(rtrim(number_format($weightKg, 4, '.', ''), '0'), '.');
 
         return ($trimmed === '' ? '0' : $trimmed).' كغ';
     }

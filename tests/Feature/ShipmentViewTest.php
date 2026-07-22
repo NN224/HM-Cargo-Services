@@ -79,6 +79,25 @@ test('a cancelled package is still listed', function () {
         ->assertSee(PackageStatus::Cancelled->label());
 });
 
+test('an exception package is coloured danger and an arrived package is coloured success', function () {
+    // This is the one guard that stops the page's whole reason for existing
+    // from silently regressing: if a Missing box ever rendered with the same
+    // colour as an arrived one, the operator would have no visual cue to catch
+    // it. Filament's badge colour classes are 'fi-color-{name}' (see
+    // vendor/filament/support/src/Colors/ColorManager.php:131) — asserted
+    // literally here rather than guessed.
+    $arrived = $this->shipment->packages()->create(['weight_kg' => 1.0]);
+    $missing = $this->shipment->packages()->create(['weight_kg' => 1.0]);
+
+    $arrived->forceFill(['status' => PackageStatus::ArrivedDestination])->save();
+    $missing->forceFill(['status' => PackageStatus::Missing])->save();
+
+    Livewire::actingAs($this->admin)
+        ->test(ViewShipment::class, ['record' => $this->shipment->getRouteKey()])
+        ->assertSee('fi-color-success', false)
+        ->assertSee('fi-color-danger', false);
+});
+
 test('the supplier barcode is shown when one was recorded', function () {
     $this->shipment->packages()->create([
         'weight_kg' => 1.0,

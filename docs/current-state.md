@@ -1,7 +1,7 @@
 # Current State — Handoff
 
 **Last updated:** 2026-07-21, end of session
-**Tests:** 239 passing, 764 assertions, working tree clean
+**Tests:** 252 passing, 789 assertions, working tree clean
 
 Read this first if you are picking the project up. It says what exists, what
 does not, and what to do next. The binding rules live in [`../AGENTS.md`](../AGENTS.md)
@@ -61,6 +61,7 @@ has tried the scan flow on a real phone in a real warehouse.
 | Shipment destination, enforced against the batch route | done |
 | Batch-first intake — receive cargo into an open batch | done |
 | Shipment view with its packages, per-package status | done |
+| Money screens gated by capability; shared locked-page notice | done |
 
 ## Not built
 
@@ -72,7 +73,7 @@ has tried the scan flow on a real phone in a real warehouse.
 ## Suggested next step
 
 Try it against a real shipment before adding anything else. The feature list
-is close to complete and entirely unexercised: every one of the 239 tests was
+is close to complete and entirely unexercised: every one of the 252 tests was
 written by the same session that wrote the code it tests. A single real
 shipment — created in Dubai, priced into a batch, scanned in, collected and
 paid — will find more than the next feature would.
@@ -97,6 +98,7 @@ rules, so do not act on the originals without reading these.
 | D-022 | Two roles plus five fixed capability switches — not a permission matrix |
 | D-023 | A missing or damaged package stays in the billable weight. Only cancellation removes it |
 | D-024 | Receiving cargo applies an agreed rate — it is not a pricing decision |
+| D-025 | Employees see every shipment; batches stay warehouse-scoped |
 
 ---
 
@@ -125,14 +127,27 @@ predicate is shared by pricing and by an operational gate, change it only with
 a test on each side.
 
 **A pattern applied by hand, screen by screen, misses screens.** Visibility
-gating was written per-resource, and it was left off six of them — the
+gating was written per-resource, and it was left off several — the standalone
 customer-rates screen and the batch profit report exposed money to any
 employee, while the identical figures were correctly gated on the
-profitability widget. Navigation sort and icons were set per-screen too, and
-two collided. When a rule must hold across every screen, a test that
-enumerates them all catches the omission the hand cannot (see
-`NavigationTest`); `ShipmentResource` still has no scoping and is recorded as
-a known gap, not an oversight.
+profitability widget. Both are now closed (the report renders locked; the
+rates resource 403s a direct URL). Navigation sort and icons were set
+per-screen too, and two collided. When a rule must hold across every screen, a
+test that enumerates them all catches the omission the hand cannot (see
+`NavigationTest`). Shipments staying unscoped is now a recorded decision
+(D-025), not a gap.
+
+**Locate a leak by which page can reach the data, not which page renders it.**
+Closing the rates leak first targeted the rates section on the customer edit
+page — but that page already requires the customers capability to open, so no
+employee ever reached it. The real leak was the standalone `CustomerRateResource`:
+hidden from the navigation but with its routes still registered and no guard,
+so a direct URL served every rate. A test written against the wrong page will
+pass while the leak stays open one screen over, and the fix for the wrong page
+widened an unrelated policy to make its test reachable. Before gating a screen,
+confirm an unauthorised user can actually reach it today — an `assertForbidden`
+against the real URL, not an `assertDontSee` on a page they were already
+barred from.
 
 **Read before you write, including files another agent just touched.** Work
 here often runs several agents against one working tree. A file that looks
@@ -170,7 +185,7 @@ a readable staff reference from a 48-character random public token.
 
 ```bash
 php artisan serve          # http://127.0.0.1:8000 redirects to /admin
-php artisan test           # 239 passing
+php artisan test           # 252 passing
 php artisan migrate:fresh --seed   # needs ADMIN_PASSWORD in .env
 ```
 

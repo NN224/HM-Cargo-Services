@@ -2,21 +2,37 @@
 
 namespace App\Filament\Resources\Batches\Pages;
 
+use App\Enums\Capability;
+use App\Filament\Concerns\LocksWhenUnauthorized;
 use App\Filament\Resources\Batches\BatchResource;
+use App\Models\User;
 use App\Services\BatchReportService;
-use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class BatchReport extends ViewRecord
 {
+    use LocksWhenUnauthorized;
+
     protected static string $resource = BatchResource::class;
 
     protected static ?string $title = 'تقرير الرحلة';
 
     public function infolist(Schema $schema): Schema
     {
+        $user = auth()->user();
+
+        // The report carries cost and profit. An employee without the pricing
+        // capability meets the lock instead — the same numbers are gated on
+        // the profitability widget, and this page had simply been missed.
+        if (! $user instanceof User || ! $user->hasCapability(Capability::PriceShipments)) {
+            return $schema->components([
+                $this->lockNotice($this->capabilityLockReason(Capability::PriceShipments)),
+            ]);
+        }
+
         $batch = $this->record;
         $report = (new BatchReportService)->getReport($batch);
 

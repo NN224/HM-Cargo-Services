@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Shipments;
 use App\Filament\Resources\Shipments\Pages\CreateShipment;
 use App\Filament\Resources\Shipments\Pages\EditShipment;
 use App\Filament\Resources\Shipments\Pages\ListShipments;
+use App\Filament\Resources\Shipments\Pages\ViewShipment;
 use App\Filament\Resources\Shipments\Schemas\ShipmentForm;
 use App\Filament\Resources\Shipments\Tables\ShipmentsTable;
 use App\Models\Shipment;
@@ -55,6 +56,7 @@ class ShipmentResource extends Resource
         return [
             'index' => ListShipments::route('/'),
             'create' => CreateShipment::route('/create'),
+            'view' => ViewShipment::route('/{record}'),
             'edit' => EditShipment::route('/{record}/edit'),
         ];
     }

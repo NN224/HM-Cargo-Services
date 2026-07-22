@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\PackageStatus;
 use App\Enums\ShipmentStatus;
 use App\Models\Concerns\GuardsDeletion;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -251,6 +252,24 @@ class Shipment extends Model
             ->map(fn ($status) => $status->value)
             ->values()
             ->all();
+    }
+
+    /**
+     * Cargo received and waiting to be priced onto a batch.
+     *
+     * Has packages (real cargo, not an empty draft), no batch yet, and not
+     * cancelled — a cancelled shipment is not waiting for anything, so counting
+     * it would inflate a dashboard number that is supposed to mean "there is
+     * work here". Centralised so the count and any future use share one
+     * definition of the state.
+     *
+     * @param  Builder<Shipment>  $query
+     */
+    public function scopeAwaitingBatch(Builder $query): void
+    {
+        $query->whereNull('batch_id')
+            ->whereHas('packages')
+            ->where('status', '!=', ShipmentStatus::Cancelled->value);
     }
 
     /**

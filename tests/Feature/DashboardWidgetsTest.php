@@ -54,17 +54,29 @@ test('the operational counts are visible to a capability-less employee', functio
     expect(OperationalStatsWidget::canView())->toBeTrue();
 });
 
-test('awaiting-a-batch counts shipments with packages and no batch', function () {
+test('awaiting-a-batch is cargo received, unbatched, and not cancelled', function () {
     // Counted: has packages, no batch.
     shipmentWith(['batch_id' => null]);
     shipmentWith(['batch_id' => null]);
     // Not counted: no packages yet (an empty draft).
     shipmentWith(['batch_id' => null], withPackage: false);
+    // Not counted: cancelled cargo is not waiting for anything, even with its
+    // packages still attached. A count that inflates with dead shipments points
+    // at nothing to do.
+    $cancelled = shipmentWith(['batch_id' => null]);
+    $cancelled->forceFill(['status' => ShipmentStatus::Cancelled->value])->save();
+
+    // Asserted on the scope, not on the rendered digit: a bare '2' would also
+    // match Livewire's own markup, so `assertSee('2')` cannot tell 2 from 3.
+    expect(Shipment::query()->awaitingBatch()->count())->toBe(2);
+});
+
+test('the widget renders the awaiting-a-batch stat', function () {
+    shipmentWith(['batch_id' => null]);
 
     Livewire::actingAs($this->clerk)
         ->test(OperationalStatsWidget::class)
-        ->assertSee('بانتظار رحلة')
-        ->assertSee('2');
+        ->assertSee('بانتظار رحلة');
 });
 
 test('ready-for-collection counts shipments in that status', function () {

@@ -9,6 +9,7 @@ use App\Services\WhatsAppMessageService;
 use DomainException;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -72,6 +73,8 @@ class ShipmentsTable
             ])
             ->defaultSort('created_at', 'desc')
             ->recordActions([
+                ViewAction::make(),
+
                 EditAction::make(),
 
                 Action::make('copyTrackingLink')

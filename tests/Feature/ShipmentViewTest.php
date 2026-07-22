@@ -108,3 +108,12 @@ test('the supplier barcode is shown when one was recorded', function () {
         ->test(ViewShipment::class, ['record' => $this->shipment->getRouteKey()])
         ->assertSee('SUP-99887');
 });
+
+test('the list offers a way into a shipment', function () {
+    // A view page nobody can reach is not a feature.
+    $this->shipment->packages()->create(['weight_kg' => 1.0]);
+
+    Livewire::actingAs($this->admin)
+        ->test(\App\Filament\Resources\Shipments\Pages\ListShipments::class)
+        ->assertTableActionVisible('view', $this->shipment->id);
+});

@@ -74,16 +74,8 @@ test('it shows a customer who owes, and its figure, and hides one who is settled
 test('it orders debtors by outstanding balance, largest first', function () {
     $damascus = Warehouse::where('name', 'Damascus')->firstOrFail();
 
-    // Owes $80, paid nothing.
-    $biggerDebtor = Customer::create(['name' => 'مدين أكبر', 'phone' => '+971500000003']);
-    $s3 = Shipment::create([
-        'customer_id' => $biggerDebtor->id,
-        'recipient_name' => 'ع', 'recipient_phone' => '+9613000003',
-        'destination_warehouse_id' => $damascus->id,
-    ]);
-    $s3->forceFill(['final_charge_cents' => 8000])->save();
-
-    // Owes $30, paid nothing.
+    // Created first but owes less ($30, paid nothing) — if the DESC ordering
+    // were dropped, insertion order would put this before the bigger debtor.
     $smallerDebtor = Customer::create(['name' => 'مدين أصغر', 'phone' => '+971500000004']);
     $s4 = Shipment::create([
         'customer_id' => $smallerDebtor->id,
@@ -91,6 +83,15 @@ test('it orders debtors by outstanding balance, largest first', function () {
         'destination_warehouse_id' => $damascus->id,
     ]);
     $s4->forceFill(['final_charge_cents' => 3000])->save();
+
+    // Created second but owes more ($80, paid nothing).
+    $biggerDebtor = Customer::create(['name' => 'مدين أكبر', 'phone' => '+971500000003']);
+    $s3 = Shipment::create([
+        'customer_id' => $biggerDebtor->id,
+        'recipient_name' => 'ع', 'recipient_phone' => '+9613000003',
+        'destination_warehouse_id' => $damascus->id,
+    ]);
+    $s3->forceFill(['final_charge_cents' => 8000])->save();
 
     Livewire::actingAs($this->admin)
         ->test(CustomersInDebtWidget::class)

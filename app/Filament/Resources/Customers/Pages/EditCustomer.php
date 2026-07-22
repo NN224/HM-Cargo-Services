@@ -2,11 +2,9 @@
 
 namespace App\Filament\Resources\Customers\Pages;
 
-use App\Enums\Capability;
 use App\Filament\Resources\CustomerRates\CustomerRateResource;
 use App\Filament\Resources\Customers\CustomerResource;
 use App\Models\CustomerRate;
-use App\Models\User;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Pages\EditRecord;
@@ -45,15 +43,6 @@ class EditCustomer extends EditRecord
      */
     private function ratesSection(): array
     {
-        $user = auth()->user();
-
-        // The rate per kilogram is money (D-024). An employee without the
-        // customers capability still needs the rest of this page to receive
-        // cargo, so the section is omitted rather than the page locked.
-        if (! $user instanceof User || ! $user->hasCapability(Capability::ManageCustomers)) {
-            return [];
-        }
-
         $rates = $this->record->rates()->with('route')->get();
 
         return [

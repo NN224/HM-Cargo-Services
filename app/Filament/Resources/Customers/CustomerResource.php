@@ -28,11 +28,6 @@ class CustomerResource extends Resource
 
     protected static ?string $pluralModelLabel = 'العملاء';
 
-    // Without this, the edit page's title falls back to the generic model
-    // label ("عميل") instead of the customer's own name — same convention
-    // as ShipmentResource/BatchResource, just never added here.
-    protected static ?string $recordTitleAttribute = 'name';
-
     protected static string|UnitEnum|null $navigationGroup = 'العملاء والمال';
 
     protected static ?int $navigationSort = 1;

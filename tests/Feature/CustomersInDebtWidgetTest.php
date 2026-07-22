@@ -70,3 +70,29 @@ test('it shows a customer who owes, and its figure, and hides one who is settled
         ->assertSee('$50.00')
         ->assertDontSee('مسدّد');
 });
+
+test('it orders debtors by outstanding balance, largest first', function () {
+    $damascus = Warehouse::where('name', 'Damascus')->firstOrFail();
+
+    // Owes $80, paid nothing.
+    $biggerDebtor = Customer::create(['name' => 'مدين أكبر', 'phone' => '+971500000003']);
+    $s3 = Shipment::create([
+        'customer_id' => $biggerDebtor->id,
+        'recipient_name' => 'ع', 'recipient_phone' => '+9613000003',
+        'destination_warehouse_id' => $damascus->id,
+    ]);
+    $s3->forceFill(['final_charge_cents' => 8000])->save();
+
+    // Owes $30, paid nothing.
+    $smallerDebtor = Customer::create(['name' => 'مدين أصغر', 'phone' => '+971500000004']);
+    $s4 = Shipment::create([
+        'customer_id' => $smallerDebtor->id,
+        'recipient_name' => 'غ', 'recipient_phone' => '+9613000004',
+        'destination_warehouse_id' => $damascus->id,
+    ]);
+    $s4->forceFill(['final_charge_cents' => 3000])->save();
+
+    Livewire::actingAs($this->admin)
+        ->test(CustomersInDebtWidget::class)
+        ->assertCanSeeTableRecords([$biggerDebtor, $smallerDebtor], inOrder: true);
+});

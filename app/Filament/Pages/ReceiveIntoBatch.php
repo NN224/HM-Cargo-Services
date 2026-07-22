@@ -73,7 +73,7 @@ class ReceiveIntoBatch extends Page
         return $schema
             ->components([
                 Section::make('بيانات الاستلام')
-                    ->description('اختر الرحلة والعميل ثم أدخل أوزان الطرود.')
+                    ->description('استلام مباشر في رحلة مفتوحة — يُسعَّر فوراً بسعر العميل المتفق عليه.')
                     ->schema([
                         Select::make('batch_id')
                             ->label('الرحلة')

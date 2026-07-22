@@ -19,6 +19,10 @@ class ShipmentForm
         return $schema
             ->components([
                 Section::make('تفاصيل الشحنة')
+                    // The operator has two ways to create a shipment. Naming
+                    // the situation each one serves is cheaper than expecting
+                    // them to infer it from which fields are present.
+                    ->description('شحنة غير مرتبطة برحلة بعد — تُسعَّر عند إسنادها لاحقاً.')
                     ->schema([
                         Select::make('customer_id')
                             ->label('العميل المُحاسَب')

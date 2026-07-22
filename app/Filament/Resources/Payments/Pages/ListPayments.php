@@ -37,7 +37,11 @@ class ListPayments extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            // Hidden when the page is locked, so a locked screen carries no
+            // "record payment" button that only dead-ends at a 403. canCreate
+            // still enforces it — this is the button matching that rule.
+            Actions\CreateAction::make()
+                ->visible(fn (): bool => PaymentResource::canCreate()),
         ];
     }
 }

@@ -50,7 +50,7 @@ class PaymentTest extends TestCase
     public function test_payment_resource_access_controlled_by_capability(): void
     {
         $warehouse = Warehouse::create(['name' => 'Dubai', 'location' => 'UAE']);
-        
+
         $employeeWithoutCapability = User::factory()->create([
             'role' => UserRole::WarehouseEmployee,
             'warehouse_id' => $warehouse->id,
@@ -62,9 +62,14 @@ class PaymentTest extends TestCase
             'capabilities' => [Capability::RecordPayments->value],
         ]);
 
+        // The page is reachable by any authenticated user now — it renders
+        // itself locked rather than 403ing, so an employee learns payments
+        // exist and are not theirs instead of finding the screen missing.
+        // The capability still gates whether the real list (or a locked
+        // notice) is what renders; PaymentsLockTest covers that content.
         $this->actingAs($employeeWithoutCapability)
             ->get(PaymentResource::getUrl('index'))
-            ->assertForbidden();
+            ->assertSuccessful();
 
         $this->actingAs($employeeWithCapability)
             ->get(PaymentResource::getUrl('index'))

@@ -70,6 +70,11 @@ class BatchIntakeService
                 $shipment->packages()->create([
                     'weight_kg' => $package['weight_kg'],
                     'description' => $package['description'] ?? null,
+                    // The supplier's own label, when the box carries one. The
+                    // shipment form has always captured this; intake did not,
+                    // so the same box recorded different facts depending on
+                    // which screen received it.
+                    'source_barcode' => $package['source_barcode'] ?? null,
                 ]);
             }
 

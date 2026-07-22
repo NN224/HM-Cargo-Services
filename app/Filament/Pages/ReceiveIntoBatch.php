@@ -195,6 +195,9 @@ class ReceiveIntoBatch extends Page
 
                                 TextInput::make('description')
                                     ->label('وصف اختياري'),
+
+                                TextInput::make('source_barcode')
+                                    ->label('باركود المورّد (اختياري)'),
                             ])
                             ->minItems(1)
                             ->defaultItems(1)

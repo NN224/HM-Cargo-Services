@@ -138,3 +138,26 @@ test('a customer with no rate for this route is refused and nothing is written',
     // shipment or package behind.
     expect(Shipment::count())->toBe($before);
 });
+
+test('a supplier barcode given at intake reaches the package', function () {
+    // The same box must capture the same facts through either door.
+    $shipment = $this->service->receive($this->batch, [
+        'customer_id' => $this->customer->id,
+        'recipient_is_customer' => true,
+        'packages' => [
+            ['weight_kg' => 1.0, 'description' => null, 'source_barcode' => 'SUP-4471'],
+        ],
+    ], $this->actor);
+
+    expect($shipment->packages->first()->source_barcode)->toBe('SUP-4471');
+});
+
+test('a package with no supplier barcode is still accepted', function () {
+    $shipment = $this->service->receive($this->batch, [
+        'customer_id' => $this->customer->id,
+        'recipient_is_customer' => true,
+        'packages' => [['weight_kg' => 1.0, 'description' => null]],
+    ], $this->actor);
+
+    expect($shipment->packages->first()->source_barcode)->toBeNull();
+});

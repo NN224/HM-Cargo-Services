@@ -1,7 +1,7 @@
 # Current State — Handoff
 
 **Last updated:** 2026-07-21, end of session
-**Tests:** 213 passing, 679 assertions, working tree clean
+**Tests:** 239 passing, 764 assertions, working tree clean
 
 Read this first if you are picking the project up. It says what exists, what
 does not, and what to do next. The binding rules live in [`../AGENTS.md`](../AGENTS.md)
@@ -60,6 +60,7 @@ has tried the scan flow on a real phone in a real warehouse.
 | Batch report — counts, weight, revenue, cost, profit | done |
 | Shipment destination, enforced against the batch route | done |
 | Batch-first intake — receive cargo into an open batch | done |
+| Shipment view with its packages, per-package status | done |
 
 ## Not built
 
@@ -71,7 +72,7 @@ has tried the scan flow on a real phone in a real warehouse.
 ## Suggested next step
 
 Try it against a real shipment before adding anything else. The feature list
-is close to complete and entirely unexercised: every one of the 213 tests was
+is close to complete and entirely unexercised: every one of the 239 tests was
 written by the same session that wrote the code it tests. A single real
 shipment — created in Dubai, priced into a batch, scanned in, collected and
 paid — will find more than the next feature would.
@@ -123,6 +124,16 @@ because the form copied their empty warehouse into a not-null column. When a
 predicate is shared by pricing and by an operational gate, change it only with
 a test on each side.
 
+**A pattern applied by hand, screen by screen, misses screens.** Visibility
+gating was written per-resource, and it was left off six of them — the
+customer-rates screen and the batch profit report exposed money to any
+employee, while the identical figures were correctly gated on the
+profitability widget. Navigation sort and icons were set per-screen too, and
+two collided. When a rule must hold across every screen, a test that
+enumerates them all catches the omission the hand cannot (see
+`NavigationTest`); `ShipmentResource` still has no scoping and is recorded as
+a known gap, not an oversight.
+
 **Read before you write, including files another agent just touched.** Work
 here often runs several agents against one working tree. A file that looks
 original may have been rewritten minutes ago, and `git status` is the only
@@ -159,7 +170,7 @@ a readable staff reference from a 48-character random public token.
 
 ```bash
 php artisan serve          # http://127.0.0.1:8000 redirects to /admin
-php artisan test           # 213 passing
+php artisan test           # 239 passing
 php artisan migrate:fresh --seed   # needs ADMIN_PASSWORD in .env
 ```
 

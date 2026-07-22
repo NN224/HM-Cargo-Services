@@ -261,3 +261,16 @@ A warehouse employee may receive a customer's packages into a batch without hold
 `price_shipments` therefore gates *setting and changing* a customer's rate, not applying one that is already agreed. Rate changes stay on the customer rates screen, and an existing rate cannot be replaced without a confirmation naming the old and new figures.
 
 **Where an employee may set a rate.** A customer with no rate for the route has no agreement yet, and the system must still refuse to invent one. An employee holding `manage_customers` may record the agreed rate inline while receiving; one without it is refused and told who can supply it. A shipment is never saved unpriced.
+
+## D-025: Shipments are visible to every employee; batches stay warehouse-scoped
+
+**Date:** 2026-07-22  
+**Status:** Approved by owner. Overrides the shipment side of the AGENTS.md warehouse-scoping rule; leaves the batch side intact.
+
+A warehouse employee sees every shipment, not only those on routes touching their warehouse. `ShipmentResource` is left unscoped deliberately.
+
+**Why this departs from AGENTS.md.** AGENTS.md says a warehouse employee "sees and operates only their assigned warehouse." The team is small and works the same cargo together, and hiding a colleague's shipment creates friction with no benefit at this size. The rule was written for an organisation larger than the one being built for.
+
+**The asymmetry, accepted deliberately.** Batches remain scoped: an employee only works batches whose route touches their warehouse, enforced in `BatchResource` and `BatchIntakeService`. Viewing a shipment and operating a batch are different acts — the owner wants the first open and the second scoped. This is a choice, not an oversight, and a later reader should not "fix" the shipment side to match the batch side without the owner.
+
+**What this does not touch.** Money remains gated by capability regardless of warehouse (D-024): an employee seeing a shipment still does not see its rate or total without the pricing capability. Openness of the shipment list is not openness of its money.

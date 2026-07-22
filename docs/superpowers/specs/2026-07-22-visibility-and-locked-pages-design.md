@@ -23,10 +23,16 @@ They are built in this order because each rests on the one before.
   has no guard of any kind. It shows revenue, cost and profit to every
   employee. The identical figures are correctly gated on the profitability
   widget — the report was simply missed.
-- **A customer's rates** now render on the customer page (a section added last
-  round) and are visible to anyone who can open a customer, including an
-  employee with no pricing role. This contradicts D-024, which hides the rate
-  per kilogram from anyone without the pricing capability.
+- **A customer's rates** leak through the standalone `CustomerRateResource`.
+  That screen is hidden from the navigation (rates read on the customer page
+  now), but its routes stayed registered so the customer page's edit link
+  resolves — and it carried no capability guard, so a direct visit to
+  `/admin/customer-rates` showed every customer's rate per kilogram to any
+  employee. The rates *section* on the customer edit page is not a leak: that
+  page already requires the customers capability to open (`CustomerPolicy`),
+  so only a holder ever sees it. The leak is the standalone resource, closed
+  by gating its `canViewAny` on the customers capability. This was first
+  mis-attributed to the customer page; the correction is recorded here.
 - **Payments** are gated, but by *hiding* (`canViewAny()` returns false, so the
   resource vanishes from the navigation and a direct URL 403s). The owner wants
   a money screen the employee is not entitled to to appear locked, not to
@@ -62,13 +68,16 @@ Both keep their navigation entry / button. Opening either without the
 capability shows the locked notice. The administrator, who implicitly holds
 every capability, sees the real page.
 
-### A customer's rates, hidden not locked
+### A customer's rates, gated at the resource
 
-The rates section on the customer edit page is **hidden** when the user lacks
-`ManageCustomers`, rather than shown locked. A lock box inside an otherwise
-usable page is visual clutter, and the employee still needs the rest of the
-customer page to receive cargo. The section simply is not rendered; the page
-opens normally without it.
+The standalone `CustomerRateResource` is gated on `ManageCustomers`
+(`canViewAny`/`canCreate`/`canEdit`/`canView`). It is already hidden from the
+navigation, so gating access closes it entirely: an employee visiting its URL
+directly is forbidden, and a holder still reaches it through the customer
+page's edit link. No locked notice is needed — a nav-hidden screen has nothing
+to present as locked; the direct-URL 403 is the whole surface. The rates
+section on the customer edit page needs no separate guard, because that page
+already requires the capability to open.
 
 ## An owner decision this records
 

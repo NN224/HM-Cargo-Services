@@ -1,7 +1,7 @@
 # Current State — Handoff
 
 **Last updated:** 2026-07-21, end of session
-**Tests:** 252 passing, 789 assertions, working tree clean
+**Tests:** 263 passing, 810 assertions, working tree clean
 
 Read this first if you are picking the project up. It says what exists, what
 does not, and what to do next. The binding rules live in [`../AGENTS.md`](../AGENTS.md)
@@ -27,6 +27,15 @@ statement and a batch report.
 Cargo can be received the way it actually arrives: open the load that leaves
 on Thursday and add each customer's boxes as they come in, with destination,
 rate and barcodes filled in from what the batch already knows.
+
+The dashboard opens on the work rather than a vendor advertisement: two
+operational counts for everyone (cargo awaiting a batch, cargo ready to
+release) and a recent-shipments list, plus — for a money-holder — the
+outstanding total and the customers-in-debt list. Money screens are gated by
+capability: an employee without the pricing capability meets the batch report
+locked, without the payments capability meets the payments screen locked, and
+the standalone customer-rates screen is forbidden without the customers
+capability.
 
 ## What it cannot do yet
 
@@ -62,6 +71,7 @@ has tried the scan flow on a real phone in a real warehouse.
 | Batch-first intake — receive cargo into an open batch | done |
 | Shipment view with its packages, per-package status | done |
 | Money screens gated by capability; shared locked-page notice | done |
+| Dashboard — operational counts for all, money for a money-holder | done |
 
 ## Not built
 
@@ -73,7 +83,7 @@ has tried the scan flow on a real phone in a real warehouse.
 ## Suggested next step
 
 Try it against a real shipment before adding anything else. The feature list
-is close to complete and entirely unexercised: every one of the 252 tests was
+is close to complete and entirely unexercised: every one of the 263 tests was
 written by the same session that wrote the code it tests. A single real
 shipment — created in Dubai, priced into a batch, scanned in, collected and
 paid — will find more than the next feature would.
@@ -185,7 +195,7 @@ a readable staff reference from a 48-character random public token.
 
 ```bash
 php artisan serve          # http://127.0.0.1:8000 redirects to /admin
-php artisan test           # 252 passing
+php artisan test           # 263 passing
 php artisan migrate:fresh --seed   # needs ADMIN_PASSWORD in .env
 ```
 

@@ -274,3 +274,16 @@ A warehouse employee sees every shipment, not only those on routes touching thei
 **The asymmetry, accepted deliberately.** Batches remain scoped: an employee only works batches whose route touches their warehouse, enforced in `BatchResource` and `BatchIntakeService`. Viewing a shipment and operating a batch are different acts — the owner wants the first open and the second scoped. This is a choice, not an oversight, and a later reader should not "fix" the shipment side to match the batch side without the owner.
 
 **What this does not touch.** Money remains gated by capability regardless of warehouse (D-024): an employee seeing a shipment still does not see its rate or total without the pricing capability. Openness of the shipment list is not openness of its money.
+
+## D-026: Per-employee page locking, as a deny-list — not a permission matrix
+
+**Date:** 2026-07-23  
+**Status:** Approved by owner. Extends D-022 and narrows the AGENTS.md exclusion of permission matrices.
+
+An administrator may lock a specific page for a specific employee. A locked page shows as locked when opened; the employee sees it exists but cannot enter it.
+
+**Why this is not the matrix AGENTS.md and D-022 rejected.** The excluded thing is a user-defined permission matrix — per-role, per-screen, per-action grants that the client named as the complexity they were escaping. This is narrower on every axis: a fixed list of pages, a per-*user* deny-list (not roles), page access only (not per-action), and locking never grants anything — it only removes access an employee would otherwise have. It sits beside the two roles and the five capabilities, not on top of a configurable grant engine.
+
+**The two axes stay separate.** A capability grants an ability; a lock removes access to a page. A lock overrides a capability *for that page* but does not remove the ability — an action reachable from an unlocked page still authorises. To remove an ability, remove the capability. Conflating the two would rebuild the matrix this decision avoids.
+
+**Enforcement is central by design.** One middleware over every panel request, reading a single page registry, so no destination can be lockable in the UI yet unenforced in the backend — the failure mode the earlier per-screen gating hit. The dashboard is not lockable. An administrator is never locked.

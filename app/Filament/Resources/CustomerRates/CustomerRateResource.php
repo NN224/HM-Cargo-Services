@@ -48,6 +48,16 @@ class CustomerRateResource extends Resource
         ];
     }
 
+    /**
+     * A rate is read on its customer's page. Its own pages stay registered —
+     * changing a rate still happens there, behind the confirmation that names
+     * the old and new figures — but it is no longer a destination of its own.
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     public static function getPages(): array
     {
         return [

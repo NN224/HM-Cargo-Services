@@ -3,7 +3,6 @@
 use App\Filament\Pages\ReceiveIntoBatch;
 use App\Filament\Pages\ScanPackages;
 use App\Filament\Resources\Batches\BatchResource;
-use App\Filament\Resources\CustomerRates\CustomerRateResource;
 use App\Filament\Resources\Customers\CustomerResource;
 use App\Filament\Resources\Payments\PaymentResource;
 use App\Filament\Resources\Routes\RouteResource;
@@ -28,7 +27,6 @@ function navigationItems(): array
         'الشحنات' => ShipmentResource::class,
         'الرحلات' => BatchResource::class,
         'العملاء' => CustomerResource::class,
-        'أسعار العملاء' => CustomerRateResource::class,
         'المدفوعات' => PaymentResource::class,
         'المسارات' => RouteResource::class,
         'المستودعات' => WarehouseResource::class,

@@ -37,14 +37,17 @@ beforeEach(function () {
 
 function makeTestShipment(string $name, string $phone, int $charge, int $paid, string $status, string $token = 'abc123def456'): Shipment
 {
+    // Read the actual ids from the setup rather than assuming they are 1.
+    // SQLite happened to hand out id 1 to the first customer and batch;
+    // PostgreSQL does not, so a hard-coded 1 broke the foreign key there.
     return tap(Shipment::create([
-        'customer_id' => 1,
+        'customer_id' => test()->customer->id,
         'recipient_name' => $name,
         'recipient_phone' => $phone,
         'status' => $status,
     ]), function (Shipment $s) use ($charge, $paid, $token) {
         $s->forceFill([
-            'batch_id' => 1,
+            'batch_id' => test()->batch->id,
             'final_charge_cents' => $charge,
             'paid_amount_cents' => $paid,
             'public_token' => $token,

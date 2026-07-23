@@ -290,6 +290,11 @@ test('a package status event cannot be erased by deleting its package', function
         $this->employee,
     );
 
-    expect(fn () => $package->delete())->toThrow(QueryException::class)
-        ->and(DB::table('package_status_events')->where('package_id', $package->id)->exists())->toBeTrue();
+    // Check the events exist BEFORE attempting the delete. On PostgreSQL a
+    // failed statement aborts the surrounding transaction, so a query run
+    // after the delete throws would fail with "transaction aborted" rather
+    // than answer — the assertion must come first, and the throwing delete
+    // last, so nothing queries the poisoned transaction.
+    expect(DB::table('package_status_events')->where('package_id', $package->id)->exists())->toBeTrue()
+        ->and(fn () => $package->delete())->toThrow(QueryException::class);
 });

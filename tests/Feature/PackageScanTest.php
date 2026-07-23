@@ -89,6 +89,23 @@ test('scanning one destination package derives a partial shipment state and reco
     ]);
 });
 
+test('a scanned tracking URL resolves to the same package', function () {
+    $shipment = scanTestShipment($this->batch, $this->customer);
+    $package = $shipment->packages->first();
+
+    // The camera decodes the package QR and submits the tracking URL, not the
+    // bare code. The scan must still land on this exact package.
+    $scanned = app(PackageScanService::class)->scan(
+        $package->trackingUrl(),
+        $this->damascus,
+        $this->employee,
+        'camera_or_scanner',
+    );
+
+    expect($scanned->id)->toBe($package->id)
+        ->and($scanned->status)->toBe(PackageStatus::ArrivedDestination);
+});
+
 test('the shipment becomes ready only after every active package reaches destination', function () {
     $shipment = scanTestShipment($this->batch, $this->customer);
     $service = app(PackageScanService::class);

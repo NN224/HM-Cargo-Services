@@ -31,7 +31,7 @@ class PackageScanService
 
         return DB::transaction(function () use ($barcode, $warehouse, $user, $source, $note): Package {
             $identity = Package::query()
-                ->where('barcode', trim($barcode))
+                ->where('barcode', $this->normalizeScannedValue($barcode))
                 ->first(['id', 'shipment_id']);
 
             if (! $identity) {
@@ -81,6 +81,23 @@ class PackageScanService
 
             return $package->fresh();
         });
+    }
+
+    /**
+     * A camera reading a package QR yields the tracking URL, not the bare code.
+     * Reduce a `.../track/PKG-XXXX` value to its trailing segment so the same
+     * code a customer scans also drives an arrival scan. A plain barcode passes
+     * through unchanged.
+     */
+    private function normalizeScannedValue(string $raw): string
+    {
+        $value = trim($raw);
+
+        if (str_contains($value, '/track/')) {
+            $value = trim(substr($value, strrpos($value, '/') + 1));
+        }
+
+        return $value;
     }
 
     private function arrivalStatus(

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Package;
 use App\Models\Shipment;
+use App\Services\QrCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
@@ -12,7 +13,7 @@ class LabelController extends Controller
     /**
      * Print a label for a single package.
      */
-    public function printPackage(Request $request, Package $package)
+    public function printPackage(Request $request, Package $package, QrCode $qr)
     {
         Gate::authorize('view', $package->shipment);
 
@@ -44,6 +45,8 @@ class LabelController extends Controller
             [
                 'package' => $package,
                 'sequence' => $packageSequence,
+                'tracking_url' => $package->trackingUrl(),
+                'qr' => $qr->svg($package->trackingUrl(), 200),
             ]
         ];
         
@@ -57,7 +60,7 @@ class LabelController extends Controller
     /**
      * Print labels for all packages in a shipment.
      */
-    public function printShipment(Request $request, Shipment $shipment)
+    public function printShipment(Request $request, Shipment $shipment, QrCode $qr)
     {
         Gate::authorize('view', $shipment);
 
@@ -69,10 +72,12 @@ class LabelController extends Controller
         $packages = $shipment->packages()->orderBy('id')->get();
         $totalCount = $packages->count();
         
-        $labels = $packages->map(function ($package, $index) use ($totalCount) {
+        $labels = $packages->map(function ($package, $index) use ($totalCount, $qr) {
             return [
                 'package' => $package,
                 'sequence' => ($index + 1) . " من " . $totalCount,
+                'tracking_url' => $package->trackingUrl(),
+                'qr' => $qr->svg($package->trackingUrl(), 200),
             ];
         });
 

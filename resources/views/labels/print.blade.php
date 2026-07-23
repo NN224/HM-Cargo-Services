@@ -69,6 +69,16 @@
             font-weight: bold;
             letter-spacing: 2px;
         }
+        .qr-container { margin: 12px 0; }
+        .qr-code { width: 150px; height: 150px; margin: 0 auto; }
+        .qr-code svg { width: 100%; height: 100%; }
+        .tracking-url {
+            font-size: 12px;
+            direction: ltr;
+            word-break: break-all;
+            margin-top: 6px;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -89,6 +99,11 @@
 
             <div class="text-center barcode-text">
                 {{ $label['package']->barcode }}
+            </div>
+
+            <div class="qr-container text-center">
+                <div class="qr-code">{!! $label['qr'] !!}</div>
+                <div class="tracking-url">{{ $label['tracking_url'] }}</div>
             </div>
 
             <div class="details-grid">

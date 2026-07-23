@@ -68,7 +68,11 @@ it('prints a package label containing required data and NO pricing data', functi
     $response->assertSee($this->shipment->reference);
     $response->assertSee($this->shipment->recipient_name);
     $response->assertSee($this->destination->name);
-    
+
+    // The scannable QR and the tracking link the customer follows.
+    $response->assertSee('<svg', escape: false);
+    $response->assertSee($this->package1->trackingUrl());
+
     $response->assertDontSee('500');
     $response->assertDontSee('50000');
     $response->assertDontSee('السعر');
@@ -89,9 +93,25 @@ it('prints multiple labels for a full shipment containing NO pricing data', func
     $response->assertSee($this->package2->barcode);
     $response->assertSee('2 من 2');
     $response->assertSee($this->shipment->reference);
-    
-    $response->assertDontSee('500'); 
-    $response->assertDontSee('50000'); 
+
+    // A QR per package, each carrying its own tracking link.
+    $response->assertSee($this->package1->trackingUrl());
+    $response->assertSee($this->package2->trackingUrl());
+
+    $response->assertDontSee('500');
+    $response->assertDontSee('50000');
+});
+
+it('renders a server-side QR of the tracking URL on the label', function () {
+    $user = User::factory()->create(['role' => UserRole::Administrator]);
+    Gate::define('view', fn (User $u, Shipment $s) => true);
+
+    $html = actingAs($user)->get("/labels/packages/{$this->package1->id}")->getContent();
+
+    // The QR SVG is emitted inline by the server — no network needed — and the
+    // tracking URL is printed as readable text beside it.
+    expect($html)->toContain('<svg')
+        ->and($html)->toContain($this->package1->trackingUrl());
 });
 
 it('requires authentication to print labels', function () {

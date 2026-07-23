@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Capability;
+use App\Enums\LockablePage;
 use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role', 'warehouse_id', 'is_active', 'capabilities'])]
+#[Fillable(['name', 'email', 'password', 'role', 'warehouse_id', 'is_active', 'capabilities', 'locked_pages'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
@@ -38,6 +39,7 @@ class User extends Authenticatable implements FilamentUser
             'password' => 'hashed',
             'role' => UserRole::class,
             'capabilities' => 'array',
+            'locked_pages' => 'array',
             'is_active' => 'boolean',
         ];
     }
@@ -140,6 +142,54 @@ class User extends Authenticatable implements FilamentUser
         $this->forceFill([
             'capabilities' => array_values(
                 array_diff($this->capabilityList(), [$capability->value])
+            ),
+        ])->save();
+    }
+
+    /**
+     * The pages currently locked for this employee, unrecognised keys dropped.
+     *
+     * Mirrors capabilityList(): a hand-edited row cannot lock a page that does
+     * not exist in the registry.
+     *
+     * @return array<int, string>
+     */
+    public function lockedPageList(): array
+    {
+        $valid = array_column(LockablePage::cases(), 'value');
+
+        return array_values(array_intersect((array) ($this->locked_pages ?? []), $valid));
+    }
+
+    /**
+     * Whether this page is locked for this user.
+     *
+     * An administrator is never locked — the whole feature is about narrowing
+     * an employee, and an administrator holds everything (D-026).
+     */
+    public function isPageLocked(LockablePage $page): bool
+    {
+        if ($this->isAdministrator()) {
+            return false;
+        }
+
+        return in_array($page->value, $this->lockedPageList(), true);
+    }
+
+    public function lockPage(LockablePage $page): void
+    {
+        $this->forceFill([
+            'locked_pages' => array_values(array_unique(
+                [...$this->lockedPageList(), $page->value]
+            )),
+        ])->save();
+    }
+
+    public function unlockPage(LockablePage $page): void
+    {
+        $this->forceFill([
+            'locked_pages' => array_values(
+                array_diff($this->lockedPageList(), [$page->value])
             ),
         ])->save();
     }

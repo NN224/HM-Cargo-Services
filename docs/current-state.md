@@ -1,7 +1,7 @@
 # Current State — Handoff
 
-**Last updated:** 2026-07-21, end of session
-**Tests:** 279 passing, 897 assertions, working tree clean
+**Last updated:** 2026-07-23, end of session
+**Tests:** 288 passing, 929 assertions, working tree clean
 
 Read this first if you are picking the project up. It says what exists, what
 does not, and what to do next. The binding rules live in [`../AGENTS.md`](../AGENTS.md)
@@ -63,7 +63,7 @@ has tried the scan flow on a real phone in a real warehouse.
 | Collection gate — all active packages must have arrived | done |
 | Payments, oldest-first allocation, reversals | done, with screen |
 | Public tracking on `/track/{token}`, rate limited | done |
-| A4 labels and phone barcode display, no price printed | done |
+| A4 labels with a scannable tracking QR + link, no price printed | done, wired into the shipment UI and after intake |
 | One-click WhatsApp arrival message, no paid API | done |
 | Customer statement, reconciled against the ledger | done |
 | Batch report — counts, weight, revenue, cost, profit | done |
@@ -84,7 +84,7 @@ has tried the scan flow on a real phone in a real warehouse.
 ## Suggested next step
 
 Try it against a real shipment before adding anything else. The feature list
-is close to complete and entirely unexercised: every one of the 279 tests was
+is close to complete and entirely unexercised: every one of the 288 tests was
 written by the same session that wrote the code it tests. A single real
 shipment — created in Dubai, priced into a batch, scanned in, collected and
 paid — will find more than the next feature would.
@@ -206,7 +206,7 @@ a readable staff reference from a 48-character random public token.
 
 ```bash
 php artisan serve          # http://127.0.0.1:8000 redirects to /admin
-php artisan test           # 279 passing
+php artisan test           # 288 passing
 php artisan migrate:fresh --seed   # needs ADMIN_PASSWORD in .env
 ```
 

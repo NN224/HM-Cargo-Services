@@ -301,7 +301,11 @@ class ReceiveIntoBatch extends Page
                 ->success()
                 ->send();
 
-            $this->form->fill(['recipient_is_customer' => true]);
+            // Send the operator straight to the printable labels for the new
+            // shipment, so the QR is printed and stuck on the box right away.
+            $this->redirect(route('labels.shipment', $shipment));
+
+            return;
         } catch (DomainException $e) {
             Notification::make()
                 ->title('تعذّر الاستلام')

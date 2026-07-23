@@ -112,6 +112,7 @@ class TrackingController extends Controller
             'remaining_amount' => $this->formatMoney($remainingCents),
             'payment_status' => $this->paymentStatus($finalCents, $paidCents),
             'timeline' => $timeline,
+            'qr' => app(\App\Services\QrCode::class)->svg(route('tracking.show', $token), 160),
         ];
 
         return view('tracking.show', compact('tracking'));

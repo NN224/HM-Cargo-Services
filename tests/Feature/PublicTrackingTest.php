@@ -164,6 +164,7 @@ test('public tracking exposes only the safe shipment projection without login', 
         'remaining_amount',
         'payment_status',
         'timeline',
+        'qr',
     ]);
 
     foreach ([

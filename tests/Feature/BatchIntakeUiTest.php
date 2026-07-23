@@ -140,6 +140,20 @@ test('a dollar amount typed for a first agreed rate is stored as cents, not trun
         ->and($shipment->final_charge_cents)->toBe(700);
 });
 
+test('a successful intake redirects to the printable labels page', function () {
+    Livewire::actingAs($this->clerk)
+        ->test(ReceiveIntoBatch::class)
+        ->fillForm([
+            'batch_id' => $this->batch->id,
+            'customer_id' => $this->customer->id,
+            'recipient_is_customer' => true,
+            'packages' => [['weight_kg' => 2.0, 'description' => null]],
+        ])
+        ->call('receive')
+        ->assertHasNoFormErrors()
+        ->assertRedirect(route('labels.shipment', Shipment::latest('id')->firstOrFail()));
+});
+
 test('a customer with no agreed rate is refused and nothing is saved', function () {
     $stranger = Customer::create(['name' => 'غريب', 'phone' => '+971500000099']);
 

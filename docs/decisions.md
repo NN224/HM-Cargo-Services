@@ -287,3 +287,18 @@ An administrator may lock a specific page for a specific employee. A locked page
 **The two axes stay separate.** A capability grants an ability; a lock removes access to a page. A lock overrides a capability *for that page* but does not remove the ability — an action reachable from an unlocked page still authorises. To remove an ability, remove the capability. Conflating the two would rebuild the matrix this decision avoids.
 
 **Enforcement is central by design.** One middleware over every panel request, reading a single page registry, so no destination can be lockable in the UI yet unenforced in the backend — the failure mode the earlier per-screen gating hit. The dashboard is not lockable. An administrator is never locked.
+
+## D-027: The package label carries a QR of its public tracking URL
+
+**Date:** 2026-07-23  
+**Status:** Approved by owner.
+
+The A4 label already had a 1D barcode (for handheld scanners) and every package already had a working public tracking page. The label now also renders a **QR encoding `/track/{barcode}`** — a URL a phone camera acts on — so a customer scans it and lands on the tracking page, with the tracking link printed as text beside it. The package number is shown unchanged.
+
+**One code serves both audiences.** The same QR drives the warehouse arrival scan: `PackageScanService` reduces a scanned tracking URL to its trailing barcode before lookup, so the phone camera scanner (`new BarcodeDetector()`, default formats, decodes QR) works with the printed label. A bare barcode still passes through unchanged.
+
+**QR is inline SVG** via `bacon/bacon-qr-code` — pure PHP, no GD/imagick and no CDN, so it renders on the FrankenPHP production image and inside the label's print flow.
+
+**The label pages were built but unreachable.** The `labels.package`/`labels.shipment` routes existed with no UI linking to them. They are now reached from the shipments table, the shipment view header, and automatically after a successful intake. The QR also appears per package on the shipment view and on the public tracking page.
+
+**No pricing on the label.** Unchanged from before — `BarcodeLabelTest` still asserts pricing never appears; the tracking URL and QR encode only the public token.

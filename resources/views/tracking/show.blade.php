@@ -70,6 +70,10 @@
             <p class="label">حالة الدفع</p>
             <p class="value">{{ $tracking['payment_status'] }}</p>
         </article>
+        <article class="card wide" aria-label="رمز التتبّع">
+            <p class="label">امسح لمتابعة الشحنة</p>
+            <div style="width:160px;height:160px;margin-inline:auto;">{!! $tracking['qr'] !!}</div>
+        </article>
         <article class="card wide">
             <h2>الخط الزمني</h2>
             @if ($tracking['timeline'] === [])

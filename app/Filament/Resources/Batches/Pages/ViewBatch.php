@@ -19,7 +19,10 @@ class ViewBatch extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            EditAction::make(),
+            // Same rule as the edit page: a dispatched batch is locked
+            // (D-016), so the button hides rather than 403ing on click.
+            EditAction::make()
+                ->visible(fn (Batch $record): bool => BatchResource::canEdit($record)),
 
             Action::make('dispatch')
                 ->label('إرسال الرحلة')

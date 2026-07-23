@@ -119,6 +119,28 @@ test('the ordinary edit page is forbidden after dispatch', function () {
         ->assertForbidden();
 });
 
+test('the edit button is hidden once a batch is dispatched', function () {
+    // An open batch may still be edited, so the button is offered.
+    $open = phaseFourBatch($this->route);
+
+    Livewire::test(ListBatches::class)
+        ->assertTableActionVisible('edit', $open);
+
+    Livewire::test(ViewBatch::class, ['record' => $open->getRouteKey()])
+        ->assertActionVisible('edit');
+
+    // Dispatch locks the batch (D-016); a button that only 403s reads as
+    // broken, so it disappears rather than dead-ending.
+    $dispatched = phaseFourBatch($this->route);
+    app(BatchDispatchService::class)->dispatch($dispatched, 287);
+
+    Livewire::test(ListBatches::class)
+        ->assertTableActionHidden('edit', $dispatched);
+
+    Livewire::test(ViewBatch::class, ['record' => $dispatched->getRouteKey()])
+        ->assertActionHidden('edit');
+});
+
 test('the view action asks for cost and dispatches through the service', function () {
     $batch = phaseFourBatch($this->route);
 

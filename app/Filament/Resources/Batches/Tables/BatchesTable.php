@@ -4,7 +4,9 @@ namespace App\Filament\Resources\Batches\Tables;
 
 use App\Enums\BatchStatus;
 use App\Enums\Capability;
+use App\Filament\Resources\Batches\BatchResource;
 use App\Filament\Resources\Routes\RouteResource;
+use App\Models\Batch;
 use App\Models\Route;
 use DomainException;
 use Filament\Actions\Action;
@@ -92,7 +94,12 @@ class BatchesTable
             ->defaultSort('created_at', 'desc')
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make(),
+                // Hidden once the batch is no longer editable — a dispatched
+                // batch is locked (D-016), so a visible Edit button that only
+                // dead-ends at a 403 reads as broken. canEdit is the same rule
+                // the edit page enforces.
+                EditAction::make()
+                    ->visible(fn (Batch $record): bool => BatchResource::canEdit($record)),
 
                 // Only an empty batch may go. One holding shipments carries
                 // their pricing history, so deleteSafely() refuses.

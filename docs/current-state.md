@@ -1,7 +1,7 @@
 # Current State — Handoff
 
 **Last updated:** 2026-07-21, end of session
-**Tests:** 263 passing, 810 assertions, working tree clean
+**Tests:** 279 passing, 897 assertions, working tree clean
 
 Read this first if you are picking the project up. It says what exists, what
 does not, and what to do next. The binding rules live in [`../AGENTS.md`](../AGENTS.md)
@@ -72,6 +72,7 @@ has tried the scan flow on a real phone in a real warehouse.
 | Shipment view with its packages, per-package status | done |
 | Money screens gated by capability; shared locked-page notice | done |
 | Dashboard — operational counts for all, money for a money-holder | done |
+| Per-employee page locking, enforced centrally (D-026) | done |
 
 ## Not built
 
@@ -83,7 +84,7 @@ has tried the scan flow on a real phone in a real warehouse.
 ## Suggested next step
 
 Try it against a real shipment before adding anything else. The feature list
-is close to complete and entirely unexercised: every one of the 263 tests was
+is close to complete and entirely unexercised: every one of the 279 tests was
 written by the same session that wrote the code it tests. A single real
 shipment — created in Dubai, priced into a batch, scanned in, collected and
 paid — will find more than the next feature would.
@@ -109,6 +110,7 @@ rules, so do not act on the originals without reading these.
 | D-023 | A missing or damaged package stays in the billable weight. Only cancellation removes it |
 | D-024 | Receiving cargo applies an agreed rate — it is not a pricing decision |
 | D-025 | Employees see every shipment; batches stay warehouse-scoped |
+| D-026 | Per-employee page locking — a page deny-list, not a permission matrix |
 
 ---
 
@@ -159,6 +161,15 @@ confirm an unauthorised user can actually reach it today — an `assertForbidden
 against the real URL, not an `assertDontSee` on a page they were already
 barred from.
 
+**Switching `actingAs()` between freshly-created users inside one test logs
+the request out.** The `password` cast is `hashed`, so each new user gets a
+different bcrypt salt, and Filament's `AuthenticateSession` middleware reads a
+salt change mid-session as session hijacking and drops the auth before the
+request reaches your code. A whole-registry enforcement test that created ten
+users, one per key, failed on alternating iterations for this reason — not the
+feature. Reuse one user and re-`forceFill` the row each iteration; the real
+middleware stack stays in the path and the test still walks every key.
+
 **Read before you write, including files another agent just touched.** Work
 here often runs several agents against one working tree. A file that looks
 original may have been rewritten minutes ago, and `git status` is the only
@@ -195,7 +206,7 @@ a readable staff reference from a 48-character random public token.
 
 ```bash
 php artisan serve          # http://127.0.0.1:8000 redirects to /admin
-php artisan test           # 263 passing
+php artisan test           # 279 passing
 php artisan migrate:fresh --seed   # needs ADMIN_PASSWORD in .env
 ```
 

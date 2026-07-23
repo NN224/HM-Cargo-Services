@@ -89,6 +89,13 @@ class ShipmentsTable
                             .json_encode(url('/track/'.$record->public_token)).')',
                     ]),
 
+                Action::make('printLabels')
+                    ->label('طباعة الملصقات')
+                    ->icon('heroicon-o-printer')
+                    ->color('gray')
+                    ->url(fn (Shipment $record): string => route('labels.shipment', $record))
+                    ->openUrlInNewTab(),
+
                 Action::make('whatsapp')
                     ->label('واتساب')
                     ->icon('heroicon-o-chat-bubble-left-ellipsis')

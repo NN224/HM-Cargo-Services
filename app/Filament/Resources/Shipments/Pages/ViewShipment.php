@@ -4,9 +4,12 @@ namespace App\Filament\Resources\Shipments\Pages;
 
 use App\Enums\PackageStatus;
 use App\Filament\Resources\Shipments\ShipmentResource;
+use App\Services\QrCode;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ViewEntry;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -25,6 +28,12 @@ class ViewShipment extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('printLabels')
+                ->label('طباعة الملصقات')
+                ->icon('heroicon-o-printer')
+                ->url(fn (): string => route('labels.shipment', $this->record))
+                ->openUrlInNewTab(),
+
             EditAction::make(),
         ];
     }
@@ -32,6 +41,7 @@ class ViewShipment extends ViewRecord
     public function infolist(Schema $schema): Schema
     {
         $shipment = $this->record;
+        $qr = app(QrCode::class);
 
         return $schema
             ->state([
@@ -44,6 +54,7 @@ class ViewShipment extends ViewRecord
                 'total_weight' => $this->formatWeight($shipment->total_weight_kg),
                 'packages' => $shipment->packages->map(fn ($package): array => [
                     'barcode' => $package->barcode,
+                    'qr' => $qr->svg($package->trackingUrl(), 110),
                     'weight' => $this->formatWeight($package->weight_kg),
                     'description' => $package->description ?: '—',
                     'source_barcode' => $package->source_barcode ?: '—',
@@ -71,6 +82,9 @@ class ViewShipment extends ViewRecord
                             ->label('')
                             ->schema([
                                 TextEntry::make('barcode')->label('الباركود')->copyable(),
+                                ViewEntry::make('qr')
+                                    ->label('رمز التتبّع')
+                                    ->view('filament.entries.qr'),
                                 TextEntry::make('weight')->label('الوزن'),
                                 TextEntry::make('description')->label('الوصف'),
                                 TextEntry::make('source_barcode')->label('باركود المورّد'),
@@ -95,7 +109,7 @@ class ViewShipment extends ViewRecord
                                         default => 'success',
                                     }),
                             ])
-                            ->columns(5),
+                            ->columns(6),
                     ]),
             ]);
     }

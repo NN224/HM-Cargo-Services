@@ -1,7 +1,11 @@
 # HM Cargo Services - Node.js Implementation Plan
 
 **Date:** 2026-07-18
-**Status:** Proposed
+**Status:** REJECTED and superseded on 2026-07-20 by [`decisions.md` D-017](decisions.md) and [`implementation-plan-laravel.md`](implementation-plan-laravel.md).
+
+> **This plan was never approved.** It was scaffolded against anyway, producing a prototype that contradicted approved decisions D-001 and D-002. Its stated justification — that the AI Studio environment could not run PHP — no longer applies, because development moved to a local machine with PHP 8.5 available.
+>
+> Retained as a historical record. Do not implement.
 
 ## Conflict Report & Tech Stack Adaptation
 **Conflict:** `AGENTS.md` mandates Laravel with Filament and PostgreSQL. However, the AI Studio environment strictly runs Node.js containers and does not support Laravel/PHP. 

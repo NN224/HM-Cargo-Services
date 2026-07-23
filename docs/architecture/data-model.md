@@ -108,7 +108,7 @@ Core data:
 - Final destination warehouse.
 - Optional active batch.
 - Route and rate snapshots after batch assignment.
-- Exact total weight, raw charge, rounded final charge, pricing timestamp.
+- Exact total weight, computed charge, manually set final charge (D-020), pricing timestamp.
 - Operational and payment summary status.
 - Notes and timestamps.
 

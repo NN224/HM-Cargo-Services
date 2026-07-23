@@ -6,6 +6,7 @@ These instructions apply to the entire repository. Every AI agent must read this
 
 Read in this order:
 
+0. `docs/current-state.md` - what is built, what is not, and what to do next. Read before planning.
 1. `docs/decisions.md` - owner-approved decisions that must not be changed implicitly.
 2. `docs/product-spec.md` - product scope, actors, features, and acceptance criteria.
 3. `docs/domain/shipment-lifecycle.md` - shipment, package, batch, and tracking behavior.
@@ -32,7 +33,7 @@ The system must remain simpler than the reference dashboard. Do not add generic 
 - The customer price is specific to a route. Direct Dubai-to-Syria and Dubai-to-Beirut-to-Syria are different routes and may have different rates.
 - A shipment receives its billable route from its batch. Final pricing occurs when the shipment is assigned to a batch.
 - Preserve the price-per-kilogram snapshot on the shipment. Later rate changes must not rewrite historical charges.
-- Customer total rounding is custom: fractional amounts from `.01` through `.29` round down; `.30` through `.99` round up. Exact whole-dollar totals remain unchanged.
+- Customer rounding is manual (D-020, supersedes D-008): amounts carry two decimals, and the operator types the final amount the customer pays. The system does not round automatically. The computed charge is never overwritten, and the adjustment is derived from the two.
 - Batch cost and profit retain cents; the custom customer rounding rule does not apply to batch cost.
 - A batch has one total cost-per-kilogram for its entire route, even when the route includes a transit warehouse.
 - A shipment may belong to only one active batch at a time.
@@ -65,7 +66,7 @@ Version 1 excludes:
 - Multiple currencies or exchange rates.
 - Online payment processing.
 - Paid SaaS dependencies required for core operation.
-- Fine-grained permission matrices beyond administrator and warehouse employee.
+- User-defined roles and per-screen permission matrices. The two roles stand, extended only by the fixed list of capability switches in D-022.
 - A user-editable workflow/status engine.
 - SMTP configuration and automated email delivery.
 - Carrier APIs, label purchasing, and third-party courier integrations.
@@ -76,12 +77,12 @@ Version 1 excludes:
 - Use migrations and constraints to enforce invariants; do not rely only on UI validation.
 - Store money as integer cents. Never use binary floating point for money.
 - Store weight as an exact decimal with documented precision.
-- Financial mutations must be transactional and idempotent where retries are possible.
-- Use append-only audit/event records for status changes, payment reversals, repricing, and privileged edits.
+- Financial mutations must be transactional. Explicit idempotency keys are deferred past version 1 per D-018; rely on transactions plus unique constraints.
+- Record financial mutations, status transitions, and privileged edits in the append-only `audit_logs` table. Full event sourcing for every state change is deferred past version 1 per D-018.
 - Never expose sequential internal IDs in public tracking URLs.
 - Apply authorization in backend policies, not only by hiding UI elements.
-- Do not hard-delete customers, shipments, packages, batches, payments, status events, or audit records.
-- Add tests for every domain rule before implementation changes.
+- Do not hard-delete a record that anything else depends on; deactivate it instead. An administrator may permanently delete a record only when nothing references it (D-021). Completed payments, reversals, status events and audit records are never deletable regardless of dependencies.
+- Add tests for every retained domain rule in D-018 and for every authorization boundary, before implementation changes. A global 80 percent coverage target does not apply to version 1; Filament scaffolding needs no coverage.
 - Keep files focused by responsibility and follow the implementation plan once approved.
 - Do not scaffold or implement product code until the owner approves the written specification and a task-level implementation plan exists.
 

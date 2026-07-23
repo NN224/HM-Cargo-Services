@@ -1,0 +1,157 @@
+<?php
+
+use App\Enums\BatchStatus;
+use App\Enums\Capability;
+use App\Enums\UserRole;
+use App\Filament\Pages\ReceiveIntoBatch;
+use App\Models\Batch;
+use App\Models\Customer;
+use App\Models\CustomerRate;
+use App\Models\Route;
+use App\Models\Shipment;
+use App\Models\User;
+use App\Models\Warehouse;
+use Livewire\Livewire;
+
+beforeEach(function () {
+    $dubai = Warehouse::create(['name' => 'Dubai', 'location' => 'UAE']);
+    $this->damascus = Warehouse::create(['name' => 'Damascus', 'location' => 'Syria']);
+
+    $this->route = Route::create([
+        'name' => 'Dubai → Syria',
+        'origin_warehouse_id' => $dubai->id,
+        'destination_warehouse_id' => $this->damascus->id,
+    ]);
+
+    $this->batch = Batch::create([
+        'reference' => 'BCH-2026-0001',
+        'route_id' => $this->route->id,
+        'status' => BatchStatus::Open,
+    ]);
+
+    $this->customer = Customer::create(['name' => 'أحمد', 'phone' => '+971500000001']);
+
+    CustomerRate::create([
+        'customer_id' => $this->customer->id,
+        'route_id' => $this->route->id,
+        'rate_per_kg_cents' => 300,
+    ]);
+
+    $this->admin = User::create([
+        'name' => 'مدير', 'email' => 'admin@hmcargo.test',
+        'password' => 'secret', 'role' => UserRole::Administrator,
+        'warehouse_id' => null,
+    ]);
+
+    $this->clerk = User::create([
+        'name' => 'موظف', 'email' => 'clerk@hmcargo.test',
+        'password' => 'secret', 'role' => UserRole::WarehouseEmployee,
+        'warehouse_id' => $dubai->id,
+    ]);
+});
+
+test('an employee without the pricing capability can still receive cargo', function () {
+    // D-024: applying a rate agreed before the goods moved is not a pricing
+    // decision. Gating it would stop an employee doing most of their job.
+    expect($this->clerk->hasCapability(Capability::PriceShipments))->toBeFalse();
+
+    Livewire::actingAs($this->clerk)
+        ->test(ReceiveIntoBatch::class)
+        ->fillForm([
+            'batch_id' => $this->batch->id,
+            'customer_id' => $this->customer->id,
+            'recipient_is_customer' => true,
+            'packages' => [['weight_kg' => 2.0, 'description' => null]],
+        ])
+        ->call('receive')
+        ->assertHasNoFormErrors();
+
+    expect(Shipment::where('batch_id', $this->batch->id)->count())->toBe(1);
+});
+
+test('the rate and total are hidden from an employee who may not price', function () {
+    Livewire::actingAs($this->clerk)
+        ->test(ReceiveIntoBatch::class)
+        ->assertFormFieldHidden('rate_per_kg');
+});
+
+test('the rate is offered to a user who may price', function () {
+    Livewire::actingAs($this->admin)
+        ->test(ReceiveIntoBatch::class)
+        ->assertFormFieldVisible('rate_per_kg');
+});
+
+test('the rate shows the customer\'s agreed rate for the batch\'s route', function () {
+    // 300 stored cents must render as dollars, not the raw cent count.
+    Livewire::actingAs($this->admin)
+        ->test(ReceiveIntoBatch::class)
+        ->fillForm([
+            'batch_id' => $this->batch->id,
+            'customer_id' => $this->customer->id,
+        ])
+        ->assertFormSet(['rate_per_kg' => '3.00']);
+});
+
+test('a different recipient is accepted when the box is unticked', function () {
+    Livewire::actingAs($this->clerk)
+        ->test(ReceiveIntoBatch::class)
+        ->fillForm([
+            'batch_id' => $this->batch->id,
+            'customer_id' => $this->customer->id,
+            'recipient_is_customer' => false,
+            'recipient_name' => 'سامي',
+            'recipient_phone' => '+9613000001',
+            'packages' => [['weight_kg' => 2.0, 'description' => null]],
+        ])
+        ->call('receive')
+        ->assertHasNoFormErrors();
+
+    expect(Shipment::first()->recipient_name)->toBe('سامي');
+});
+
+test('a dollar amount typed for a first agreed rate is stored as cents, not truncated', function () {
+    // Every other money field in the system takes dollars and converts to
+    // cents at the boundary (CustomerRateForm). Before the fix, this field
+    // stored the typed string as-is: (int) "3.50" truncates to 3, pricing
+    // every future load on this route at 3 cents/kg instead of $3.50/kg.
+    $stranger = Customer::create(['name' => 'غريب', 'phone' => '+971500000099']);
+
+    Livewire::actingAs($this->admin)
+        ->test(ReceiveIntoBatch::class)
+        ->fillForm([
+            'batch_id' => $this->batch->id,
+            'customer_id' => $stranger->id,
+            'recipient_is_customer' => true,
+            'agreed_rate_per_kg_cents' => '3.50',
+            'packages' => [['weight_kg' => 2.0, 'description' => null]],
+        ])
+        ->call('receive')
+        ->assertHasNoFormErrors();
+
+    expect(CustomerRate::where('customer_id', $stranger->id)
+        ->where('route_id', $this->route->id)
+        ->value('rate_per_kg_cents'))->toBe(350);
+
+    $shipment = Shipment::where('customer_id', $stranger->id)->firstOrFail();
+
+    // 2.0 kg at 350 cents/kg = 700 cents, computed the same way
+    // BatchAssignmentService::computeCharge() does (bcmul, then round).
+    expect($shipment->rate_per_kg_cents)->toBe(350)
+        ->and($shipment->final_charge_cents)->toBe(700);
+});
+
+test('a customer with no agreed rate is refused and nothing is saved', function () {
+    $stranger = Customer::create(['name' => 'غريب', 'phone' => '+971500000099']);
+
+    Livewire::actingAs($this->clerk)
+        ->test(ReceiveIntoBatch::class)
+        ->fillForm([
+            'batch_id' => $this->batch->id,
+            'customer_id' => $stranger->id,
+            'recipient_is_customer' => true,
+            'packages' => [['weight_kg' => 2.0, 'description' => null]],
+        ])
+        ->call('receive');
+
+    expect(Shipment::count())->toBe(0);
+});

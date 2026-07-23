@@ -159,7 +159,7 @@ Show operational facts without misleading percentage comparisons:
 - Exact decimal weight; no minimum weight.
 - Customer rate is per route.
 - Charge before rounding = exact shipment weight multiplied by the shipment's rate snapshot.
-- Customer final charge uses the approved `.01-.29 down / .30-.99 up` rule.
+- Customer final charge is set manually by the operator (D-020, supersedes D-008). No automatic rounding rule is applied.
 - Batch cost retains cents and equals exact active package weight multiplied by the batch cost-per-kilogram snapshot.
 - Profit equals rounded customer charges in the batch minus exact batch cost.
 

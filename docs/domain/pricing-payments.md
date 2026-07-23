@@ -24,9 +24,11 @@ This document is the canonical source for all financial calculations.
 
 Let:
 
-- `W` = sum of exact weights for active, non-cancelled packages.
+- `W` = sum of exact weights for active packages. Active means everything except cancelled: a missing or damaged package still counts toward `W` and does not reduce the charge by itself (D-023). Its financial resolution is an explicit administrator adjustment.
 - `R` = shipment rate snapshot in USD per kilogram.
 - `raw_charge` = `W × R`.
+
+> **SUPERSEDED by D-020 (2026-07-20).** The automatic rule described in this section is no longer implemented. The operator types the final amount the customer pays; the computed charge is preserved and the adjustment is derived. Weight is still never rounded, and batch cost and profit still keep their cents. The text below is retained as a record of the original rule.
 
 Apply custom rounding only to the final customer charge:
 

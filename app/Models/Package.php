@@ -105,4 +105,10 @@ class Package extends Model
             PackageStatus::Collected,
         ], true);
     }
+
+    /** The public tracking URL a customer reaches by scanning this package. */
+    public function trackingUrl(): string
+    {
+        return route('tracking.show', $this->barcode);
+    }
 }

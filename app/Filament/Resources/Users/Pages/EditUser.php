@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Enums\Capability;
+use App\Enums\LockablePage;
 use App\Enums\UserRole;
 use App\Filament\Resources\Users\UserResource;
 use Filament\Resources\Pages\EditRecord;
@@ -34,6 +35,17 @@ class EditUser extends EditRecord
         } else {
             $data['capabilities'] = $capabilities;
         }
+
+        $locked = [];
+        foreach (LockablePage::cases() as $page) {
+            $key = "lock_{$page->value}";
+            if (! empty($data[$key])) {
+                $locked[] = $page->value;
+            }
+            unset($data[$key]);
+        }
+        // An administrator is never locked; keep the column clean for them.
+        $data['locked_pages'] = ($data['role'] ?? null) === UserRole::Administrator->value ? [] : $locked;
 
         return $data;
     }

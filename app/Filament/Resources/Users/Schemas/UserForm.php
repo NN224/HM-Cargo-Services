@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\Schemas;
 
 use App\Enums\Capability;
+use App\Enums\LockablePage;
 use App\Enums\UserRole;
 use App\Models\User;
 use Filament\Forms\Components\Select;
@@ -28,6 +29,17 @@ class UserForm
                 // The underlying capabilities column is a list of strings.
                 // We hydrate the toggle by checking if the user holds that capability.
                 ->formatStateUsing(fn (?User $record): bool => $record ? $record->hasCapability($capability) : false);
+        }
+
+        $lockToggles = [];
+
+        // One toggle per lockable page (D-026). Hydrated from the stored lock
+        // list, saved back in the page mutators, exactly like the capability
+        // toggles above.
+        foreach (LockablePage::cases() as $page) {
+            $lockToggles[] = Toggle::make("lock_{$page->value}")
+                ->label($page->label())
+                ->formatStateUsing(fn (?User $record): bool => $record ? $record->isPageLocked($page) : false);
         }
 
         return $schema
@@ -79,6 +91,12 @@ class UserForm
                     ->visible(fn (Get $get): bool => $get('role') === UserRole::WarehouseEmployee->value)
                     ->schema($capabilityToggles)
                     ->columns(1),
+
+                Section::make('الصفحات المقفولة')
+                    ->description('امنع الموظف من فتح صفحات محددة. القفل يمنع الصفحة فقط، لا يغيّر صلاحياته.')
+                    ->visible(fn (Get $get): bool => $get('role') === UserRole::WarehouseEmployee->value)
+                    ->schema($lockToggles)
+                    ->columns(2),
             ]);
     }
 }

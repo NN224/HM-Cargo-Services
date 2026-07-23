@@ -302,3 +302,27 @@ The A4 label already had a 1D barcode (for handheld scanners) and every package 
 **The label pages were built but unreachable.** The `labels.package`/`labels.shipment` routes existed with no UI linking to them. They are now reached from the shipments table, the shipment view header, and automatically after a successful intake. The QR also appears per package on the shipment view and on the public tracking page.
 
 **No pricing on the label.** Unchanged from before — `BarcodeLabelTest` still asserts pricing never appears; the tracking URL and QR encode only the public token.
+
+## D-028: Two WhatsApp messages — tracking at intake, amount at arrival
+
+**Date:** 2026-07-23  
+**Status:** Approved by owner (client asked for WhatsApp + tracking specifically).
+
+The single arrival message used to carry the tracking link, which is useless
+once the shipment has already arrived — and the customer never received the
+link while it was actually travelling. Split into two one-click messages (still
+no paid API):
+
+- **Intake** — prepared when the cargo is received, sent to the customer
+  (sender). Carries the tracking link; no amount (nothing is due yet). Reached
+  from the labels page the operator lands on right after intake.
+- **Arrival** — sent to the recipient when it arrives. Carries the amount due
+  and the invitation to collect; **no tracking link**.
+
+In the common case the recipient is the customer, so both reach the same
+registered number.
+
+**The tracking-link handoff never appears in the staff shipments list.** That
+link carries the secret `public_token`; the list deliberately never prints it
+(D-025/ShipmentUiTest), so the intake WhatsApp button lives on the labels page,
+and only the token-free arrival message is offered as a row action.

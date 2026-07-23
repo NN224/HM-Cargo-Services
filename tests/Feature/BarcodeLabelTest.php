@@ -107,6 +107,17 @@ it('renders a server-side QR of the tracking URL on the label', function () {
         ->and($html)->toContain($this->package1->trackingUrl());
 });
 
+it('offers a WhatsApp handoff to send the tracking link to the customer', function () {
+    // The operator lands on this page right after intake — the natural moment
+    // to send the customer their tracking link.
+    $user = User::factory()->create(['role' => UserRole::Administrator]);
+
+    $html = actingAs($user)->get("/labels/shipments/{$this->shipment->id}")->getContent();
+
+    expect($html)->toContain('https://wa.me/')
+        ->and($html)->toContain('واتساب');
+});
+
 it('requires authentication to print labels', function () {
     $response = get("/labels/packages/{$this->package1->id}");
     $response->assertRedirect('/login');

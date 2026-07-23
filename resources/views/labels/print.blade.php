@@ -84,6 +84,9 @@
 <body>
     <div class="no-print text-center" style="margin-bottom: 20px;">
         <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px; cursor: pointer; background: #000; color: #fff; border: none; border-radius: 4px;">طباعة الملصقات (A4)</button>
+        @isset($whatsappUrl)
+            <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" style="display: inline-block; padding: 10px 20px; font-size: 16px; margin-right: 10px; background: #25D366; color: #fff; border-radius: 4px; text-decoration: none;">إرسال رابط التتبّع عبر واتساب</a>
+        @endisset
     </div>
 
     @foreach($labels as $label)

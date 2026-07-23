@@ -96,12 +96,21 @@ class ShipmentsTable
                     ->url(fn (Shipment $record): string => route('labels.shipment', $record))
                     ->openUrlInNewTab(),
 
-                Action::make('whatsapp')
-                    ->label('واتساب')
+                // The tracking-link handoff (which carries the secret token)
+                // lives on the labels page, reached right after intake — not
+                // here: the staff list deliberately never prints the token
+                // (see ShipmentUiTest). The existing "رابط التتبع" copy action
+                // still lets staff share it without rendering it.
+                //
+                // Once it has arrived the tracking link is moot; the recipient
+                // needs the amount due and the invitation to collect. This
+                // arrival message carries no token, so it is safe in the list.
+                Action::make('whatsappArrival')
+                    ->label('واتساب: إشعار الوصول')
                     ->icon('heroicon-o-chat-bubble-left-ellipsis')
                     ->color('success')
                     ->visible(fn (Shipment $record): bool => $record->status === ShipmentStatus::ReadyForCollection)
-                    ->url(fn (Shipment $record): string => (new WhatsAppMessageService)->buildUrl($record))
+                    ->url(fn (Shipment $record): string => (new WhatsAppMessageService)->arrivalUrl($record))
                     ->openUrlInNewTab(),
 
                 // A shipment leaves only while nothing depends on it: once it

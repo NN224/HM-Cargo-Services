@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Package;
 use App\Models\Shipment;
 use App\Services\QrCode;
+use App\Services\WhatsAppMessageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
@@ -13,7 +14,7 @@ class LabelController extends Controller
     /**
      * Print a label for a single package.
      */
-    public function printPackage(Request $request, Package $package, QrCode $qr)
+    public function printPackage(Request $request, Package $package, QrCode $qr, WhatsAppMessageService $whatsapp)
     {
         Gate::authorize('view', $package->shipment);
 
@@ -54,13 +55,14 @@ class LabelController extends Controller
             'shipment' => $shipment,
             'labels' => $labels,
             'destination' => $destination,
+            'whatsappUrl' => $whatsapp->intakeUrl($shipment),
         ]);
     }
 
     /**
      * Print labels for all packages in a shipment.
      */
-    public function printShipment(Request $request, Shipment $shipment, QrCode $qr)
+    public function printShipment(Request $request, Shipment $shipment, QrCode $qr, WhatsAppMessageService $whatsapp)
     {
         Gate::authorize('view', $shipment);
 
@@ -85,6 +87,7 @@ class LabelController extends Controller
             'shipment' => $shipment,
             'labels' => $labels,
             'destination' => $destination,
+            'whatsappUrl' => $whatsapp->intakeUrl($shipment),
         ]);
     }
 }

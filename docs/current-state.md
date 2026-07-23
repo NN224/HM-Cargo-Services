@@ -1,7 +1,7 @@
 # Current State — Handoff
 
 **Last updated:** 2026-07-23, end of session
-**Tests:** 288 passing, 929 assertions, working tree clean
+**Tests:** 291 passing, 938 assertions, working tree clean
 
 Read this first if you are picking the project up. It says what exists, what
 does not, and what to do next. The binding rules live in [`../AGENTS.md`](../AGENTS.md)
@@ -64,7 +64,7 @@ has tried the scan flow on a real phone in a real warehouse.
 | Payments, oldest-first allocation, reversals | done, with screen |
 | Public tracking on `/track/{token}`, rate limited | done |
 | A4 labels with a scannable tracking QR + link, no price printed | done, wired into the shipment UI and after intake |
-| One-click WhatsApp arrival message, no paid API | done |
+| Two WhatsApp handoffs — tracking at intake, amount at arrival (D-028) | done |
 | Customer statement, reconciled against the ledger | done |
 | Batch report — counts, weight, revenue, cost, profit | done |
 | Shipment destination, enforced against the batch route | done |
@@ -84,7 +84,7 @@ has tried the scan flow on a real phone in a real warehouse.
 ## Suggested next step
 
 Try it against a real shipment before adding anything else. The feature list
-is close to complete and entirely unexercised: every one of the 288 tests was
+is close to complete and entirely unexercised: every one of the 291 tests was
 written by the same session that wrote the code it tests. A single real
 shipment — created in Dubai, priced into a batch, scanned in, collected and
 paid — will find more than the next feature would.
@@ -111,6 +111,8 @@ rules, so do not act on the originals without reading these.
 | D-024 | Receiving cargo applies an agreed rate — it is not a pricing decision |
 | D-025 | Employees see every shipment; batches stay warehouse-scoped |
 | D-026 | Per-employee page locking — a page deny-list, not a permission matrix |
+| D-027 | The package label carries a QR of its public tracking URL |
+| D-028 | Two WhatsApp messages — tracking link at intake, amount at arrival |
 
 ---
 
@@ -206,7 +208,7 @@ a readable staff reference from a 48-character random public token.
 
 ```bash
 php artisan serve          # http://127.0.0.1:8000 redirects to /admin
-php artisan test           # 288 passing
+php artisan test           # 291 passing
 php artisan migrate:fresh --seed   # needs ADMIN_PASSWORD in .env
 ```
 

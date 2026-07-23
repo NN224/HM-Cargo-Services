@@ -30,6 +30,10 @@ beforeEach(function () {
         'warehouse_id' => $this->dubai->id,
     ]);
 
+    // The customer (the sender) has their own phone; the intake message goes
+    // here. The recipient may be a different person and phone; the arrival
+    // message goes there. In the common case the recipient is the customer,
+    // so both reach the same registered number.
     $this->customer = Customer::create([
         'name' => 'أحمد', 'phone' => '+971500000001',
     ]);
@@ -55,80 +59,110 @@ function makeTestShipment(string $name, string $phone, int $charge, int $paid, s
     });
 }
 
-// ------------------------------------------------------------ unit: messages
+// ------------------------------------------------------- unit: intake message
 
-test('whatsapp service builds a wa.me url with arabic message', function () {
+test('the intake message goes to the customer and carries the tracking link', function () {
+    // Sent when the cargo is received — this is when the tracking link is
+    // useful, and it goes to the sender (the customer) on their own number.
+    $shipment = makeTestShipment('سامي', '+9613000001', 9250, 0,
+        ShipmentStatus::Pending->value);
+
+    $url = (new WhatsAppMessageService)->intakeUrl($shipment);
+
+    expect($url)->toStartWith('https://wa.me/971500000001?text=') // the customer's phone
+        ->and($url)->toContain(urlencode('أحمد'))                 // the customer's name
+        ->and($url)->toContain(urlencode('استلمنا'))
+        ->and($url)->toContain(urlencode('/track/'.$shipment->public_token))
+        // No money at intake: nothing is due until the goods arrive.
+        ->and($url)->not->toContain(urlencode('المبلغ'));
+});
+
+// ------------------------------------------------------ unit: arrival message
+
+test('the arrival message goes to the recipient with the amount and no tracking link', function () {
+    // Sent on arrival. Tracking is moot once it has arrived, so the link is
+    // gone; what the recipient needs now is the amount and the invitation to
+    // collect.
     $shipment = makeTestShipment('سامي', '+9613000001', 9250, 0,
         ShipmentStatus::ReadyForCollection->value);
 
-    $service = new WhatsAppMessageService;
-    $url = $service->buildUrl($shipment);
+    $url = (new WhatsAppMessageService)->arrivalUrl($shipment);
 
-    expect($url)->toStartWith('https://wa.me/9613000001?text=')
+    expect($url)->toStartWith('https://wa.me/9613000001?text=') // the recipient's phone
         ->and($url)->toContain(urlencode('سامي'))
-        ->and($url)->toContain(urlencode($shipment->reference))
+        ->and($url)->toContain(urlencode('وصلت'))
         ->and($url)->toContain(urlencode('دمشق'))
         ->and($url)->toContain(urlencode('92.50'))
-        ->and($url)->toContain(urlencode('/track/'.$shipment->public_token));
+        ->and($url)->not->toContain(urlencode('/track/')); // no tracking link at arrival
 });
 
-test('whatsapp service includes remaining amount when partially paid', function () {
+test('the arrival message includes the remaining amount when partially paid', function () {
     $shipment = makeTestShipment('كريم', '+96171112233', 15000, 5000,
         ShipmentStatus::ReadyForCollection->value);
 
-    $url = (new WhatsAppMessageService)->buildUrl($shipment);
+    $url = (new WhatsAppMessageService)->arrivalUrl($shipment);
 
     expect($url)->toContain(urlencode('150.00'))
         ->and($url)->toContain(urlencode('100.00'));
 });
 
-test('whatsapp service strips non-digits and plus from phone', function () {
+test('the arrival message strips non-digits and plus from the phone', function () {
     $shipment = makeTestShipment('نور', '+961 71-112233', 5000, 0,
         ShipmentStatus::ReadyForCollection->value);
 
-    $url = (new WhatsAppMessageService)->buildUrl($shipment);
+    $url = (new WhatsAppMessageService)->arrivalUrl($shipment);
 
     expect($url)->toStartWith('https://wa.me/96171112233?text=');
 });
 
-test('whatsapp message encodes arabic text for url', function () {
+test('the messages url-encode the arabic text', function () {
     $shipment = makeTestShipment('عمر', '+9613000001', 5000, 0,
         ShipmentStatus::ReadyForCollection->value);
 
-    $url = (new WhatsAppMessageService)->buildUrl($shipment);
+    $url = (new WhatsAppMessageService)->arrivalUrl($shipment);
 
-    // Raw Arabic must not appear in URL
+    // Raw Arabic must not appear in the URL; the encoded form must.
     expect($url)->not->toContain('مرحباً')
         ->and($url)->not->toContain('وصلت')
-        // But URL-encoded form should
         ->and($url)->toContain(urlencode('مرحباً'));
 });
 
-// ----------------------------------------------------------- ui: table action
+// ------------------------------------------------- ui: arrival table action
 
-test('whatsapp action is visible when shipment is ready for collection', function () {
+test('the arrival action appears once the shipment is ready for collection', function () {
     $shipment = makeTestShipment('ليلى', '+9613000001', 7500, 0,
         ShipmentStatus::ReadyForCollection->value, 'tok-readydel');
 
     Livewire::actingAs($this->admin)
         ->test(ListShipments::class)
-        ->assertTableActionVisible('whatsapp', $shipment->id);
+        ->assertTableActionVisible('whatsappArrival', $shipment->id);
 });
 
-test('whatsapp action is hidden when shipment is not ready for collection', function () {
-    $justPending = makeTestShipment('ماجد', '+9613000001', 3000, 0,
+test('the arrival action is hidden while the shipment is still travelling', function () {
+    $shipment = makeTestShipment('ماجد', '+9613000001', 3000, 0,
         ShipmentStatus::Pending->value, 'tok-pending');
 
     Livewire::actingAs($this->admin)
         ->test(ListShipments::class)
-        ->assertTableActionHidden('whatsapp', $justPending->id);
+        ->assertTableActionHidden('whatsappArrival', $shipment->id);
 });
 
-test('whatsapp action is hidden for cancelled shipments', function () {
+test('the arrival action is hidden for a cancelled shipment', function () {
     $cancelled = makeTestShipment('ملغي', '+9613000001', 1000, 0,
         ShipmentStatus::Cancelled->value, 'tok-cancelled');
 
     Livewire::actingAs($this->admin)
         ->test(ListShipments::class)
-        ->assertTableActionHidden('whatsapp', $cancelled->id);
+        ->assertTableActionHidden('whatsappArrival', $cancelled->id);
+});
+
+// The staff list must never print the secret tracking token — the intake
+// WhatsApp handoff (which carries it) lives on the labels page instead.
+test('the shipments list does not print the tracking token in any whatsapp link', function () {
+    $shipment = makeTestShipment('ماجد', '+9613000001', 3000, 0,
+        ShipmentStatus::Pending->value, 'tok-secret-xyz');
+
+    Livewire::actingAs($this->admin)
+        ->test(ListShipments::class)
+        ->assertDontSee('tok-secret-xyz');
 });

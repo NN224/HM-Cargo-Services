@@ -6,7 +6,7 @@
 # rather than guess one.
 
 [phases.setup]
-nixPkgs = ["php83", "php83Extensions.pdo_pgsql", "php83Extensions.pgsql", "php83Extensions.bcmath", "php83Extensions.mbstring", "php83Extensions.intl", "composerEnv"]
+nixPkgs = ["php84", "php84Extensions.pdo_pgsql", "php84Extensions.pgsql", "php84Extensions.bcmath", "php84Extensions.mbstring", "php84Extensions.intl", "php84Extensions.zip", "composerEnv"]
 
 [phases.install]
 cmds = ["composer install --no-dev --optimize-autoloader --no-interaction"]

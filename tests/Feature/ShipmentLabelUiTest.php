@@ -30,6 +30,9 @@ beforeEach(function () {
 test('the shipment view offers a print-labels action and shows a QR', function () {
     Livewire::test(ViewShipment::class, ['record' => $this->shipment->getRouteKey()])
         ->assertSee('طباعة الملصقات', escape: false)
-        ->assertSee('<svg', escape: false)
+        // The QR is rendered at size 110; Filament's own chrome SVGs (breadcrumb
+        // chevrons, icons) are other sizes, so this width discriminates the
+        // per-package QR from them — a bare '<svg' assertion would pass vacuously.
+        ->assertSee('width="110"', escape: false)
         ->assertSee(route('labels.shipment', $this->shipment));
 });

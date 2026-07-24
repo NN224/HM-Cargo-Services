@@ -7,7 +7,9 @@ use App\Enums\Capability;
 use App\Filament\Resources\Batches\BatchResource;
 use App\Models\Batch;
 use App\Models\Customer;
+use App\Models\Route;
 use App\Models\User;
+use App\Models\Warehouse;
 use App\Services\BatchIntakeService;
 use BackedEnum;
 use DomainException;
@@ -94,7 +96,50 @@ class ReceiveIntoBatch extends Page
                             // The rate depends on this batch's route, so a
                             // change here must refresh it same as customer_id.
                             ->live()
-                            ->afterStateUpdated(fn (Get $get, Set $set) => $set('rate_per_kg', self::agreedRatePerKg($get))),
+                            ->afterStateUpdated(fn (Get $get, Set $set) => $set('rate_per_kg', self::agreedRatePerKg($get)))
+                            ->createOptionForm([
+                                Select::make('route_id')
+                                    ->label('المسار')
+                                    ->relationship(
+                                        'route',
+                                        'name',
+                                        modifyQueryUsing: fn (Builder $query): Builder => BatchResource::scopeRouteQuery($query),
+                                    )
+                                    ->searchable()
+                                    ->preload()
+                                    ->required()
+                                    ->createOptionForm([
+                                        TextInput::make('name')
+                                            ->label('اسم المسار')
+                                            ->required()
+                                            ->maxLength(255)
+                                            ->extraInputAttributes(['dir' => 'auto'])
+                                            ->unique('routes', 'name'),
+
+                                        Select::make('origin_warehouse_id')
+                                            ->label('مستودع المنشأ')
+                                            ->options(fn () => Warehouse::pluck('name', 'id')->all())
+                                            ->required(),
+
+                                        Select::make('destination_warehouse_id')
+                                            ->label('مستودع الوجهة')
+                                            ->options(fn () => Warehouse::pluck('name', 'id')->all())
+                                            ->required()
+                                            ->different('origin_warehouse_id'),
+
+                                        Select::make('transit_warehouse_id')
+                                            ->label('مستودع العبور (اختياري)')
+                                            ->options(fn () => Warehouse::pluck('name', 'id')->all())
+                                            ->different('origin_warehouse_id')
+                                            ->different('destination_warehouse_id'),
+                                    ])
+                                    ->createOptionUsing(fn (array $data): int => Route::create($data)->id),
+                            ])
+                            ->createOptionUsing(fn (array $data): int => Batch::create([
+                                'route_id' => $data['route_id'],
+                            ])->id)
+                            ->createOptionAction(fn (Action $action): Action => $action
+                                ->authorize(fn (): bool => auth()->user()?->hasCapability(Capability::PriceShipments) ?? false)),
 
                         Select::make('customer_id')
                             ->label('العميل')

@@ -156,6 +156,16 @@ test('the arrival action is hidden for a cancelled shipment', function () {
         ->assertTableActionHidden('whatsappArrival', $cancelled->id);
 });
 
+test('the view shipment page offers whatsapp intake and arrival actions', function () {
+    $shipment = makeTestShipment('سامي', '+9613000001', 9250, 0,
+        ShipmentStatus::ReadyForCollection->value, 'tok-view-wa');
+
+    Livewire::actingAs($this->admin)
+        ->test(\App\Filament\Resources\Shipments\Pages\ViewShipment::class, ['record' => $shipment->id])
+        ->assertActionExists('whatsappIntake')
+        ->assertActionExists('whatsappArrival');
+});
+
 // The staff list must never print the secret tracking token — the intake
 // WhatsApp handoff (which carries it) lives on the labels page instead.
 test('the shipments list does not print the tracking token in any whatsapp link', function () {

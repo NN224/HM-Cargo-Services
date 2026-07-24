@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\Shipments\Pages;
 
 use App\Enums\PackageStatus;
+use App\Enums\ShipmentStatus;
 use App\Filament\Resources\Shipments\ShipmentResource;
 use App\Services\QrCode;
+use App\Services\WhatsAppMessageService;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Infolists\Components\RepeatableEntry;
@@ -28,6 +30,24 @@ class ViewShipment extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('whatsappIntake')
+                ->label('واتساب: رابط التتبع')
+                ->icon('heroicon-o-chat-bubble-left-right')
+                ->color('success')
+                ->url(fn (): string => (new WhatsAppMessageService)->intakeUrl($this->record))
+                ->openUrlInNewTab(),
+
+            Action::make('whatsappArrival')
+                ->label('واتساب: إشعار الوصول')
+                ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                ->color('success')
+                ->visible(fn (): bool => in_array($this->record->status, [
+                    ShipmentStatus::ReadyForCollection,
+                    ShipmentStatus::Collected,
+                ], true))
+                ->url(fn (): string => (new WhatsAppMessageService)->arrivalUrl($this->record))
+                ->openUrlInNewTab(),
+
             Action::make('printLabels')
                 ->label('طباعة الملصقات')
                 ->icon('heroicon-o-printer')

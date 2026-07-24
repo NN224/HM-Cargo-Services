@@ -45,7 +45,7 @@ class DatabaseSeeder extends Seeder
         // Seeded so the system is operational immediately — no manual route
         // setup is required before a user can create a batch and receive cargo.
         Route::firstOrCreate(
-            ['name' => 'دبي → لبنان'],
+            ['name' => 'Dubai → Lebanon'],
             [
                 'origin_warehouse_id'      => $dubai->id,
                 'destination_warehouse_id' => $beirut->id,
@@ -55,7 +55,7 @@ class DatabaseSeeder extends Seeder
         );
 
         Route::firstOrCreate(
-            ['name' => 'دبي → سوريا (مباشر)'],
+            ['name' => 'Dubai → Syria (Direct)'],
             [
                 'origin_warehouse_id'      => $dubai->id,
                 'destination_warehouse_id' => $damascus->id,
@@ -65,7 +65,7 @@ class DatabaseSeeder extends Seeder
         );
 
         Route::firstOrCreate(
-            ['name' => 'دبي → بيروت → سوريا'],
+            ['name' => 'Dubai → Beirut → Syria'],
             [
                 'origin_warehouse_id'      => $dubai->id,
                 'destination_warehouse_id' => $damascus->id,

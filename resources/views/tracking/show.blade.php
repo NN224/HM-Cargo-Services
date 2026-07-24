@@ -33,19 +33,19 @@
         main {
             width: min(100% - 1.5rem, 36rem);
             margin: 0 auto;
-            padding: 1rem 0 3rem;
+            padding: 1rem 0 3.5rem;
         }
 
-        /* Hero Header - Deep Black Glass */
+        /* Hero Header - Deep Black Glass with Logo */
         header {
             position: relative;
             padding: 2rem 1.5rem 2.25rem;
             border-radius: 1.5rem;
             background: var(--primary-gradient);
-            border: 1px solid rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.25);
             color: white;
             text-align: center;
-            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
             overflow: hidden;
         }
 
@@ -56,24 +56,43 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 65%);
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 65%);
             pointer-events: none;
         }
 
-        .brand-badge {
+        .logo-container {
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
-            padding: 0.35rem 0.9rem;
+            justify-content: center;
+            gap: 0.6rem;
+            padding: 0.45rem 1.25rem;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(8px);
-            font-size: 0.85rem;
-            font-weight: 600;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            backdrop-filter: blur(12px);
+            margin-bottom: 0.85rem;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            background: #10b981;
+            color: #042f2e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 0.9rem;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .logo-text {
+            font-size: 0.95rem;
+            font-weight: 800;
             letter-spacing: 0.5px;
-            margin-bottom: 0.75rem;
-            color: #a7f3d0;
+            color: #f9fafb;
         }
 
         h1 {
@@ -102,7 +121,7 @@
             font-size: 0.95rem;
         }
 
-        /* Step Progress Tracker - Deep Mode */
+        /* Step Progress Tracker */
         .stepper-container {
             margin: 1.25rem 0;
             padding: 1.25rem 1rem;
@@ -179,7 +198,7 @@
             color: #6ee7b7;
         }
 
-        /* Content Cards Grid - Dark Cards */
+        /* Content Cards Grid */
         .cards-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -212,7 +231,7 @@
             margin: 0;
         }
 
-        /* Financial Highlight Banner - Deep Glass */
+        /* Financial Highlight Banner */
         .finance-card {
             grid-column: 1 / -1;
             background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
@@ -245,7 +264,7 @@
         .finance-value.paid { color: #60a5fa; }
         .finance-value.balance { color: #fbbf24; }
 
-        /* Timeline Section - Dark Timeline */
+        /* Timeline Section */
         .timeline-section {
             grid-column: 1 / -1;
             margin-top: 0.5rem;
@@ -317,14 +336,62 @@
             background: white;
             padding: 0.5rem;
         }
+
+        /* Call To Action (CTA) Section */
+        .cta-card {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #064e3b 0%, #059669 100%);
+            border-radius: 1.25rem;
+            padding: 1.25rem 1.5rem;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(6, 78, 59, 0.3);
+            margin-top: 0.5rem;
+        }
+
+        .cta-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.35rem;
+        }
+
+        .cta-subtitle {
+            font-size: 0.85rem;
+            color: #a7f3d0;
+            margin-bottom: 1rem;
+        }
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.85rem 1.25rem;
+            background: #ffffff;
+            color: #064e3b;
+            font-weight: 800;
+            font-size: 0.95rem;
+            border-radius: 0.85rem;
+            text-decoration: none;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+            transition: transform 0.2s ease;
+        }
+
+        .cta-button:active {
+            transform: scale(0.98);
+        }
     </style>
 </head>
 <body>
 
 <main>
-    <!-- Header Hero Banner - Deep Black Glass -->
+    <!-- Header Hero Banner with Logo -->
     <header>
-        <div class="brand-badge">📦 HM Cargo Services</div>
+        <div class="logo-container">
+            <div class="logo-icon">HM</div>
+            <div class="logo-text">HM Cargo Services</div>
+        </div>
         <h1>تتبع الشحنة</h1>
         <div class="ref-number">{{ $tracking['reference'] }}</div>
         <div class="status-pill">{{ $tracking['stage'] }}</div>
@@ -421,6 +488,15 @@
         <div class="card full-width qr-box">
             <div class="card-label" style="margin-bottom:0.75rem;">رمز QR لمتابعة الشحنة</div>
             <div>{!! $tracking['qr'] !!}</div>
+        </div>
+
+        <!-- Call To Action (CTA) Card -->
+        <div class="cta-card">
+            <div class="cta-title">هل لديك أي استفسار حول الشحنة؟</div>
+            <div class="cta-subtitle">فريق خدمة العملاء جاهز لمساعدتك مباشرةً</div>
+            <a href="https://wa.me/?text={{ urlencode('مرحباً، أستفسر عن شحنتي رقم ' . $tracking['reference']) }}" target="_blank" class="cta-button">
+                💬 التواصل المباشر عبر الواتساب
+            </a>
         </div>
     </div>
 </main>

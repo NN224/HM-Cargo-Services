@@ -34,8 +34,11 @@ class ViewShipment extends ViewRecord
                 ->label('واتساب: رابط التتبع')
                 ->icon('heroicon-o-chat-bubble-left-right')
                 ->color('success')
-                ->url(fn (): string => (new WhatsAppMessageService)->intakeUrl($this->record))
-                ->openUrlInNewTab(),
+                ->action(function (): void {
+                    $this->record->markIntakeNotified();
+                    $url = (new WhatsAppMessageService)->intakeUrl($this->record);
+                    $this->js('window.open('.json_encode($url).', "_blank")');
+                }),
 
             Action::make('whatsappArrival')
                 ->label('واتساب: إشعار الوصول')
@@ -45,8 +48,11 @@ class ViewShipment extends ViewRecord
                     ShipmentStatus::ReadyForCollection,
                     ShipmentStatus::Collected,
                 ], true))
-                ->url(fn (): string => (new WhatsAppMessageService)->arrivalUrl($this->record))
-                ->openUrlInNewTab(),
+                ->action(function (): void {
+                    $this->record->markArrivalNotified();
+                    $url = (new WhatsAppMessageService)->arrivalUrl($this->record);
+                    $this->js('window.open('.json_encode($url).', "_blank")');
+                }),
 
             Action::make('printLabels')
                 ->label('طباعة الملصقات')
@@ -63,6 +69,17 @@ class ViewShipment extends ViewRecord
         $shipment = $this->record;
         $qr = app(QrCode::class);
 
+        $intakeText = $shipment->intake_notified_at
+            ? 'تم تجهيز الإشعار ('.$shipment->intake_notified_at->format('Y-m-d H:i').')'
+            : 'لم يُرسل بعد';
+
+        $isReady = $shipment->status === ShipmentStatus::ReadyForCollection;
+        $arrivalText = match (true) {
+            $shipment->arrival_notified_at !== null => 'تم إشعار الوصول ('.$shipment->arrival_notified_at->format('Y-m-d H:i').')',
+            $isReady => '⚠️ تنبيه: لم يُرسل إشعار الوصول للمستلم بعد!',
+            default => '—',
+        };
+
         return $schema
             ->state([
                 'reference' => $shipment->reference,
@@ -72,14 +89,14 @@ class ViewShipment extends ViewRecord
                 'destination' => $shipment->destinationWarehouse?->name ?? '—',
                 'status' => $shipment->status->label(),
                 'total_weight' => $this->formatWeight($shipment->total_weight_kg),
+                'intake_notified' => $intakeText,
+                'arrival_notified' => $arrivalText,
                 'packages' => $shipment->packages->map(fn ($package): array => [
                     'barcode' => $package->barcode,
                     'qr' => $qr->svg($package->trackingUrl(), 110),
                     'weight' => $this->formatWeight($package->weight_kg),
                     'description' => $package->description ?: '—',
                     'source_barcode' => $package->source_barcode ?: '—',
-                    // The raw enum, not its label: the colour closure below matches on
-                    // it directly (kept as $state, not read as a sibling field — see note).
                     'status' => $package->status,
                 ])->all(),
             ])
@@ -93,6 +110,18 @@ class ViewShipment extends ViewRecord
                         TextEntry::make('destination')->label('مستودع الوجهة'),
                         TextEntry::make('status')->label('حالة الشحنة')->badge(),
                         TextEntry::make('total_weight')->label('الوزن الإجمالي'),
+                        TextEntry::make('intake_notified')
+                            ->label('إشعار التتبع (الاستلام)')
+                            ->badge()
+                            ->color(fn (): string => $shipment->intake_notified_at ? 'success' : 'gray'),
+                        TextEntry::make('arrival_notified')
+                            ->label('إشعار الوصول للمستلم')
+                            ->badge()
+                            ->color(fn (): string => match (true) {
+                                $shipment->arrival_notified_at !== null => 'success',
+                                $isReady => 'warning',
+                                default => 'gray',
+                            }),
                     ])
                     ->columns(3),
 

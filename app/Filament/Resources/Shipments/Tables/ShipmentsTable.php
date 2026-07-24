@@ -61,6 +61,27 @@ class ShipmentsTable
                         ShipmentStatus::Exception => 'danger',
                     }),
 
+                TextColumn::make('notification_status')
+                    ->label('الإشعار')
+                    ->state(function (Shipment $record): string {
+                        if ($record->arrival_notified_at !== null) {
+                            return 'تم إشعار الوصول';
+                        }
+                        if ($record->status === ShipmentStatus::ReadyForCollection) {
+                            return '⚠️ يحتاج إشعار وصول!';
+                        }
+                        if ($record->intake_notified_at !== null) {
+                            return 'تم إرسال التتبع';
+                        }
+                        return '—';
+                    })
+                    ->badge()
+                    ->color(fn (string $state): string => match (true) {
+                        str_contains($state, 'تم') => 'success',
+                        str_contains($state, '⚠️') => 'warning',
+                        default => 'gray',
+                    }),
+
                 TextColumn::make('created_at')
                     ->label('التاريخ')
                     ->date('Y-m-d')
@@ -96,22 +117,16 @@ class ShipmentsTable
                     ->url(fn (Shipment $record): string => route('labels.shipment', $record))
                     ->openUrlInNewTab(),
 
-                // The tracking-link handoff (which carries the secret token)
-                // lives on the labels page, reached right after intake — not
-                // here: the staff list deliberately never prints the token
-                // (see ShipmentUiTest). The existing "رابط التتبع" copy action
-                // still lets staff share it without rendering it.
-                //
-                // Once it has arrived the tracking link is moot; the recipient
-                // needs the amount due and the invitation to collect. This
-                // arrival message carries no token, so it is safe in the list.
                 Action::make('whatsappArrival')
                     ->label('واتساب: إشعار الوصول')
                     ->icon('heroicon-o-chat-bubble-left-ellipsis')
                     ->color('success')
                     ->visible(fn (Shipment $record): bool => $record->status === ShipmentStatus::ReadyForCollection)
-                    ->url(fn (Shipment $record): string => (new WhatsAppMessageService)->arrivalUrl($record))
-                    ->openUrlInNewTab(),
+                    ->action(function (Shipment $record, $livewire): void {
+                        $record->markArrivalNotified();
+                        $url = (new WhatsAppMessageService)->arrivalUrl($record);
+                        $livewire->js('window.open('.json_encode($url).', "_blank")');
+                    }),
 
                 // A shipment leaves only while nothing depends on it: once it
                 // is in a batch, its weight and revenue are already counted

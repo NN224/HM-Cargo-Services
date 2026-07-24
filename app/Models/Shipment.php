@@ -34,6 +34,8 @@ class Shipment extends Model
         'status',
         'reference',
         'public_token',
+        'intake_notified_at',
+        'arrival_notified_at',
     ];
 
     protected $attributes = [
@@ -49,6 +51,8 @@ class Shipment extends Model
             // float loses exactness, which is the bug this system must not
             // reproduce (D-007).
             'total_weight_kg' => 'decimal:4',
+            'intake_notified_at' => 'datetime',
+            'arrival_notified_at' => 'datetime',
         ];
     }
 
@@ -281,6 +285,16 @@ class Shipment extends Model
      */
     protected function deletionDependencies(): array
     {
-        return ['رحلة' => 'batch'];
+        return ['رحلات' => 'batch'];
+    }
+
+    public function markIntakeNotified(): void
+    {
+        $this->update(['intake_notified_at' => now()]);
+    }
+
+    public function markArrivalNotified(): void
+    {
+        $this->update(['arrival_notified_at' => now()]);
     }
 }

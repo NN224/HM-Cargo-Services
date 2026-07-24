@@ -3,7 +3,10 @@
 namespace App\Filament\Resources\Batches\Schemas;
 
 use App\Filament\Resources\Batches\BatchResource;
+use App\Models\Route;
+use App\Models\Warehouse;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -30,7 +33,33 @@ class BatchForm
                             )
                             ->searchable()
                             ->preload()
-                            ->required(),
+                            ->required()
+                            ->createOptionForm([
+                                TextInput::make('name')
+                                    ->label('اسم المسار')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->extraInputAttributes(['dir' => 'auto'])
+                                    ->unique('routes', 'name'),
+
+                                Select::make('origin_warehouse_id')
+                                    ->label('مستودع المنشأ')
+                                    ->options(fn () => Warehouse::pluck('name', 'id')->all())
+                                    ->required(),
+
+                                Select::make('destination_warehouse_id')
+                                    ->label('مستودع الوجهة')
+                                    ->options(fn () => Warehouse::pluck('name', 'id')->all())
+                                    ->required()
+                                    ->different('origin_warehouse_id'),
+
+                                Select::make('transit_warehouse_id')
+                                    ->label('مستودع العبور (اختياري)')
+                                    ->options(fn () => Warehouse::pluck('name', 'id')->all())
+                                    ->different('origin_warehouse_id')
+                                    ->different('destination_warehouse_id'),
+                            ])
+                            ->createOptionUsing(fn (array $data): int => Route::create($data)->id),
 
                         TextEntry::make('status')
                             ->label('الحالة')

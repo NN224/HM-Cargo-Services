@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\UserRole;
+use App\Models\Route;
 use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -13,8 +14,12 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed the initial administrator and the warehouses behind the three
-     * routes approved in D-005.
+     * Seed the initial administrator, the warehouses, and the three routes
+     * approved in D-005.
+     *
+     * The three routes are seeded so the system is immediately operational
+     * after a fresh install: a user can create a batch and receive cargo
+     * without first having to configure warehouses and routes manually.
      *
      * The password is read from ADMIN_PASSWORD so no credential is ever
      * committed. Seeding is skipped, loudly, when it is unset.
@@ -26,14 +31,47 @@ class DatabaseSeeder extends Seeder
             ['location' => 'دبي، الإمارات العربية المتحدة'],
         );
 
-        Warehouse::firstOrCreate(
+        $beirut = Warehouse::firstOrCreate(
             ['name' => 'Beirut'],
             ['location' => 'بيروت، لبنان'],
         );
 
-        Warehouse::firstOrCreate(
+        $damascus = Warehouse::firstOrCreate(
             ['name' => 'Damascus'],
             ['location' => 'دمشق، سوريا'],
+        );
+
+        // The three initial routes approved in D-005.
+        // Seeded so the system is operational immediately — no manual route
+        // setup is required before a user can create a batch and receive cargo.
+        Route::firstOrCreate(
+            ['name' => 'Dubai → Lebanon'],
+            [
+                'origin_warehouse_id'      => $dubai->id,
+                'destination_warehouse_id' => $beirut->id,
+                'transit_warehouse_id'     => null,
+                'is_active'                => true,
+            ],
+        );
+
+        Route::firstOrCreate(
+            ['name' => 'Dubai → Syria (Direct)'],
+            [
+                'origin_warehouse_id'      => $dubai->id,
+                'destination_warehouse_id' => $damascus->id,
+                'transit_warehouse_id'     => null,
+                'is_active'                => true,
+            ],
+        );
+
+        Route::firstOrCreate(
+            ['name' => 'Dubai → Beirut → Syria'],
+            [
+                'origin_warehouse_id'      => $dubai->id,
+                'destination_warehouse_id' => $damascus->id,
+                'transit_warehouse_id'     => $beirut->id,
+                'is_active'                => true,
+            ],
         );
 
         $password = env('ADMIN_PASSWORD');
@@ -50,14 +88,14 @@ class DatabaseSeeder extends Seeder
         User::firstOrCreate(
             ['email' => env('ADMIN_EMAIL', 'admin@hmcargo.ae')],
             [
-                'name' => 'مدير النظام',
-                'password' => $password,
-                'role' => UserRole::Administrator,
+                'name'         => 'مدير النظام',
+                'password'     => $password,
+                'role'         => UserRole::Administrator,
                 'warehouse_id' => $dubai->id,
-                'is_active' => true,
+                'is_active'    => true,
             ],
         );
 
-        $this->command?->info('Administrator seeded. Change the password after first login.');
+        $this->command?->info('Administrator and initial routes seeded. Change the password after first login.');
     }
 }

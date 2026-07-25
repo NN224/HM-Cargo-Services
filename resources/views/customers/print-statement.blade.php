@@ -214,7 +214,10 @@
             <div class="info-box">
                 <div class="info-label">معلومات الشركة</div>
                 <div class="info-value">HM Cargo Services</div>
-                <div style="color: #4b5563; margin-top: 5px; direction: ltr; text-align: right;">+971521616814</div>
+                <div style="color: #4b5563; margin-top: 5px; direction: ltr; text-align: right; font-size: 13px;">
+                    <div>🇦🇪 +971 52 153 0190</div>
+                    <div style="margin-top: 3px;">🇱🇧 +961 81 059 063</div>
+                </div>
             </div>
         </div>
 

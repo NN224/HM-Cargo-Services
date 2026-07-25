@@ -388,9 +388,9 @@
 <main>
     <!-- Header Hero Banner with Logo -->
     <header>
-        <div class="logo-container">
-            <div class="logo-icon">HM</div>
-            <div class="logo-text">HM Cargo Services</div>
+        <div class="logo-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.35rem; margin-bottom: 0.75rem;">
+            <img src="{{ asset('images/logo.png') }}" alt="HM Cargo Services Logo" style="height: 72px; width: auto; max-width: 180px; object-fit: contain; filter: drop-shadow(0 4px 16px rgba(0,0,0,0.6));">
+            <div class="logo-text" style="font-weight: 800; font-size: 1.1rem; letter-spacing: 0.5px;">HM Cargo Services</div>
         </div>
         <h1>تتبع الشحنة</h1>
         <div class="ref-number">{{ $tracking['reference'] }}</div>

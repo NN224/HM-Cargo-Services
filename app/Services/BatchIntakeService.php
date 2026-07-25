@@ -70,11 +70,10 @@ class BatchIntakeService
                 $shipment->packages()->create([
                     'weight_kg' => $package['weight_kg'],
                     'description' => $package['description'] ?? null,
-                    // The supplier's own label, when the box carries one. The
-                    // shipment form has always captured this; intake did not,
-                    // so the same box recorded different facts depending on
-                    // which screen received it.
                     'source_barcode' => $package['source_barcode'] ?? null,
+                    'custom_rate_per_kg_cents' => filled($package['custom_rate_per_kg'] ?? null)
+                        ? (int) round(((float) $package['custom_rate_per_kg']) * 100)
+                        : null,
                 ]);
             }
 
@@ -83,7 +82,30 @@ class BatchIntakeService
             // Pricing stays where it has always been. If the customer has no
             // agreed rate for this route, assign() refuses and this whole
             // transaction unwinds — no half-received cargo.
-            return $this->assignment->assign($shipment->fresh(), $batch);
+            $shipment = $this->assignment->assign($shipment->fresh(), $batch);
+
+            $hasCustomRates = false;
+            $customTotalCents = 0;
+            $defaultRateCents = $shipment->rate_per_kg_cents;
+
+            foreach ($packages as $pkg) {
+                $w = (float) ($pkg['weight_kg'] ?? 0);
+                if (isset($pkg['custom_rate_per_kg']) && filled($pkg['custom_rate_per_kg'])) {
+                    $hasCustomRates = true;
+                    $pkgRateCents = (int) round(((float) $pkg['custom_rate_per_kg']) * 100);
+                } else {
+                    $pkgRateCents = $defaultRateCents;
+                }
+                $customTotalCents += (int) round($w * $pkgRateCents);
+            }
+
+            if ($hasCustomRates) {
+                $shipment->forceFill([
+                    'final_charge_cents' => $customTotalCents,
+                ])->save();
+            }
+
+            return $shipment->fresh();
         });
     }
 

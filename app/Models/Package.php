@@ -23,6 +23,7 @@ class Package extends Model
     protected $fillable = [
         'shipment_id',
         'weight_kg',
+        'custom_rate_per_kg_cents',
         'status',
         'source_barcode',
         'description',
@@ -38,6 +39,7 @@ class Package extends Model
         return [
             'status' => PackageStatus::class,
             'weight_kg' => 'decimal:4',
+            'custom_rate_per_kg_cents' => 'integer',
         ];
     }
 

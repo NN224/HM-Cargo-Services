@@ -252,6 +252,16 @@ class ReceiveIntoBatch extends Page
 
                                 TextInput::make('source_barcode')
                                     ->label('باركود المورّد (اختياري)'),
+
+                                TextInput::make('custom_rate_per_kg')
+                                    ->label('سعر الكيلو الخاص بالطرد (دولار - اختياري)')
+                                    ->placeholder('تلقائي (سعر المسار)')
+                                    ->numeric()
+                                    ->step('0.01')
+                                    ->minValue(0.01)
+                                    ->prefix('$')
+                                    ->live(onBlur: true)
+                                    ->helperText('اتركه فارغاً لاستخدام سعر المسار الافتراضي.'),
                             ])
                             ->minItems(1)
                             ->defaultItems(1)
@@ -262,23 +272,38 @@ class ReceiveIntoBatch extends Page
                             ->content(function (Get $get): string {
                                 $packages = $get('packages') ?? [];
                                 $totalWeight = 0;
+                                $estimatedTotal = 0;
+
+                                $defaultRateStr = self::agreedRatePerKg($get);
+                                if (! $defaultRateStr && $get('agreed_rate_per_kg_cents')) {
+                                    $defaultRateStr = number_format(((float) $get('agreed_rate_per_kg_cents')) / 100, 2);
+                                }
+
+                                $defaultRate = $defaultRateStr ? (float) $defaultRateStr : 0;
+                                $hasCustomRate = false;
+
                                 foreach ($packages as $pkg) {
-                                    $totalWeight += (float) ($pkg['weight_kg'] ?? 0);
+                                    $w = (float) ($pkg['weight_kg'] ?? 0);
+                                    $totalWeight += $w;
+
+                                    $pkgRate = (isset($pkg['custom_rate_per_kg']) && filled($pkg['custom_rate_per_kg']))
+                                        ? (float) $pkg['custom_rate_per_kg']
+                                        : $defaultRate;
+
+                                    if (isset($pkg['custom_rate_per_kg']) && filled($pkg['custom_rate_per_kg'])) {
+                                        $hasCustomRate = true;
+                                    }
+
+                                    $estimatedTotal += round($w * $pkgRate, 2);
                                 }
 
                                 if ($totalWeight <= 0) {
                                     return 'أدخل أوزان الطرود لحساب الإجمالي المالي تلقائياً.';
                                 }
 
-                                $rateStr = self::agreedRatePerKg($get);
-                                if (! $rateStr && $get('agreed_rate_per_kg_cents')) {
-                                    $rateStr = number_format(((float) $get('agreed_rate_per_kg_cents')) / 100, 2);
-                                }
-
-                                if ($rateStr) {
-                                    $rate = (float) $rateStr;
-                                    $estimatedTotal = round($totalWeight * $rate, 2);
-                                    return sprintf('⚖️ الوزن الكلي: %s كغ  |  💵 الإجمالي المقدر: $%s (بسعر $%s / كغ)', number_format($totalWeight, 4), number_format($estimatedTotal, 2), number_format($rate, 2));
+                                if ($defaultRate > 0 || $hasCustomRate) {
+                                    $rateInfo = $hasCustomRate ? '(يتضمن طروداً بأسعار مخصصة)' : sprintf('(بسعر $%s / كغ)', number_format($defaultRate, 2));
+                                    return sprintf('⚖️ الوزن الكلي: %s كغ  |  💵 الإجمالي المقدر: $%s %s', number_format($totalWeight, 4), number_format($estimatedTotal, 2), $rateInfo);
                                 }
 
                                 return sprintf('⚖️ الوزن الكلي: %s كغ', number_format($totalWeight, 4));

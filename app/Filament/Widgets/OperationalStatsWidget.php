@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Enums\ShipmentStatus;
 use App\Models\Shipment;
 use App\Models\User;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -16,6 +17,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 class OperationalStatsWidget extends StatsOverviewWidget
 {
     protected static ?int $sort = 1;
+
+    protected ?string $pollingInterval = '30s';
 
     public static function canView(): bool
     {
@@ -33,11 +36,23 @@ class OperationalStatsWidget extends StatsOverviewWidget
             ->where('status', ShipmentStatus::ReadyForCollection->value)
             ->count();
 
+        $inTransit = Shipment::query()
+            ->where('status', ShipmentStatus::InTransit->value)
+            ->count();
+
         return [
             Stat::make('بانتظار رحلة', (string) $awaitingBatch)
-                ->description('شحنات وصلت طرودها وتنتظر الإسناد إلى رحلة'),
+                ->description('شحنات تنتظر الإسناد إلى رحلة')
+                ->icon(Heroicon::OutlinedArchiveBox)
+                ->color($awaitingBatch > 0 ? 'warning' : 'gray'),
+            Stat::make('في الطريق', (string) $inTransit)
+                ->description('شحنات حُمِّلت وهي في الطريق')
+                ->icon(Heroicon::OutlinedTruck)
+                ->color('info'),
             Stat::make('جاهزة للتسليم', (string) $readyForCollection)
-                ->description('شحنات وصلت كل طرودها وجاهزة لتسليم المستلم'),
+                ->description('وصلت كل طرودها — بانتظار الاستلام')
+                ->icon(Heroicon::OutlinedCheckCircle)
+                ->color($readyForCollection > 0 ? 'success' : 'gray'),
         ];
     }
 }

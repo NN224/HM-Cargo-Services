@@ -6,6 +6,7 @@ use App\Enums\Capability;
 use App\Enums\ShipmentStatus;
 use App\Models\Batch;
 use App\Models\User;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Database\Eloquent\Collection;
@@ -14,6 +15,10 @@ use Illuminate\Support\Facades\DB;
 class BatchProfitabilityWidget extends StatsOverviewWidget
 {
     public ?Batch $record = null;
+
+    protected static ?int $sort = 3;
+
+    protected ?string $pollingInterval = '60s';
 
     public static function canView(): bool
     {
@@ -63,18 +68,29 @@ class BatchProfitabilityWidget extends StatsOverviewWidget
 
         if (! $costIsAvailable) {
             return [
-                Stat::make('الإيراد', $this->formatUsd($revenueCents)),
-                Stat::make('التكلفة', 'غير متاحة'),
-                Stat::make('الربح', 'غير متاحة'),
+                Stat::make('الإيراد', $this->formatUsd($revenueCents))
+                    ->icon(Heroicon::OutlinedCurrencyDollar)
+                    ->color('success'),
+                Stat::make('التكلفة', 'غير متاحة')
+                    ->icon(Heroicon::OutlinedShoppingCart)
+                    ->color('gray'),
+                Stat::make('الربح', 'غير متاح')
+                    ->icon(Heroicon::OutlinedChartBar)
+                    ->color('gray'),
             ];
         }
 
         $profitCents = $revenueCents - $costCents;
 
         return [
-            Stat::make('الإيراد', $this->formatUsd($revenueCents)),
-            Stat::make('التكلفة', $this->formatUsd($costCents)),
+            Stat::make('الإيراد', $this->formatUsd($revenueCents))
+                ->icon(Heroicon::OutlinedCurrencyDollar)
+                ->color('success'),
+            Stat::make('التكلفة', $this->formatUsd($costCents))
+                ->icon(Heroicon::OutlinedShoppingCart)
+                ->color('warning'),
             Stat::make('الربح', $this->formatUsd($profitCents))
+                ->icon(Heroicon::OutlinedChartBar)
                 ->color($profitCents >= 0 ? 'success' : 'danger'),
         ];
     }

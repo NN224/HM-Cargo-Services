@@ -12,15 +12,13 @@ use App\Models\Payment;
 use App\Models\Route;
 use App\Models\Shipment;
 use App\Models\Warehouse;
+use BackedEnum;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
-
-use BackedEnum;
 use UnitEnum;
 
 class OperationalReports extends Page
@@ -172,15 +170,15 @@ class OperationalReports extends Page
             $batchIds = $batches->pluck('id');
             $shipments = Shipment::whereIn('batch_id', $batchIds)->get();
 
-            $totalWeightGrams = $shipments->sum('total_weight_grams');
+            $totalWeightKg = $shipments->sum('total_weight_kg');
             $totalRevenueCents = $shipments->sum('final_charge_cents');
-            $totalCostCents = $batches->sum(fn (\App\Models\Batch $b) => $b->costCents());
+            $totalCostCents = $batches->sum(fn (Batch $b) => $b->costCents());
             $netProfitCents = $totalRevenueCents - $totalCostCents;
 
             $results[] = [
                 'route_name' => $route->name,
                 'batches_count' => $batches->count(),
-                'total_weight_kg' => number_format($totalWeightGrams / 1000, 2),
+                'total_weight_kg' => number_format((float) $totalWeightKg, 2),
                 'total_revenue_usd' => number_format($totalRevenueCents / 100, 2),
                 'total_cost_usd' => number_format($totalCostCents / 100, 2),
                 'net_profit_usd' => number_format($netProfitCents / 100, 2),

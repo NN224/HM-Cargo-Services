@@ -6,6 +6,7 @@ use App\Enums\Capability;
 use App\Models\PaymentAllocation;
 use App\Models\Shipment;
 use App\Models\User;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -20,6 +21,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 class OutstandingWidget extends StatsOverviewWidget
 {
     protected static ?int $sort = 2;
+
+    protected ?string $pollingInterval = '60s';
 
     public static function canView(): bool
     {
@@ -37,8 +40,10 @@ class OutstandingWidget extends StatsOverviewWidget
         $outstanding = $charged - $allocated;
 
         return [
-            Stat::make('المستحق', $this->formatUsd($outstanding))
-                ->description('إجمالي المبالغ المتبقية على العملاء'),
+            Stat::make('المستحق على العملاء', $this->formatUsd($outstanding))
+                ->description('إجمالي المبالغ المتبقية لدى العملاء')
+                ->icon(Heroicon::OutlinedBanknotes)
+                ->color($outstanding > 0 ? 'danger' : 'success'),
         ];
     }
 

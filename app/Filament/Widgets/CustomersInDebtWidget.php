@@ -18,7 +18,7 @@ use Filament\Widgets\TableWidget;
  */
 class CustomersInDebtWidget extends TableWidget
 {
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 5;
 
     protected int|string|array $columnSpan = 'full';
 
@@ -50,10 +50,18 @@ class CustomersInDebtWidget extends TableWidget
                     ->orderByRaw("($charged - $allocated) DESC")
             )
             ->columns([
-                TextColumn::make('name')->label('العميل'),
-                TextColumn::make('phone')->label('رقم الهاتف'),
+                TextColumn::make('name')
+                    ->label('العميل')
+                    ->weight('bold')
+                    ->searchable(),
+                TextColumn::make('phone')
+                    ->label('رقم الهاتف')
+                    ->fontFamily('mono')
+                    ->color('gray'),
                 TextColumn::make('outstanding_cents')
                     ->label('المتبقي')
+                    ->weight('bold')
+                    ->color('danger')
                     ->formatStateUsing(fn ($state): string => sprintf('$%d.%02d', intdiv((int) $state, 100), (int) $state % 100)),
             ])
             ->paginated(false);

@@ -49,7 +49,8 @@ class ListShipments extends ListRecords
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Hide duplicate empty secondary sort toolbar boxes */
+/* Completely hide duplicate sorting toolbar box */
+.fi-ta-sorting-settings,
 .fi-ta-header-ctn > div:not(.fi-ta-header-toolbar) {
     display: none !important;
 }

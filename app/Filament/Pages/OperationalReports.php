@@ -125,8 +125,7 @@ class OperationalReports extends Page
 
         $packagesQuery = Package::query()->whereBetween('created_at', [$from, $to]);
         $totalPackages = (clone $packagesQuery)->count();
-        $totalWeightGrams = (clone $packagesQuery)->sum('weight_grams');
-        $totalWeightKg = number_format($totalWeightGrams / 1000, 2);
+        $totalWeightKg = number_format((float) (clone $packagesQuery)->sum('weight_kg'), 2);
 
         $awaitingPackages = Package::query()
             ->whereIn('status', [PackageStatus::ReceivedOrigin->value, PackageStatus::ArrivedTransit->value])

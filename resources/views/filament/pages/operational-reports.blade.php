@@ -337,7 +337,7 @@
                             <td style="font-weight: 700;">{{ $pkg->shipment->reference ?? '—' }}</td>
                             <td>{{ $pkg->shipment->customer->name ?? '—' }}</td>
                             <td><span style="padding: 0.25rem 0.5rem; font-size: 0.75rem; font-weight: 700; border-radius: 9999px; background-color: var(--color-danger-50, #fef2f2); color: var(--color-danger-600, #ef4444);">مفقود</span></td>
-                            <td>{{ number_format($pkg->weight_grams / 1000, 2) }} كغ</td>
+                            <td>{{ number_format((float) $pkg->weight_kg, 2) }} كغ</td>
                         </tr>
                     @endforeach
 
@@ -347,7 +347,7 @@
                             <td style="font-weight: 700;">{{ $pkg->shipment->reference ?? '—' }}</td>
                             <td>{{ $pkg->shipment->customer->name ?? '—' }}</td>
                             <td><span style="padding: 0.25rem 0.5rem; font-size: 0.75rem; font-weight: 700; border-radius: 9999px; background-color: var(--color-warning-50, #fffbeb); color: var(--color-warning-600, #f59e0b);">متضرر</span></td>
-                            <td>{{ number_format($pkg->weight_grams / 1000, 2) }} كغ</td>
+                            <td>{{ number_format((float) $pkg->weight_kg, 2) }} كغ</td>
                         </tr>
                     @endforeach
 

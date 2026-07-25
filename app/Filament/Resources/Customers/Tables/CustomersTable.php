@@ -10,6 +10,7 @@ use App\Services\PaymentService;
 use DomainException;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -76,6 +77,7 @@ class CustomersTable
             ])
             ->defaultSort('name')
             ->recordActions([
+                ViewAction::make(),
                 Action::make('recordPayment')
                     ->label('تسجيل دفعة')
                     ->icon('heroicon-o-banknotes')

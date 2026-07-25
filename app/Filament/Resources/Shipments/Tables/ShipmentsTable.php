@@ -197,13 +197,19 @@ class ShipmentsTable
                     ->titlePrefixedWithLabel(false)
                     ->getTitleFromRecordUsing(function (Shipment $record): string {
                         if (! $record->batch) {
-                            return '📦 شحنات غير مسندة لرحلة';
+                            $unassignedCount = Shipment::whereNull('batch_id')->count();
+                            $unassignedWeight = rtrim(rtrim(number_format((float) Shipment::whereNull('batch_id')->sum('total_weight_kg'), 2), '0'), '.');
+
+                            return "📦 شحنات غير مسندة لرحلة — ({$unassignedCount} شحنات | {$unassignedWeight} كغ)";
                         }
 
-                        $routeName = $record->batch->route?->name ?? '';
+                        $batch = $record->batch;
+                        $routeName = $batch->route?->name ?? '';
                         $routeSuffix = $routeName ? " ({$routeName})" : '';
+                        $shipmentsCount = $batch->shipments()->count();
+                        $weightSum = rtrim(rtrim(number_format((float) $batch->shipments()->sum('total_weight_kg'), 2), '0'), '.');
 
-                        return '🚚 الرحلة: '.$record->batch->reference.$routeSuffix;
+                        return "🚚 الرحلة: {$batch->reference}{$routeSuffix} — 📦 {$shipmentsCount} شحنات | ⚖️ {$weightSum} كغ";
                     })
                     ->collapsible(),
 
@@ -213,6 +219,7 @@ class ShipmentsTable
                     ->collapsible(),
             ])
             ->defaultGroup('batch.reference')
+            ->groupingSettingsHidden()
             ->extraAttributes([
                 'class' => 'fi-transparent-panel',
                 'style' => 'background-color: transparent !important; box-shadow: none !important; border: none !important; --ring-color: transparent;',

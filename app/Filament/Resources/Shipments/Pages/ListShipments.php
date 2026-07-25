@@ -47,9 +47,11 @@ class ListShipments extends ListRecords
 .fi-ta-group-header-cell,
 .fi-ta-group-header {
     background-color: #18181b !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
     border-radius: 0.75rem !important;
-    margin-top: 1rem !important;
-    margin-bottom: 0.75rem !important;
+    margin-top: 1.25rem !important;
+    margin-bottom: 0.875rem !important;
+    padding: 0.625rem 1rem !important;
     font-weight: 700 !important;
     color: #60a5fa !important;
 }

@@ -3,14 +3,17 @@
 namespace App\Filament\Resources\Customers\Tables;
 
 use App\Enums\Capability;
+use App\Models\Customer;
 use DomainException;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class CustomersTable
 {
@@ -27,6 +30,13 @@ class CustomersTable
                     ->label('رقم الهاتف')
                     ->searchable(),
 
+                TextColumn::make('outstanding_cents')
+                    ->label('الرصيد المتبقي (ديون)')
+                    ->state(fn (Customer $record): int => $record->outstandingCents())
+                    ->formatStateUsing(fn ($state): string => sprintf('$%d.%02d', intdiv((int) $state, 100), (int) $state % 100))
+                    ->badge()
+                    ->color(fn ($state): string => (int) $state > 0 ? 'danger' : 'success'),
+
                 IconColumn::make('is_credit_customer')
                     ->label('آجل')
                     ->boolean(),
@@ -36,6 +46,25 @@ class CustomersTable
                     ->boolean(),
             ])
             ->filters([
+                SelectFilter::make('debt_status')
+                    ->label('الموقف المالي / الديون')
+                    ->options([
+                        'in_debt' => 'عملاء عليهم رصيد متبقي (ديون)',
+                        'zero_balance' => 'عملاء لا ديون عليهم (رصيد صفري)',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $charged = '(SELECT COALESCE(SUM(final_charge_cents), 0) FROM shipments WHERE shipments.customer_id = customers.id)';
+                        $allocated = '(SELECT COALESCE(SUM(pa.amount_cents), 0) FROM payment_allocations pa INNER JOIN payments p ON p.id = pa.payment_id WHERE p.customer_id = customers.id AND p.type != \'reversal\')';
+
+                        if (($data['value'] ?? null) === 'in_debt') {
+                            return $query->whereRaw("($charged - $allocated) > 0");
+                        }
+                        if (($data['value'] ?? null) === 'zero_balance') {
+                            return $query->whereRaw("($charged - $allocated) <= 0");
+                        }
+
+                        return $query;
+                    }),
                 TernaryFilter::make('is_credit_customer')->label('عميل آجل'),
                 TernaryFilter::make('is_active')->label('الحالة'),
             ])

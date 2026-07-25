@@ -32,12 +32,12 @@ class ListShipments extends ListRecords
     background: transparent !important;
 }
 
-/* Style single unified dark header box panel containing batch cards & search toolbar */
+/* Style single unified dark header box panel containing batch cards, search toolbar, & active filters */
 .fi-ta-header-ctn {
     background: #18181b !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     border-radius: 1rem !important;
-    padding: 0.875rem 1rem 0.5rem !important;
+    padding: 0.875rem 1rem 0.625rem !important;
     margin-bottom: 1.25rem !important;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
     display: flex !important;
@@ -45,7 +45,7 @@ class ListShipments extends ListRecords
     gap: 0.5rem !important;
 }
 
-/* Inner search and filter toolbar sits cleanly at bottom of unified container */
+/* Inner search and filter toolbar sits cleanly inside unified container */
 .fi-ta-header-toolbar {
     background: transparent !important;
     border: none !important;
@@ -55,6 +55,23 @@ class ListShipments extends ListRecords
     padding-bottom: 0.125rem !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+    margin-bottom: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Include Active Filters bar inside the unified dark container box */
+.fi-ta-active-filters-ctn,
+.fi-ta-filter-indicators,
+.fi-ta-header-ctn > div:last-child {
+    background: transparent !important;
+    border: none !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 0 !important;
+    padding-top: 0.625rem !important;
+    padding-bottom: 0.25rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-top: 0.25rem !important;
     margin-bottom: 0 !important;
     box-shadow: none !important;
 }

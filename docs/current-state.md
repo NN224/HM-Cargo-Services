@@ -209,6 +209,7 @@ a readable staff reference from a 48-character random public token.
 1. **Automated Direct WhatsApp Integration (`evolution-go`):**
    - Proposal to deploy a self-hosted `evolution-go` Docker container (Go-based WhatsApp REST API engine utilizing `whatsmeow`).
    - Enables background automatic messaging for intake tracking links and arrival notifications without opening `wa.me` links in WhatsApp Web.
+   - Includes a dedicated Admin-only toggle switch (`isAdministrator()`) to enable (`auto`) or disable (`manual fallback`) automatic sending at any time.
    - Low resource footprint (~25MB RAM), fully self-hosted, 0 monthly API costs.
 
 ---

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\BatchStatus;
 use App\Enums\PackageStatus;
 use App\Models\Package;
+use App\Models\Route;
 use App\Models\Shipment;
 use App\Models\User;
 use App\Models\Warehouse;
@@ -60,24 +61,9 @@ class PackageScanService
                 );
             }
 
-            $status = $this->arrivalStatus($package, $shipment, $warehouse);
+            $this->ensureScannableAtWarehouse($package, $shipment, $warehouse);
 
-            // Status is a derived operational fact. forceFill avoids the
-            // silent mass-assignment discard that previously hid derived
-            // updates elsewhere in this project.
-            $package->forceFill(['status' => $status])->save();
-
-            DB::table('package_status_events')->insert([
-                'package_id' => $package->id,
-                'status' => $status->value,
-                'warehouse_id' => $warehouse->id,
-                'user_id' => $user->id,
-                'scanned_at' => now(),
-                'source' => $source,
-                'note' => $note,
-            ]);
-
-            $shipment->recalculateOperationalStatus();
+            app(PackageJourneyService::class)->advance($shipment, [$package->id], $user, $source, $note);
 
             return $package->fresh();
         });
@@ -100,11 +86,11 @@ class PackageScanService
         return $value;
     }
 
-    private function arrivalStatus(
+    private function ensureScannableAtWarehouse(
         Package $package,
         Shipment $shipment,
         Warehouse $warehouse,
-    ): PackageStatus {
+    ): void {
         $batch = $shipment->batch;
         $route = $batch?->route;
 
@@ -120,41 +106,48 @@ class PackageScanService
             throw new DomainException('الرحلة مغلقة أو ملغاة، ولا تقبل مسح وصول جديداً.');
         }
 
-        if ($route->destination_warehouse_id === $warehouse->id) {
-            if ($route->hasTransit() && ! in_array($package->status, [
-                PackageStatus::DepartedTransit,
-                PackageStatus::Missing,
-            ], true)) {
-                throw new DomainException(
-                    'لا يمكن تسجيل وصول الطرد إلى الوجهة قبل مغادرته مستودع العبور.'
-                );
-            }
+        $next = $this->nextStatus($package->status);
 
-            if (! $route->hasTransit() && ! in_array($package->status, [
-                PackageStatus::Received,
-                PackageStatus::ReceivedOrigin,
-                PackageStatus::InTransit,
-                PackageStatus::Missing,
-            ], true)) {
-                throw new DomainException('حالة الطرد الحالية لا تسمح بتسجيل وصوله إلى الوجهة.');
-            }
-
-            return PackageStatus::ArrivedDestination;
+        if ($next === PackageStatus::Collected) {
+            throw new DomainException('استخدم إجراء التسليم لتسليم الطرود الواصلة.');
         }
 
-        if ($route->transit_warehouse_id === $warehouse->id) {
-            if (! in_array($package->status, [
-                PackageStatus::Received,
-                PackageStatus::ReceivedOrigin,
-                PackageStatus::InTransit,
-                PackageStatus::Missing,
-            ], true)) {
-                throw new DomainException('حالة الطرد الحالية لا تسمح بتسجيل وصوله إلى العبور.');
+        $targetWarehouseId = $this->targetWarehouseId($route, $next);
+
+        if ($targetWarehouseId !== $warehouse->id) {
+            if ($route->transit_warehouse_id !== null && $targetWarehouseId === $route->transit_warehouse_id) {
+                throw new DomainException('لا يمكن تسجيل الوصول قبل محطة العبور.');
             }
 
-            return PackageStatus::ArrivedTransit;
+            throw new DomainException('المستخدم غير مخوّل لتنفيذ هذه المرحلة من هذا المستودع.');
+        }
+    }
+
+    private function nextStatus(PackageStatus $status): PackageStatus
+    {
+        if ($status->isException() || in_array($status, [PackageStatus::Cancelled, PackageStatus::Collected], true)) {
+            throw new DomainException('حالة الطرد الحالية لا تسمح بتسجيل وصول عادي.');
         }
 
-        throw new DomainException('هذا المستودع ليس محطة وصول في مسار الرحلة.');
+        $position = $status->journeyPosition();
+        $steps = PackageStatus::journeySteps();
+
+        if ($position === null || ! isset($steps[$position + 1])) {
+            throw new DomainException('حالة الطرد الحالية لا تسمح بتسجيل وصول عادي.');
+        }
+
+        return $steps[$position + 1];
+    }
+
+    private function targetWarehouseId(Route $route, PackageStatus $target): int
+    {
+        return match ($target) {
+            PackageStatus::ArrivedOriginAirport,
+            PackageStatus::InTransit => $route->origin_warehouse_id,
+            PackageStatus::ArrivedTransit,
+            PackageStatus::DepartedTransit => $route->transit_warehouse_id ?? $route->destination_warehouse_id,
+            PackageStatus::ArrivedDestination => $route->destination_warehouse_id,
+            default => throw new DomainException('حالة الطرد الحالية لا تسمح بتسجيل وصول عادي.'),
+        };
     }
 }

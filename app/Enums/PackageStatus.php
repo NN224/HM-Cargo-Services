@@ -13,6 +13,7 @@ enum PackageStatus: string
     case Created = 'created';
     case ReceivedOrigin = 'received_origin';
     case Received = 'received';
+    case ArrivedOriginAirport = 'arrived_origin_airport';
     case InTransit = 'in_transit';
     case ArrivedTransit = 'arrived_transit';
     case DepartedTransit = 'departed_transit';
@@ -29,6 +30,7 @@ enum PackageStatus: string
             self::Created => 'تم الإنشاء',
             self::ReceivedOrigin => 'مستلم في مستودع المنشأ',
             self::Received => 'تم الاستلام',
+            self::ArrivedOriginAirport => 'وصل إلى مطار الانطلاق',
             self::InTransit => 'في الطريق',
             self::ArrivedTransit => 'وصل إلى مستودع العبور',
             self::DepartedTransit => 'غادر مستودع العبور',
@@ -56,6 +58,27 @@ enum PackageStatus: string
     public function isException(): bool
     {
         return in_array($this, [self::Missing, self::Damaged], true);
+    }
+
+    /** @return array<int, self> */
+    public static function journeySteps(): array
+    {
+        return [
+            self::ReceivedOrigin,
+            self::ArrivedOriginAirport,
+            self::InTransit,
+            self::ArrivedTransit,
+            self::DepartedTransit,
+            self::ArrivedDestination,
+            self::Collected,
+        ];
+    }
+
+    public function journeyPosition(): ?int
+    {
+        $position = array_search($this, self::journeySteps(), true);
+
+        return $position === false ? null : $position;
     }
 
     /** @return array<string, string> */

@@ -8,6 +8,7 @@ use App\Services\QrCode;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -23,9 +24,15 @@ class TrackingController extends Controller
                 'shipments.reference',
                 'shipments.recipient_name',
                 'shipments.status',
+                'shipments.id',
                 'shipments.final_charge_cents',
                 'routes.name as route_name',
+                'routes.origin_airport_name',
+                'routes.destination_airport_name',
+                'routes.delivery_office_name',
+                'origin_warehouses.name as origin_warehouse_name',
             ])
+            ->leftJoin('warehouses as origin_warehouses', 'origin_warehouses.id', '=', 'routes.origin_warehouse_id')
             // Both SQLite and PostgreSQL support TEXT. Forcing the decimal to
             // text prevents PDO from turning an exact weight into a float.
             ->selectRaw('CAST(shipments.total_weight_kg AS TEXT) as total_weight_kg')
@@ -70,6 +77,31 @@ class TrackingController extends Controller
             })
             ->sum('amount_cents');
 
+        $journeyPackages = DB::table('packages')
+            ->where('shipment_id', $shipment->id)
+            ->where('status', '!=', PackageStatus::Cancelled->value)
+            ->select(['status', 'is_delayed'])
+            ->get();
+
+        $publishedEvents = DB::table('package_status_events as events')
+            ->join('packages', 'packages.id', '=', 'events.package_id')
+            ->where('packages.shipment_id', $shipment->id)
+            ->whereNotNull('events.public_reason')
+            ->where('events.public_reason', '!=', '')
+            ->orderBy('events.scanned_at')
+            ->select([
+                'events.status',
+                'events.public_reason',
+                'events.scanned_at',
+            ])
+            ->get()
+            ->map(fn ($event): array => [
+                'label' => PackageStatus::tryFrom($event->status)?->label() ?? 'تحديث رحلة',
+                'reason' => $event->public_reason,
+                'occurred_at' => date('Y-m-d H:i', strtotime($event->scanned_at)),
+            ])
+            ->all();
+
         $timeline = DB::table('package_status_events as events')
             ->join('packages', 'packages.id', '=', 'events.package_id')
             ->join('shipments', 'shipments.id', '=', 'packages.shipment_id')
@@ -113,6 +145,7 @@ class TrackingController extends Controller
             'remaining_amount' => $this->formatMoney($remainingCents),
             'payment_status' => $this->paymentStatus($finalCents, $paidCents),
             'timeline' => $timeline,
+            'journey' => $this->journeyProjection($shipment, $journeyPackages, $publishedEvents),
             'qr' => app(QrCode::class)->svg(route('tracking.show', $token), 160),
         ];
 
@@ -141,6 +174,7 @@ class TrackingController extends Controller
         return match (PackageStatus::tryFrom($status)) {
             PackageStatus::Created => 'تم إنشاء طرد',
             PackageStatus::ReceivedOrigin, PackageStatus::Received => 'تم استلام طرد في مستودع المنشأ',
+            PackageStatus::ArrivedOriginAirport => 'وصل طرد إلى مطار الانطلاق',
             PackageStatus::InTransit => 'طرد في الطريق',
             PackageStatus::ArrivedTransit,
             PackageStatus::ArrivedDestination,
@@ -152,6 +186,66 @@ class TrackingController extends Controller
             PackageStatus::Damaged => 'يوجد طرد يحتاج مراجعة',
             default => 'تم تحديث حالة طرد',
         };
+    }
+
+    /**
+     * @param  Collection<int, object{status: string, is_delayed: bool|int}>  $packages
+     * @param  array<int, array{label: string, reason: string, occurred_at: string}>  $publishedEvents
+     * @return array{steps: array<int, array{status: string, label: string, completed_count: int, current_count: int, delayed_count: int}>, package_count: int, delayed_count: int, published_events: array<int, array{label: string, reason: string, occurred_at: string}>}
+     */
+    private function journeyProjection(object $shipment, $packages, array $publishedEvents): array
+    {
+        $journeyPackages = $packages
+            ->filter(fn ($package): bool => PackageStatus::tryFrom($package->status)?->journeyPosition() !== null)
+            ->values();
+
+        $steps = [];
+
+        foreach (PackageStatus::journeySteps() as $position => $status) {
+            $currentPackages = $journeyPackages->filter(
+                fn ($package): bool => PackageStatus::from($package->status)->journeyPosition() === $position
+            );
+
+            $steps[] = [
+                'status' => $status->value,
+                'label' => $this->journeyLabel($shipment, $status),
+                'completed_count' => $journeyPackages
+                    ->filter(fn ($package): bool => PackageStatus::from($package->status)->journeyPosition() > $position)
+                    ->count(),
+                'current_count' => $currentPackages->count(),
+                'delayed_count' => $currentPackages
+                    ->filter(fn ($package): bool => (bool) $package->is_delayed)
+                    ->count(),
+            ];
+        }
+
+        return [
+            'steps' => $steps,
+            'package_count' => $journeyPackages->count(),
+            'delayed_count' => $journeyPackages
+                ->filter(fn ($package): bool => (bool) $package->is_delayed)
+                ->count(),
+            'published_events' => $publishedEvents,
+        ];
+    }
+
+    private function journeyLabel(object $shipment, PackageStatus $status): string
+    {
+        return match ($status) {
+            PackageStatus::ReceivedOrigin => 'وصل مستودع '.$this->safeJourneyLabel($shipment->origin_warehouse_name ?? null),
+            PackageStatus::ArrivedOriginAirport => 'وصل '.$this->safeJourneyLabel($shipment->origin_airport_name ?? null),
+            PackageStatus::InTransit => 'غادر '.$this->safeJourneyLabel($shipment->origin_airport_name ?? null),
+            PackageStatus::ArrivedTransit => 'وصل '.$this->safeJourneyLabel($shipment->destination_airport_name ?? null),
+            PackageStatus::DepartedTransit => 'غادر '.$this->safeJourneyLabel($shipment->destination_airport_name ?? null),
+            PackageStatus::ArrivedDestination => 'وصل '.$this->safeJourneyLabel($shipment->delivery_office_name ?? null),
+            PackageStatus::Collected => 'استلمه العميل',
+            default => 'غير مضبوط',
+        };
+    }
+
+    private function safeJourneyLabel(?string $value): string
+    {
+        return filled($value) ? $value : 'غير مضبوط';
     }
 
     private function formatMoney(?int $cents): string

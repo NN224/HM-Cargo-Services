@@ -302,6 +302,19 @@ class Shipment extends Model
             $this->forceFill(['status' => ShipmentStatus::AtTransit])->save();
         } elseif ($transitCount > 0) {
             $this->forceFill(['status' => ShipmentStatus::PartialAtTransit])->save();
+        } else {
+            $movementCount = (clone $active)
+                ->whereIn('status', [
+                    PackageStatus::ArrivedOriginAirport->value,
+                    PackageStatus::InTransit->value,
+                ])
+                ->count();
+
+            if ($movementCount === $activeCount) {
+                $this->forceFill(['status' => ShipmentStatus::InTransit])->save();
+            } elseif ($movementCount > 0) {
+                $this->forceFill(['status' => ShipmentStatus::PartialAtTransit])->save();
+            }
         }
     }
 

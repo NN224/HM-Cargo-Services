@@ -4,7 +4,9 @@ namespace App\Filament\Resources\Shipments\Tables;
 
 use App\Enums\Capability;
 use App\Enums\ShipmentStatus;
+use App\Filament\Resources\Shipments\Actions\ManageJourneyAction;
 use App\Models\Shipment;
+use App\Services\PackageJourneyProjection;
 use App\Services\ShipmentCollectionService;
 use App\Services\WhatsAppMessageService;
 use DomainException;
@@ -16,9 +18,9 @@ use Filament\Notifications\Notification;
 use Filament\Tables\Columns\Layout\Grid;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -127,6 +129,10 @@ class ShipmentsTable
                                 default => 'gray',
                             }),
                     ]),
+
+                    ViewColumn::make('journey')
+                        ->view('filament.tables.columns.package-journey')
+                        ->state(fn (Shipment $record): array => app(PackageJourneyProjection::class)->forShipment($record)),
                 ])->space(3),
             ])
             ->contentGrid([
@@ -178,19 +184,13 @@ class ShipmentsTable
                 'class' => 'fi-transparent-panel',
                 'style' => 'background-color: transparent !important; box-shadow: none !important; border: none !important; --ring-color: transparent;',
             ])
-            ->groups([
-                Group::make('batch_id')
-                    ->label('الرحلة')
-                    ->getTitleFromRecordUsing(fn (Shipment $record): string => $record->batch?->reference ? "الرحلة: {$record->batch->reference}" : 'شحنات غير مسندة لرحلة')
-                    ->collapsible(),
-            ])
-            ->defaultGroup('batch_id')
             ->defaultSort('created_at', 'desc')
             ->actionsPosition(RecordActionsPosition::BeforeColumns)
             ->recordActions([
                 ActionGroup::make([
                     ViewAction::make(),
                     EditAction::make(),
+                    ManageJourneyAction::make(),
 
                     Action::make('copyTrackingLink')
                         ->label('رابط التتبع')

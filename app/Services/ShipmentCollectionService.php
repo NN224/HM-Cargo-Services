@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\PackageStatus;
-use App\Enums\ShipmentStatus;
 use App\Models\Shipment;
 use App\Models\User;
 use App\Models\Warehouse;
@@ -41,23 +40,12 @@ class ShipmentCollectionService
                 );
             }
 
-            foreach ($packages as $package) {
-                $package->forceFill(['status' => PackageStatus::Collected])->save();
-
-                DB::table('package_status_events')->insert([
-                    'package_id' => $package->id,
-                    'status' => PackageStatus::Collected->value,
-                    'warehouse_id' => $warehouse->id,
-                    'user_id' => $user->id,
-                    'scanned_at' => now(),
-                    'source' => 'collection',
-                    'note' => null,
-                ]);
-            }
-
-            $shipment->forceFill(['status' => ShipmentStatus::Collected])->save();
-
-            return $shipment;
+            return app(PackageJourneyService::class)->advance(
+                $shipment,
+                $packages->modelKeys(),
+                $user,
+                'collection',
+            );
         });
     }
 
@@ -86,23 +74,13 @@ class ShipmentCollectionService
                 throw new DomainException('لا توجد أي طرود واصلة لمستودع الوجهة لتسليمها جزئياً.');
             }
 
-            foreach ($arrivedPackages as $package) {
-                $package->forceFill(['status' => PackageStatus::Collected])->save();
-
-                DB::table('package_status_events')->insert([
-                    'package_id' => $package->id,
-                    'status' => PackageStatus::Collected->value,
-                    'warehouse_id' => $warehouse->id,
-                    'user_id' => $user->id,
-                    'scanned_at' => now(),
-                    'source' => 'partial_collection',
-                    'note' => 'تسليم جزئي للطرود الواصلة',
-                ]);
-            }
-
-            $shipment->recalculateOperationalStatus();
-
-            return $shipment;
+            return app(PackageJourneyService::class)->advance(
+                $shipment,
+                $arrivedPackages->modelKeys(),
+                $user,
+                'partial_collection',
+                'تسليم جزئي للطرود الواصلة',
+            );
         });
     }
 }

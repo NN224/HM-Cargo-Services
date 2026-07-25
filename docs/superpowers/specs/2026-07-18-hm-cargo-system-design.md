@@ -43,7 +43,7 @@ Keep domain operations isolated behind focused application services:
 
 - Shipment creation and package/barcode issuance.
 - Batch assignment, route/rate snapshotting, and initial charge posting.
-- Package scanning and aggregate status transitions.
+- Package journey progress, scanning, delay overlays, corrections, and aggregate status transitions.
 - Shipment collection.
 - Payment recording, FIFO allocation, and reversal.
 - Post-dispatch repricing and adjustment.
@@ -71,11 +71,11 @@ The billing customer owns route rates, credit, payments, and statements. Shipmen
 
 ### Routes and rates
 
-Routes are configurable records with origin, destination, and optional transit warehouse. Customer rates are route-specific and effective-dated. *(Superseded by D-018 for version 1: one current rate per customer and route, with no effective-dating. The rate snapshot taken at batch assignment already preserves historical charges.)* Batch assignment snapshots the selected route and rate.
+Routes are configurable records with origin, destination, optional transit warehouse, and the three route-specific labels used by the fixed package journey: origin airport, destination airport, and delivery office. Customer rates are route-specific and effective-dated. *(Superseded by D-018 for version 1: one current rate per customer and route, with no effective-dating. The rate snapshot taken at batch assignment already preserves historical charges.)* Batch assignment snapshots the selected route and rate.
 
 ### Shipments and packages
 
-A shipment groups one or more physical packages. Each package receives a unique generated barcode and exact weight. Labels support normal A4 printing and phone display. Phone-camera scanning is a primary warehouse workflow.
+A shipment groups one or more physical packages. Each package receives a unique generated barcode, exact weight, and one of the fixed package journey statuses. Labels support normal A4 printing and phone display. Phone-camera scanning is a primary warehouse workflow.
 
 ### Shipment batches
 

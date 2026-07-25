@@ -23,6 +23,9 @@ use InvalidArgumentException;
  * @property int $origin_warehouse_id
  * @property int $destination_warehouse_id
  * @property int|null $transit_warehouse_id
+ * @property string|null $origin_airport_name
+ * @property string|null $destination_airport_name
+ * @property string|null $delivery_office_name
  * @property bool $is_active
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -39,10 +42,13 @@ use InvalidArgumentException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereDestinationWarehouseId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereDeliveryOfficeName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereIsActive($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereOriginAirportName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereOriginWarehouseId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereDestinationAirportName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereTransitWarehouseId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereUpdatedAt($value)
  *
@@ -57,6 +63,9 @@ class Route extends Model
         'origin_warehouse_id',
         'destination_warehouse_id',
         'transit_warehouse_id',
+        'origin_airport_name',
+        'destination_airport_name',
+        'delivery_office_name',
         'is_active',
     ];
 

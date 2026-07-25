@@ -72,6 +72,7 @@ Show operational facts without misleading percentage comparisons:
 
 - Administrators can create and deactivate routes without code changes.
 - A route has an origin warehouse, destination warehouse, and optional transit warehouse.
+- A route has origin airport, destination airport, and delivery office labels used by the fixed package journey.
 - Initial routes are:
   - Dubai to Lebanon.
   - Dubai to Syria direct.
@@ -105,6 +106,7 @@ Show operational facts without misleading percentage comparisons:
 - Show expected incoming batches and packages.
 - Scan each package on arrival.
 - Mark missing or damaged exceptions without falsely marking the entire shipment complete.
+- Advance eligible packages through the fixed seven-step journey, including selected-package progress and private or published delay reasons.
 - Mark a shipment ready for complete collection only after all active packages arrive at the destination warehouse.
 - Allow a destination warehouse employee to release only the packages that have arrived while unarrived packages remain in transit (D-029).
 
@@ -122,6 +124,7 @@ Show operational facts without misleading percentage comparisons:
 - Display:
   - Shipment reference and safe recipient identification.
   - Route and current location/stage.
+  - Seven-step package journey progress with route-specific labels.
   - Timeline of status events.
   - Package count and arrival progress, such as `2 of 3 packages arrived`.
   - Exact total weight.
@@ -167,7 +170,7 @@ Detailed financial rules are canonical in `domain/pricing-payments.md`.
 
 ## 6. Status summary
 
-Package, shipment, and batch statuses are separate. The system supports normal travel events plus cancelled, missing, and damaged exceptions. Detailed transition rules are canonical in `domain/shipment-lifecycle.md`.
+Package, shipment, and batch statuses are separate. The system supports a fixed seven-step package journey, delay overlays, administrator corrections, plus cancelled, missing, and damaged exceptions. Detailed transition rules are canonical in `domain/shipment-lifecycle.md`.
 
 ## 7. Explicitly out of scope for version 1
 

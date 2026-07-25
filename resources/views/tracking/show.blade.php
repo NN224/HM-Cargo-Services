@@ -399,24 +399,41 @@
 
     <!-- Visual Stepper Progress -->
     <div class="stepper-container">
-        <div class="stepper">
-            <div class="step completed">
-                <div class="step-icon">✓</div>
-                <div class="step-title">استلام</div>
-            </div>
-            <div class="step {{ in_array($tracking['stage'], ['طرد في الطريق', 'وصل بعضها إلى الوجهة', 'وصلت لمستودع الوصول', 'جاهزة للاستلام', 'تم التسليم']) ? 'completed' : 'active' }}">
-                <div class="step-icon">2</div>
-                <div class="step-title">في الطريق</div>
-            </div>
-            <div class="step {{ in_array($tracking['stage'], ['وصل بعضها إلى الوجهة', 'وصلت لمستودع الوصول', 'جاهزة للاستلام', 'تم التسليم']) ? 'active' : '' }}">
-                <div class="step-icon">3</div>
-                <div class="step-title">وصلت للمستودع</div>
-            </div>
-            <div class="step {{ $tracking['stage'] === 'تم التسليم' ? 'completed' : '' }}">
-                <div class="step-icon">4</div>
-                <div class="step-title">تسليم</div>
-            </div>
+        <div class="section-title" style="margin-bottom: 0.75rem;">رحلة الطرود</div>
+        <div style="display: flex; gap: 0.65rem; overflow-x: auto; padding-bottom: 0.25rem;">
+            @foreach ($tracking['journey']['steps'] as $step)
+                @php
+                    $countText = fn (int $count): string => strtr((string) $count, ['0' => '٠', '1' => '١', '2' => '٢', '3' => '٣', '4' => '٤', '5' => '٥', '6' => '٦', '7' => '٧', '8' => '٨', '9' => '٩']);
+                    $tone = $step['delayed_count'] > 0 ? '#f59e0b' : ($step['current_count'] > 0 ? '#60a5fa' : ($step['completed_count'] >= $tracking['journey']['package_count'] && $tracking['journey']['package_count'] > 0 ? '#10b981' : '#6b7280'));
+                @endphp
+                <div style="min-width: 8.5rem; border: 1px solid {{ $tone }}; border-radius: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.03);">
+                    <div style="font-weight: 800; font-size: 0.82rem; color: {{ $tone }};">{{ $step['label'] }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem;">
+                        @if ($step['current_count'] > 0)
+                            {{ $countText($step['current_count']) }} حالياً
+                        @elseif ($step['completed_count'] > 0)
+                            {{ $countText($step['completed_count']) }} أنجزت
+                        @else
+                            قادم
+                        @endif
+
+                        @if ($step['delayed_count'] > 0)
+                            <span style="display:block; color:#fbbf24; font-weight:800;">{{ $countText($step['delayed_count']) }} متأخر</span>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
         </div>
+
+        @if ($tracking['journey']['published_events'] !== [])
+            <div style="margin-top: 1rem; display: grid; gap: 0.5rem;">
+                @foreach ($tracking['journey']['published_events'] as $event)
+                    <div style="border-radius: 0.85rem; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); padding: 0.75rem; color: #fde68a; font-weight: 700;">
+                        {{ $event['reason'] }}
+                    </div>
+                @endforeach
+            </div>
+        @endif
     </div>
 
     <!-- Details Cards Grid -->

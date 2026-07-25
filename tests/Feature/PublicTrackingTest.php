@@ -23,6 +23,9 @@ beforeEach(function () {
         'origin_warehouse_id' => $this->origin->id,
         'transit_warehouse_id' => $this->transit->id,
         'destination_warehouse_id' => $this->destination->id,
+        'origin_airport_name' => 'مطار دبي',
+        'destination_airport_name' => 'مطار بيروت',
+        'delivery_office_name' => 'مكتب دمشق',
     ]);
     $this->batch = Batch::create([
         'reference' => 'BATCH-PRIVATE-REF',
@@ -164,6 +167,7 @@ test('public tracking exposes only the safe shipment projection without login', 
         'remaining_amount',
         'payment_status',
         'timeline',
+        'journey',
         'qr',
     ]);
 

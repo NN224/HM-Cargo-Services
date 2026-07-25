@@ -34,6 +34,21 @@ class RoutesTable
                 TextColumn::make('destinationWarehouse.name')
                     ->label('الوجهة'),
 
+                TextColumn::make('origin_airport_name')
+                    ->label('مطار الانطلاق')
+                    ->placeholder('غير مضبوط')
+                    ->toggleable(),
+
+                TextColumn::make('destination_airport_name')
+                    ->label('مطار الوصول')
+                    ->placeholder('غير مضبوط')
+                    ->toggleable(),
+
+                TextColumn::make('delivery_office_name')
+                    ->label('مكتب التسليم')
+                    ->placeholder('غير مضبوط')
+                    ->toggleable(),
+
                 IconColumn::make('is_active')
                     ->label('نشط')
                     ->boolean(),

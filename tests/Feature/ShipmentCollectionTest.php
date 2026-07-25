@@ -22,6 +22,9 @@ beforeEach(function () {
         'name' => 'دبي ← دمشق',
         'origin_warehouse_id' => $this->origin->id,
         'destination_warehouse_id' => $this->destination->id,
+        'origin_airport_name' => 'مطار دبي',
+        'destination_airport_name' => 'مطار دمشق',
+        'delivery_office_name' => 'مكتب دمشق',
     ]);
     $this->batch = Batch::create(['route_id' => $this->route->id]);
     $this->customer = Customer::create(['name' => 'عميل التسليم', 'phone' => '+971500000302']);
@@ -84,7 +87,8 @@ test('all active packages and the shipment are collected in one controlled trans
 
     expect($collected->status)->toBe(ShipmentStatus::Collected)
         ->and($shipment->packages()->where('status', PackageStatus::Collected->value)->count())->toBe(2)
-        ->and(DB::table('package_status_events')->where('source', 'collection')->count())->toBe(2);
+        ->and(DB::table('package_status_events')->where('source', 'collection')->count())->toBe(2)
+        ->and(DB::table('package_status_events')->where('previous_status', PackageStatus::ArrivedDestination->value)->count())->toBe(2);
 });
 
 test('cancelled packages do not create a partial pickup', function () {
@@ -149,7 +153,8 @@ test('d029 partial collection is available to destination warehouse employees', 
     expect($partiallyCollected->status)->toBe(ShipmentStatus::PartiallyCollected)
         ->and($shipment->packages()->where('status', PackageStatus::Collected->value)->count())->toBe(1)
         ->and($shipment->packages()->where('status', PackageStatus::InTransit->value)->count())->toBe(1)
-        ->and(DB::table('package_status_events')->where('source', 'partial_collection')->count())->toBe(1);
+        ->and(DB::table('package_status_events')->where('source', 'partial_collection')->count())->toBe(1)
+        ->and(DB::table('package_status_events')->where('previous_status', PackageStatus::ArrivedDestination->value)->count())->toBe(1);
 });
 
 test('destination warehouse employees see the partial collection action', function () {

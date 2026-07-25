@@ -329,7 +329,7 @@ and only the token-free arrival message is offered as a row action.
 
 ## D-029: Partial package collection is allowed
 
-**Date:** 2026-07-25  
+**Date:** 2026-07-25
 **Status:** Approved by owner confirmation.
 
 Supersedes the all-or-nothing collection rule in D-015. A warehouse employee may collect the packages that have arrived at the destination (`PackageStatus::ArrivedDestination`) while other packages in the shipment are still in transit. Administrator approval is not required; normal warehouse authorization still applies.
@@ -339,3 +339,17 @@ Supersedes the all-or-nothing collection rule in D-015. A warehouse employee may
 - The shipment operational status transitions to `ShipmentStatus::PartiallyCollected`.
 - Payments may be recorded for the partially delivered shipment and allocated normally.
 - Every partial collection records package status events with the acting user, warehouse, and timestamp.
+
+## D-030: Fixed package journey with dynamic route locations
+
+**Date:** 2026-07-25
+
+**Status:** Approved by owner-approved package journey design.
+
+Every normal package now follows one fixed seven-step journey: origin warehouse, origin airport, origin-airport departure, destination airport, destination-airport departure, delivery office, and collection. The workflow order is fixed in code and is not user-editable.
+
+Each route stores the dynamic names for origin airport, destination airport, and delivery office. Direct routes still remain distinct route records for pricing, but they no longer skip transit-shaped journey steps; the seven customer-visible progress positions are always present and labelled from the route.
+
+Package rows and append-only package status events are the operational source of truth. Delay and administrator-correction metadata is recorded as package events, correction reasons are required, and privileged corrections also write append-only audit log rows.
+
+Batch, shipment, and package state machines remain separate. Advancing package journey progress never silently advances or closes a batch.

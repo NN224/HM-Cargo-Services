@@ -45,32 +45,41 @@ class DatabaseSeeder extends Seeder
         // The three initial routes approved in D-005.
         // Seeded so the system is operational immediately — no manual route
         // setup is required before a user can create a batch and receive cargo.
-        Route::firstOrCreate(
+        Route::updateOrCreate(
             ['name' => 'Dubai → Lebanon'],
             [
                 'origin_warehouse_id' => $dubai->id,
                 'destination_warehouse_id' => $beirut->id,
                 'transit_warehouse_id' => null,
+                'origin_airport_name' => 'مطار دبي',
+                'destination_airport_name' => 'مطار بيروت',
+                'delivery_office_name' => 'مكتب بيروت',
                 'is_active' => true,
             ],
         );
 
-        Route::firstOrCreate(
+        Route::updateOrCreate(
             ['name' => 'Dubai → Syria (Direct)'],
             [
                 'origin_warehouse_id' => $dubai->id,
                 'destination_warehouse_id' => $damascus->id,
                 'transit_warehouse_id' => null,
+                'origin_airport_name' => 'مطار دبي',
+                'destination_airport_name' => 'مطار دمشق',
+                'delivery_office_name' => 'مكتب دمشق',
                 'is_active' => true,
             ],
         );
 
-        Route::firstOrCreate(
+        Route::updateOrCreate(
             ['name' => 'Dubai → Beirut → Syria'],
             [
                 'origin_warehouse_id' => $dubai->id,
                 'destination_warehouse_id' => $damascus->id,
                 'transit_warehouse_id' => $beirut->id,
+                'origin_airport_name' => 'مطار دبي',
+                'destination_airport_name' => 'مطار بيروت',
+                'delivery_office_name' => 'مكتب دمشق',
                 'is_active' => true,
             ],
         );

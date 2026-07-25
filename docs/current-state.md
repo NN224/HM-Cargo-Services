@@ -1,7 +1,7 @@
 # Current State — Handoff
 
 **Last updated:** 2026-07-25
-**Tests:** 297 passing, 961 assertions
+**Tests:** 325 passing, 1073 assertions
 
 Read this first if you are picking the project up. It says what exists, what
 does not, and what to do next. The binding rules live in [`../AGENTS.md`](../AGENTS.md)
@@ -19,7 +19,9 @@ destination warehouses, with shipment status derived from the package rows
 rather than declared. Collect a shipment only once every active package has
 arrived. Record full, partial and account-level payments with oldest-first
 allocation and reversals. Follow a shipment from the public tracking page
-without logging in.
+    without logging in. Package progress now uses the fixed seven-step journey
+    with route-specific labels, selected-package advancement, delay overlays,
+    administrator corrections, and a privacy-safe public journey bar.
 
 It also prints A4 labels, hands off to WhatsApp, and produces a customer
 statement and a batch report.
@@ -63,6 +65,7 @@ has tried the scan flow on a real phone in a real warehouse.
 | Complete and partial collection — release arrived packages and retain the rest in transit (D-029) | done |
 | Payments, oldest-first allocation, reversals | done, with screen |
 | Public tracking on `/track/{token}`, rate limited | done |
+| Seven-step package journey, selected progress, delays, corrections, safe public bar (D-030) | done, needs real warehouse/airport operational trial |
 | A4 labels with a scannable tracking QR + link, no price printed | done, wired into the shipment UI and after intake |
 | Two WhatsApp handoffs — tracking at intake, amount at arrival (D-028) | done |
 | Customer statement, reconciled against the ledger | done |
@@ -84,8 +87,9 @@ has tried the scan flow on a real phone in a real warehouse.
 ## Suggested next step
 
 Try it against a real shipment before adding anything else. The feature list
-is close to complete and entirely unexercised: every one of the 297 tests was
-written by the same session that wrote the code it tests. A single real
+is close to complete and largely unexercised in the real warehouse context:
+every one of the 325 tests was written by the same session that wrote or
+changed the code it tests. A single real
 shipment — created in Dubai, priced into a batch, scanned in, collected and
 paid — will find more than the next feature would.
 
@@ -218,7 +222,7 @@ a readable staff reference from a 48-character random public token.
 
 ```bash
 php artisan serve          # http://127.0.0.1:8000 redirects to /admin
-php artisan test           # 291 passing
+php artisan test           # 325 passing
 php artisan migrate:fresh --seed   # needs ADMIN_PASSWORD in .env
 ```
 

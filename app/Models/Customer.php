@@ -67,14 +67,19 @@ class Customer extends Model
         return $this->hasMany(Shipment::class);
     }
 
-    public function outstandingCents(): int
+    public function paidCents(): int
     {
-        $charged = (int) $this->shipments()->whereNotNull('final_charge_cents')->sum('final_charge_cents');
-        $allocated = (int) DB::table('payment_allocations')
+        return (int) DB::table('payment_allocations')
             ->join('payments', 'payments.id', '=', 'payment_allocations.payment_id')
             ->where('payments.customer_id', $this->id)
             ->where('payments.type', '!=', 'reversal')
             ->sum('payment_allocations.amount_cents');
+    }
+
+    public function outstandingCents(): int
+    {
+        $charged = (int) $this->shipments()->whereNotNull('final_charge_cents')->sum('final_charge_cents');
+        $allocated = $this->paidCents();
 
         return max(0, $charged - $allocated);
     }

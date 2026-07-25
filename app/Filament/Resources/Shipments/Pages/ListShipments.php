@@ -26,7 +26,13 @@ class ListShipments extends ListRecords
     border: none !important; 
 }
 
-/* Style top header toolbar */
+/* Enable separate border collapse for table spacing */
+.fi-ta-content table {
+    border-collapse: separate !important;
+    border-spacing: 0 0.875rem !important;
+}
+
+/* Style top search & filter header toolbar cleanly */
 .fi-ta-ctn {
     border: none !important;
     box-shadow: none !important;
@@ -37,21 +43,26 @@ class ListShipments extends ListRecords
     background: #18181b !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     border-radius: 0.875rem !important;
-    padding: 0.5rem 0.875rem !important;
-    margin-bottom: 1.25rem !important;
+    padding: 0.625rem 1rem !important;
+    margin-bottom: 1rem !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Style table group headers cleanly */
-.fi-ta-group-header-row,
-.fi-ta-group-header-cell,
-.fi-ta-group-header {
-    background-color: #18181b !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 0.75rem !important;
-    margin-top: 1.25rem !important;
-    margin-bottom: 0.875rem !important;
-    padding: 0.625rem 1rem !important;
+/* Style table group headers as standalone cards */
+.fi-ta-group-header-row td,
+.fi-ta-group-header-cell {
+    background: #18181b !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 0.875rem !important;
+    padding: 0.875rem 1.25rem !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    color: #60a5fa !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+}
+
+.fi-ta-group-header-cell button,
+.fi-ta-group-header-cell span {
     font-weight: 700 !important;
     color: #60a5fa !important;
 }

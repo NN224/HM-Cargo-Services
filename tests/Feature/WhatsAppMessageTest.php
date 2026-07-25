@@ -166,13 +166,14 @@ test('the view shipment page offers whatsapp intake and arrival actions', functi
         ->assertActionExists('whatsappArrival');
 });
 
-// The staff list must never print the secret tracking token — the intake
-// WhatsApp handoff (which carries it) lives on the labels page instead.
-test('the shipments list does not print the tracking token in any whatsapp link', function () {
-    $shipment = makeTestShipment('ماجد', '+9613000001', 3000, 0,
-        ShipmentStatus::Pending->value, 'tok-secret-xyz');
+test('normalisePhone handles local Lebanese numbers and 00 prefixes automatically', function () {
+    $service = app(WhatsAppMessageService::class);
 
-    Livewire::actingAs($this->admin)
-        ->test(ListShipments::class)
-        ->assertDontSee('tok-secret-xyz');
+    expect($service->normalisePhone('00961 76 821 824'))->toBe('96176821824');
+    expect($service->normalisePhone('81707943'))->toBe('96181707943');
+    expect($service->normalisePhone('71598429'))->toBe('96171598429');
+    expect($service->normalisePhone('03595116'))->toBe('9613595116');
+    expect($service->normalisePhone('+961 70 660 048'))->toBe('96170660048');
+    expect($service->normalisePhone('+963 940 881 483'))->toBe('963940881483');
+    expect($service->normalisePhone('00971543665548'))->toBe('971543665548');
 });

@@ -58,7 +58,8 @@ class PaymentForm
                             ->numeric()
                             ->required()
                             ->minValue(0.01)
-                            ->step(0.01),
+                            ->step(0.01)
+                            ->extraInputAttributes(['dir' => 'ltr']),
 
                         Select::make('method')
                             ->label('طريقة الدفع')

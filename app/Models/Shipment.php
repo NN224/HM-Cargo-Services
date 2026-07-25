@@ -6,10 +6,12 @@ use App\Enums\PackageStatus;
 use App\Enums\ShipmentStatus;
 use App\Models\Concerns\GuardsDeletion;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -27,10 +29,10 @@ use Illuminate\Support\Facades\DB;
  * @property string $recipient_phone
  * @property ShipmentStatus $status
  * @property numeric $total_weight_kg
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $intake_notified_at
- * @property \Illuminate\Support\Carbon|null $arrival_notified_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $intake_notified_at
+ * @property Carbon|null $arrival_notified_at
  * @property int|null $batch_id
  * @property int|null $rate_per_kg_cents
  * @property int|null $computed_charge_cents
@@ -38,11 +40,12 @@ use Illuminate\Support\Facades\DB;
  * @property int $paid_amount_cents
  * @property string|null $priced_at
  * @property int|null $destination_warehouse_id
- * @property-read \App\Models\Batch|null $batch
- * @property-read \App\Models\Customer $customer
- * @property-read \App\Models\Warehouse|null $destinationWarehouse
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Package> $packages
+ * @property-read Batch|null $batch
+ * @property-read Customer $customer
+ * @property-read Warehouse|null $destinationWarehouse
+ * @property-read Collection<int, Package> $packages
  * @property-read int|null $packages_count
+ *
  * @method static Builder<static>|Shipment awaitingBatch()
  * @method static Builder<static>|Shipment newModelQuery()
  * @method static Builder<static>|Shipment newQuery()
@@ -64,6 +67,7 @@ use Illuminate\Support\Facades\DB;
  * @method static Builder<static>|Shipment whereStatus($value)
  * @method static Builder<static>|Shipment whereTotalWeightKg($value)
  * @method static Builder<static>|Shipment whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class Shipment extends Model
@@ -383,10 +387,12 @@ class Shipment extends Model
 
         if ($paid > 0) {
             $remainingDollars = number_format(($this->final_charge_cents - $paid) / 100, 2);
+
             return "مدفوع جزئياً (متبقي $$remainingDollars)";
         }
 
         $totalDollars = number_format($this->final_charge_cents / 100, 2);
+
         return "غير مدفوع ($$totalDollars)";
     }
 }

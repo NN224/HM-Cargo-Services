@@ -6,6 +6,7 @@ use App\Enums\PackageStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
@@ -23,9 +24,10 @@ use InvalidArgumentException;
  * @property string|null $description
  * @property numeric $weight_kg
  * @property PackageStatus $status
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Shipment $shipment
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Shipment $shipment
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Package newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Package newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Package query()
@@ -38,6 +40,7 @@ use InvalidArgumentException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Package whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Package whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Package whereWeightKg($value)
+ *
  * @mixin \Eloquent
  */
 class Package extends Model

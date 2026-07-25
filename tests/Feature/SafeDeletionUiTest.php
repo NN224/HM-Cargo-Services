@@ -7,7 +7,6 @@ use App\Filament\Resources\Routes\Pages\ListRoutes;
 use App\Filament\Resources\Warehouses\Pages\ListWarehouses;
 use App\Models\Batch;
 use App\Models\Customer;
-use App\Models\CustomerRate;
 use App\Models\Route;
 use App\Models\Shipment;
 use App\Models\User;

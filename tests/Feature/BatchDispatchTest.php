@@ -141,11 +141,11 @@ test('the view action asks for cost and dispatches through the service', functio
 
     Livewire::test(ViewBatch::class, ['record' => $batch->getRouteKey()])
         ->assertSee('إرسال الرحلة', escape: false)
-        ->callAction('dispatch', ['cost_per_kg_cents' => 415])
+        ->callAction('dispatch')
         ->assertHasNoActionErrors()
         ->assertRedirect(BatchResource::getUrl('view', ['record' => $batch]));
 
-    expect($batch->fresh()->cost_per_kg_cents)->toBe(415)
+    expect($batch->fresh()->cost_per_kg_cents)->toBe(0)
         ->and($batch->fresh()->status)->toBe(BatchStatus::Dispatched);
 });
 

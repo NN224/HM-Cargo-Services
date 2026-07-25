@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\PackageStatus;
 use App\Enums\ShipmentStatus;
+use App\Services\QrCode;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response as HttpResponse;
@@ -112,7 +113,7 @@ class TrackingController extends Controller
             'remaining_amount' => $this->formatMoney($remainingCents),
             'payment_status' => $this->paymentStatus($finalCents, $paidCents),
             'timeline' => $timeline,
-            'qr' => app(\App\Services\QrCode::class)->svg(route('tracking.show', $token), 160),
+            'qr' => app(QrCode::class)->svg(route('tracking.show', $token), 160),
         ];
 
         return view('tracking.show', compact('tracking'));

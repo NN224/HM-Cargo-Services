@@ -3,25 +3,27 @@
 namespace App\Models;
 
 use App\Models\Concerns\GuardsDeletion;
-
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property string $name
  * @property string $location
  * @property bool $is_active
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Route> $routesAsDestination
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, Route> $routesAsDestination
  * @property-read int|null $routes_as_destination_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Route> $routesAsOrigin
+ * @property-read Collection<int, Route> $routesAsOrigin
  * @property-read int|null $routes_as_origin_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $users
+ * @property-read Collection<int, User> $users
  * @property-read int|null $users_count
+ *
  * @method static Builder<static>|Warehouse newModelQuery()
  * @method static Builder<static>|Warehouse newQuery()
  * @method static Builder<static>|Warehouse query()
@@ -32,6 +34,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static Builder<static>|Warehouse whereLocation($value)
  * @method static Builder<static>|Warehouse whereName($value)
  * @method static Builder<static>|Warehouse whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class Warehouse extends Model

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Customers\Pages;
 
 use App\Filament\Resources\CustomerRates\CustomerRateResource;
 use App\Filament\Resources\Customers\CustomerResource;
+use App\Models\Customer;
 use App\Models\CustomerRate;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -13,7 +14,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 /**
- * @property \App\Models\Customer $record
+ * @property Customer $record
  */
 class EditCustomer extends EditRecord
 {

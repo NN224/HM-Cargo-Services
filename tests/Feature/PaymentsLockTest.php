@@ -2,8 +2,8 @@
 
 use App\Enums\Capability;
 use App\Enums\UserRole;
-use App\Filament\Resources\Payments\PaymentResource;
 use App\Filament\Resources\Payments\Pages\ListPayments;
+use App\Filament\Resources\Payments\PaymentResource;
 use App\Models\User;
 use App\Models\Warehouse;
 use Livewire\Livewire;

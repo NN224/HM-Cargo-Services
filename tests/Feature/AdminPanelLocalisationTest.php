@@ -29,10 +29,10 @@ test('every resource shows an Arabic navigation label', function (string $url, s
         ->assertOk()
         ->assertSee($label, escape: false);
 })->with([
-    ['/admin/customers', 'العملاء'],
-    ['/admin/routes', 'المسارات'],
-    ['/admin/customer-rates', 'أسعار العملاء'],
-    ['/admin/warehouses', 'المستودعات'],
+    ['/customers', 'العملاء'],
+    ['/routes', 'المسارات'],
+    ['/customer-rates', 'أسعار العملاء'],
+    ['/warehouses', 'المستودعات'],
 ]);
 
 test('the rates table is labelled in Arabic and never shows the cents unit', function () {
@@ -53,7 +53,7 @@ test('the rates table is labelled in Arabic and never shows the cents unit', fun
 
 test('the panel renders right to left', function () {
     $this->actingAs($this->admin)
-        ->get('/admin')
+        ->get('')
         ->assertOk()
         ->assertSee('dir="rtl"', escape: false);
 });

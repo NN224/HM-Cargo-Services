@@ -9,6 +9,7 @@ use App\Services\ShipmentCollectionService;
 use App\Services\WhatsAppMessageService;
 use DomainException;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Notifications\Notification;
@@ -86,6 +87,7 @@ class ShipmentsTable
                         if ($record->intake_notified_at !== null) {
                             return 'تم إرسال التتبع';
                         }
+
                         return '—';
                     })
                     ->badge()
@@ -118,6 +120,7 @@ class ShipmentsTable
                         if (($data['value'] ?? null) === 'not_collected') {
                             return $query->where('status', '!=', ShipmentStatus::Collected->value);
                         }
+
                         return $query;
                     }),
 
@@ -136,104 +139,105 @@ class ShipmentsTable
                             return $query->whereNotNull('final_charge_cents')
                                 ->whereRaw('(SELECT COALESCE(SUM(pa.amount_cents), 0) FROM payment_allocations pa INNER JOIN payments p ON p.id = pa.payment_id WHERE pa.shipment_id = shipments.id AND p.type != \'reversal\') < shipments.final_charge_cents');
                         }
+
                         return $query;
                     }),
             ])
             ->defaultSort('created_at', 'desc')
             ->recordActions([
-                \Filament\Actions\ActionGroup::make([
+                ActionGroup::make([
                     ViewAction::make(),
                     EditAction::make(),
 
-                Action::make('copyTrackingLink')
-                    ->label('رابط التتبع')
-                    ->icon('heroicon-o-link')
-                    ->color('gray')
-                    ->action(function ($record, $livewire): void {
-                        $livewire->dispatch('copy-to-clipboard', text: url('/track/'.$record->public_token));
-                    })
-                    ->extraAttributes(fn ($record): array => [
-                        'x-on:click' => 'navigator.clipboard.writeText('
-                            .json_encode(url('/track/'.$record->public_token)).')',
-                    ]),
+                    Action::make('copyTrackingLink')
+                        ->label('رابط التتبع')
+                        ->icon('heroicon-o-link')
+                        ->color('gray')
+                        ->action(function ($record, $livewire): void {
+                            $livewire->dispatch('copy-to-clipboard', text: url('/track/'.$record->public_token));
+                        })
+                        ->extraAttributes(fn ($record): array => [
+                            'x-on:click' => 'navigator.clipboard.writeText('
+                                .json_encode(url('/track/'.$record->public_token)).')',
+                        ]),
 
-                Action::make('printLabels')
-                    ->label('طباعة الملصقات')
-                    ->icon('heroicon-o-printer')
-                    ->color('gray')
-                    ->url(fn (Shipment $record): string => route('labels.shipment', $record))
-                    ->openUrlInNewTab(),
+                    Action::make('printLabels')
+                        ->label('طباعة الملصقات')
+                        ->icon('heroicon-o-printer')
+                        ->color('gray')
+                        ->url(fn (Shipment $record): string => route('labels.shipment', $record))
+                        ->openUrlInNewTab(),
 
-                Action::make('partialCollect')
-                    ->label('تسليم جزئي (بموافقة الإدارة)')
-                    ->icon('heroicon-o-check-badge')
-                    ->color('warning')
-                    ->visible(fn (Shipment $record): bool => (auth()->user()?->isAdministrator() ?? false) && in_array($record->status, [ShipmentStatus::PartialAtDestination, ShipmentStatus::PartiallyCollected, ShipmentStatus::InTransit, ShipmentStatus::AtTransit]))
-                    ->requiresConfirmation()
-                    ->modalHeading('تسليم جزئي بموافقة الإدارة (D-029)')
-                    ->modalDescription('سيتم تسليم الطرود الواصلة فقط لمستودع الوجهة وتعديل حالة الشحنة إلى (تسليم جزئي)، ويبقى متبقي الطرود قيد المتابعة.')
-                    ->action(function (Shipment $record, ShipmentCollectionService $service): void {
-                        $actor = auth()->user();
-                        $warehouse = $actor->warehouse ?? $record->destinationWarehouse;
+                    Action::make('partialCollect')
+                        ->label('تسليم جزئي (بموافقة الإدارة)')
+                        ->icon('heroicon-o-check-badge')
+                        ->color('warning')
+                        ->visible(fn (Shipment $record): bool => (auth()->user()?->isAdministrator() ?? false) && in_array($record->status, [ShipmentStatus::PartialAtDestination, ShipmentStatus::PartiallyCollected, ShipmentStatus::InTransit, ShipmentStatus::AtTransit]))
+                        ->requiresConfirmation()
+                        ->modalHeading('تسليم جزئي بموافقة الإدارة (D-029)')
+                        ->modalDescription('سيتم تسليم الطرود الواصلة فقط لمستودع الوجهة وتعديل حالة الشحنة إلى (تسليم جزئي)، ويبقى متبقي الطرود قيد المتابعة.')
+                        ->action(function (Shipment $record, ShipmentCollectionService $service): void {
+                            $actor = auth()->user();
+                            $warehouse = $actor->warehouse ?? $record->destinationWarehouse;
 
-                        try {
-                            $service->collectPartially($record, $warehouse, $actor);
-                            Notification::make()
-                                ->title('تم التسليم الجزئي بنجاح')
-                                ->body('تم تسليم الطرود الواصلة وتحديث حالة الشحنة بنجاح.')
-                                ->success()
-                                ->send();
-                        } catch (DomainException $e) {
-                            Notification::make()
-                                ->title('تعذر التسليم الجزئي')
-                                ->body($e->getMessage())
-                                ->danger()
-                                ->send();
-                        }
-                    }),
+                            try {
+                                $service->collectPartially($record, $warehouse, $actor);
+                                Notification::make()
+                                    ->title('تم التسليم الجزئي بنجاح')
+                                    ->body('تم تسليم الطرود الواصلة وتحديث حالة الشحنة بنجاح.')
+                                    ->success()
+                                    ->send();
+                            } catch (DomainException $e) {
+                                Notification::make()
+                                    ->title('تعذر التسليم الجزئي')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        }),
 
-                Action::make('whatsappArrival')
-                    ->label('واتساب: إشعار الوصول')
-                    ->icon('heroicon-o-chat-bubble-left-ellipsis')
-                    ->color('success')
-                    ->visible(fn (Shipment $record): bool => $record->status === ShipmentStatus::ReadyForCollection)
-                    ->action(function (Shipment $record, $livewire): void {
-                        $record->markArrivalNotified();
-                        $url = (new WhatsAppMessageService)->arrivalUrl($record);
-                        $livewire->js('window.open('.json_encode($url).', "_blank")');
-                    }),
+                    Action::make('whatsappArrival')
+                        ->label('واتساب: إشعار الوصول')
+                        ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                        ->color('success')
+                        ->visible(fn (Shipment $record): bool => $record->status === ShipmentStatus::ReadyForCollection)
+                        ->action(function (Shipment $record, $livewire): void {
+                            $record->markArrivalNotified();
+                            $url = (new WhatsAppMessageService)->arrivalUrl($record);
+                            $livewire->js('window.open('.json_encode($url).', "_blank")');
+                        }),
 
-                // A shipment leaves only while nothing depends on it: once it
-                // is in a batch, its weight and revenue are already counted
-                // there, so deleteSafely() refuses and names the batch.
-                Action::make('delete')
-                    ->label('حذف')
-                    ->icon('heroicon-o-trash')
-                    ->color('danger')
-                    ->visible(fn (): bool => auth()->user()?->hasCapability(Capability::DeleteRecords) ?? false)
-                    ->authorize(fn ($record): bool => auth()->user()?->hasCapability(Capability::DeleteRecords) ?? false)
-                    ->requiresConfirmation()
-                    ->modalHeading('حذف الشحنة')
-                    ->modalDescription('سيُحذف معها طرودها. لا يمكن التراجع عن هذا الإجراء.')
-                    ->action(function ($record): void {
-                        try {
-                            $record->deleteSafely();
-                            Notification::make()
-                                ->title('تم الحذف')
-                                ->success()
-                                ->send();
-                        } catch (DomainException $e) {
-                            Notification::make()
-                                ->title('لا يمكن الحذف')
-                                ->body($e->getMessage())
-                                ->danger()
-                                ->send();
-                        }
-                    }),
+                    // A shipment leaves only while nothing depends on it: once it
+                    // is in a batch, its weight and revenue are already counted
+                    // there, so deleteSafely() refuses and names the batch.
+                    Action::make('delete')
+                        ->label('حذف')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->visible(fn (): bool => auth()->user()?->hasCapability(Capability::DeleteRecords) ?? false)
+                        ->authorize(fn ($record): bool => auth()->user()?->hasCapability(Capability::DeleteRecords) ?? false)
+                        ->requiresConfirmation()
+                        ->modalHeading('حذف الشحنة')
+                        ->modalDescription('سيُحذف معها طرودها. لا يمكن التراجع عن هذا الإجراء.')
+                        ->action(function ($record): void {
+                            try {
+                                $record->deleteSafely();
+                                Notification::make()
+                                    ->title('تم الحذف')
+                                    ->success()
+                                    ->send();
+                            } catch (DomainException $e) {
+                                Notification::make()
+                                    ->title('لا يمكن الحذف')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        }),
                 ])
-                ->label('إجراءات')
-                ->icon('heroicon-m-ellipsis-vertical')
-                ->button(),
+                    ->label('إجراءات')
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->button(),
             ])
             ->toolbarActions([]);
     }

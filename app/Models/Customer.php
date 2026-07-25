@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use App\Models\Concerns\GuardsDeletion;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -19,12 +21,13 @@ use Illuminate\Support\Facades\DB;
  * @property string $phone
  * @property bool $is_credit_customer
  * @property bool $is_active
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CustomerRate> $rates
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, CustomerRate> $rates
  * @property-read int|null $rates_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Shipment> $shipments
+ * @property-read Collection<int, Shipment> $shipments
  * @property-read int|null $shipments_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer query()
@@ -35,6 +38,7 @@ use Illuminate\Support\Facades\DB;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer wherePhone($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class Customer extends Model

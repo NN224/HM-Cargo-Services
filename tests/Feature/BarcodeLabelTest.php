@@ -1,20 +1,21 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Models\Batch;
 use App\Models\Customer;
 use App\Models\Package;
+use App\Models\Route;
 use App\Models\Shipment;
 use App\Models\User;
 use App\Models\Warehouse;
-use App\Models\Batch;
-use App\Models\Route;
+
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 
 beforeEach(function () {
     $this->origin = Warehouse::create(['name' => 'Dubai', 'location' => 'UAE']);
     $this->destination = Warehouse::create(['name' => 'Damascus', 'location' => 'Syria']);
-    
+
     $this->customer = Customer::create([
         'name' => 'John Doe',
         'phone' => '123456789',
@@ -38,7 +39,7 @@ beforeEach(function () {
         'recipient_phone' => '987654321',
     ]);
     $this->shipment->forceFill(['batch_id' => $this->batch->id])->save();
-    
+
     $this->shipment->setFinalCharge(50000);
     $this->shipment->forceFill(['computed_charge_cents' => 50000])->save();
 
@@ -55,11 +56,11 @@ beforeEach(function () {
 
 it('prints a package label containing required data and NO pricing data', function () {
     $user = User::factory()->create(['role' => UserRole::Administrator]);
-    
+
     $response = actingAs($user)->get("/labels/packages/{$this->package1->id}");
-    
+
     $response->assertOk();
-    
+
     $response->assertSee($this->package1->barcode);
     $response->assertSee('1 من 2');
     $response->assertSee($this->shipment->reference);
@@ -78,11 +79,11 @@ it('prints a package label containing required data and NO pricing data', functi
 
 it('prints multiple labels for a full shipment containing NO pricing data', function () {
     $user = User::factory()->create(['role' => UserRole::Administrator]);
-    
+
     $response = actingAs($user)->get("/labels/shipments/{$this->shipment->id}");
-    
+
     $response->assertOk();
-    
+
     $response->assertSee($this->package1->barcode);
     $response->assertSee('1 من 2');
     $response->assertSee($this->package2->barcode);
@@ -120,7 +121,7 @@ it('offers a WhatsApp handoff to send the tracking link to the customer', functi
 
 it('requires authentication to print labels', function () {
     $response = get("/labels/packages/{$this->package1->id}");
-    $response->assertRedirect('/login');
+    $response->assertRedirect('/system-login');
 });
 
 it('lets an authenticated employee print through the real policy', function () {

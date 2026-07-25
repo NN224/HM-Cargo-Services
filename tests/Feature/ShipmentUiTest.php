@@ -42,7 +42,7 @@ test('a shipment with several packages can be created from the panel', function 
         ])
         ->call('create')
         ->assertHasNoFormErrors()
-        ->assertRedirect('/admin/shipments');
+        ->assertRedirect('/shipments');
 
     $shipment = Shipment::first();
 

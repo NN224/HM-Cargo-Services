@@ -5,16 +5,18 @@ namespace App\Models;
 use App\Models\Concerns\GuardsDeletion;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property int $payment_id
  * @property int $shipment_id
  * @property int $amount_cents
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Payment $payment
- * @property-read \App\Models\Shipment $shipment
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Payment $payment
+ * @property-read Shipment $shipment
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentAllocation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentAllocation newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentAllocation query()
@@ -24,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentAllocation wherePaymentId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentAllocation whereShipmentId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentAllocation whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class PaymentAllocation extends Model

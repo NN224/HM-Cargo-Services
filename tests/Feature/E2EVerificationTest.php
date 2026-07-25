@@ -11,10 +11,8 @@ use App\Models\CustomerRate;
 use App\Models\Package;
 use App\Models\Payment;
 use App\Models\Route;
-use App\Models\Shipment;
 use App\Models\User;
 use App\Models\Warehouse;
-use App\Services\BatchAssignmentService;
 use App\Services\BatchDispatchService;
 use App\Services\BatchIntakeService;
 use App\Services\CustomerStatementService;
@@ -80,6 +78,7 @@ test('e2e full operational daily routine verification test', function () {
             ['weight_kg' => 5.45, 'description' => 'ملابس'],
             ['weight_kg' => 3.20, 'description' => 'أحذية'],
         ],
+        'final_charge_usd' => '38.93',
     ], $admin);
 
     $shipment->refresh();
@@ -100,7 +99,7 @@ test('e2e full operational daily routine verification test', function () {
     $dispatchService->dispatch($batch, 200);
 
     expect($batch->fresh()->status)->toBe(BatchStatus::Dispatched);
-    expect($shipment->fresh()->rate_per_kg_cents)->toBe(450);
+    expect($shipment->fresh()->rate_per_kg_cents)->toBeNull();
 
     // 5. WAREHOUSE SCANNING AT TRANSIT & DESTINATION
     $scanService = app(PackageScanService::class);

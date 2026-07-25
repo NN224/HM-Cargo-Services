@@ -18,16 +18,15 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\RepeatableEntry;
-use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
-use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 /**
- * @property \App\Models\Customer $record
+ * @property Customer $record
  */
 class ViewCustomer extends ViewRecord
 {
@@ -111,7 +110,8 @@ class ViewCustomer extends ViewRecord
                 ->openUrlInNewTab()
                 ->url(function () use ($customer): string {
                     $normalised = app(WhatsAppMessageService::class)->normalisePhone($customer->phone);
-                    return "https://wa.me/{$normalised}?text=" . urlencode("مرحباً {$customer->name}، ننتظر تواصلك بخصوص شحناتك.");
+
+                    return "https://wa.me/{$normalised}?text=".urlencode("مرحباً {$customer->name}، ننتظر تواصلك بخصوص شحناتك.");
                 }),
 
             EditAction::make(),
@@ -160,7 +160,7 @@ class ViewCustomer extends ViewRecord
                         TextEntry::make('name')->label('اسم العميل'),
                         TextEntry::make('phone')
                             ->label('رقم الهاتف')
-                            ->extraAttributes(['dir' => 'ltr', 'style' => 'text-align: right;']),
+                            ->extraAttributes(['style' => 'unicode-bidi: isolate; direction: ltr; text-align: right;']),
                         IconEntry::make('is_credit_customer')->label('عميل آجل')->boolean(),
                         IconEntry::make('is_active')->label('حالة الحساب (نشط)')->boolean(),
                     ])
@@ -183,7 +183,7 @@ class ViewCustomer extends ViewRecord
                         ->label('')
                         ->state($rates->map(fn (CustomerRate $rate): array => [
                             'route' => $rate->route->name,
-                            'rate' => '$' . number_format($rate->rate_per_kg_cents / 100, 2),
+                            'rate' => '$'.number_format($rate->rate_per_kg_cents / 100, 2),
                             'url' => CustomerRateResource::getUrl('edit', ['record' => $rate]),
                         ])->all())
                         ->schema([
@@ -220,8 +220,8 @@ class ViewCustomer extends ViewRecord
                         ->state($shipments->map(fn (Shipment $s): array => [
                             'reference' => $s->reference,
                             'status' => $s->status->label(),
-                            'weight' => number_format((float) $s->total_weight_kg, 2) . ' كغ',
-                            'total' => $s->final_charge_cents ? '$' . number_format($s->final_charge_cents / 100, 2) : 'غير مسعر',
+                            'weight' => number_format((float) $s->total_weight_kg, 2).' كغ',
+                            'total' => $s->final_charge_cents ? '$'.number_format($s->final_charge_cents / 100, 2) : 'غير مسعر',
                             'payment_status' => $s->paymentStatusLabel(),
                             'url' => ShipmentResource::getUrl('view', ['record' => $s]),
                         ])->all())
@@ -252,6 +252,6 @@ class ViewCustomer extends ViewRecord
         $sign = $cents < 0 ? '-' : '';
         $absolute = abs($cents);
 
-        return $sign . '$' . intdiv($absolute, 100) . '.' . str_pad((string) ($absolute % 100), 2, '0', STR_PAD_LEFT);
+        return $sign.'$'.intdiv($absolute, 100).'.'.str_pad((string) ($absolute % 100), 2, '0', STR_PAD_LEFT);
     }
 }

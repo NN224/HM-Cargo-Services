@@ -9,7 +9,6 @@ use App\Filament\Resources\Payments\Pages\ListPayments;
 use App\Filament\Resources\Payments\PaymentResource;
 use App\Models\Customer;
 use App\Models\Payment;
-use App\Models\PaymentAllocation;
 use App\Models\Shipment;
 use App\Models\User;
 use App\Models\Warehouse;

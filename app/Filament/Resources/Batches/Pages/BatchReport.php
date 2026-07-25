@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Batches\Pages;
 use App\Enums\Capability;
 use App\Filament\Concerns\LocksWhenUnauthorized;
 use App\Filament\Resources\Batches\BatchResource;
+use App\Models\Batch;
 use App\Models\User;
 use App\Services\BatchReportService;
 use Filament\Infolists\Components\TextEntry;
@@ -13,7 +14,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 /**
- * @property \App\Models\Batch $record
+ * @property Batch $record
  */
 class BatchReport extends ViewRecord
 {

@@ -72,72 +72,13 @@ test('an employee without the pricing capability can still receive cargo', funct
 test('the rate and total are hidden from an employee who may not price', function () {
     Livewire::actingAs($this->clerk)
         ->test(ReceiveIntoBatch::class)
-        ->assertFormFieldHidden('rate_per_kg');
+        ->assertFormFieldHidden('final_charge_usd');
 });
 
-test('the rate is offered to a user who may price', function () {
+test('the total is offered to a user who may price', function () {
     Livewire::actingAs($this->admin)
         ->test(ReceiveIntoBatch::class)
-        ->assertFormFieldVisible('rate_per_kg');
-});
-
-test('the rate shows the customer\'s agreed rate for the batch\'s route', function () {
-    // 300 stored cents must render as dollars, not the raw cent count.
-    Livewire::actingAs($this->admin)
-        ->test(ReceiveIntoBatch::class)
-        ->fillForm([
-            'batch_id' => $this->batch->id,
-            'customer_id' => $this->customer->id,
-        ])
-        ->assertFormSet(['rate_per_kg' => '3.00']);
-});
-
-test('a different recipient is accepted when the box is unticked', function () {
-    Livewire::actingAs($this->clerk)
-        ->test(ReceiveIntoBatch::class)
-        ->fillForm([
-            'batch_id' => $this->batch->id,
-            'customer_id' => $this->customer->id,
-            'recipient_is_customer' => false,
-            'recipient_name' => 'سامي',
-            'recipient_phone' => '+9613000001',
-            'packages' => [['weight_kg' => 2.0, 'description' => null]],
-        ])
-        ->call('receive')
-        ->assertHasNoFormErrors();
-
-    expect(Shipment::first()->recipient_name)->toBe('سامي');
-});
-
-test('a dollar amount typed for a first agreed rate is stored as cents, not truncated', function () {
-    // Every other money field in the system takes dollars and converts to
-    // cents at the boundary (CustomerRateForm). Before the fix, this field
-    // stored the typed string as-is: (int) "3.50" truncates to 3, pricing
-    // every future load on this route at 3 cents/kg instead of $3.50/kg.
-    $stranger = Customer::create(['name' => 'غريب', 'phone' => '+971500000099']);
-
-    Livewire::actingAs($this->admin)
-        ->test(ReceiveIntoBatch::class)
-        ->fillForm([
-            'batch_id' => $this->batch->id,
-            'customer_id' => $stranger->id,
-            'recipient_is_customer' => true,
-            'agreed_rate_per_kg_cents' => '3.50',
-            'packages' => [['weight_kg' => 2.0, 'description' => null]],
-        ])
-        ->call('receive')
-        ->assertHasNoFormErrors();
-
-    expect(CustomerRate::where('customer_id', $stranger->id)
-        ->where('route_id', $this->route->id)
-        ->value('rate_per_kg_cents'))->toBe(350);
-
-    $shipment = Shipment::where('customer_id', $stranger->id)->firstOrFail();
-
-    // 2.0 kg at 350 cents/kg = 700 cents, computed the same way
-    // BatchAssignmentService::computeCharge() does (bcmul, then round).
-    expect($shipment->rate_per_kg_cents)->toBe(350)
-        ->and($shipment->final_charge_cents)->toBe(700);
+        ->assertFormFieldVisible('final_charge_usd');
 });
 
 test('a successful intake redirects to the printable labels page', function () {
@@ -154,18 +95,20 @@ test('a successful intake redirects to the printable labels page', function () {
         ->assertRedirect(route('labels.shipment', Shipment::latest('id')->firstOrFail()));
 });
 
-test('a customer with no agreed rate is refused and nothing is saved', function () {
-    $stranger = Customer::create(['name' => 'غريب', 'phone' => '+971500000099']);
-
+test('a different recipient is accepted when the box is unticked', function () {
     Livewire::actingAs($this->clerk)
         ->test(ReceiveIntoBatch::class)
         ->fillForm([
             'batch_id' => $this->batch->id,
-            'customer_id' => $stranger->id,
-            'recipient_is_customer' => true,
+            'customer_id' => $this->customer->id,
+            'recipient_is_customer' => false,
+            'recipient_name' => 'سامي',
+            'recipient_phone' => '+9613000001',
             'packages' => [['weight_kg' => 2.0, 'description' => null]],
+            'final_charge_usd' => '10.00',
         ])
-        ->call('receive');
+        ->call('receive')
+        ->assertHasNoFormErrors();
 
-    expect(Shipment::count())->toBe(0);
+    expect(Shipment::first()->recipient_name)->toBe('سامي');
 });

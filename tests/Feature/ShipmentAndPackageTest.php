@@ -3,7 +3,6 @@
 use App\Enums\PackageStatus;
 use App\Enums\ShipmentStatus;
 use App\Models\Customer;
-use App\Models\Package;
 use App\Models\Shipment;
 
 beforeEach(function () {

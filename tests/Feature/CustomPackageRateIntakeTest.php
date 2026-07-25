@@ -1,13 +1,13 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Filament\Pages\ReceiveIntoBatch;
 use App\Models\Batch;
 use App\Models\Customer;
 use App\Models\CustomerRate;
 use App\Models\Route;
 use App\Models\User;
 use App\Models\Warehouse;
-use App\Services\BatchIntakeService;
 
 beforeEach(function () {
     $this->admin = User::factory()->create([
@@ -39,26 +39,27 @@ beforeEach(function () {
     ]);
 });
 
-test('intake calculates final charge with custom per package rates', function () {
-    $service = app(BatchIntakeService::class);
-
-    $shipment = $service->receive($this->batch, [
-        'customer_id' => $this->customer->id,
-        'recipient_is_customer' => true,
-        'packages' => [
-            [
-                'weight_kg' => '2.0000',
-                'description' => 'Shein Clothes',
-                'custom_rate_per_kg' => null, // Default: $9.25 * 2 = $18.50 (1850 cents)
+test('intake ui calculates final charge with custom per package rates', function () {
+    Livewire::actingAs($this->admin)
+        ->test(ReceiveIntoBatch::class)
+        ->fillForm([
+            'batch_id' => $this->batch->id,
+            'customer_id' => $this->customer->id,
+            'recipient_is_customer' => true,
+            'packages' => [
+                [
+                    'weight_kg' => '2.0000',
+                    'description' => 'Shein Clothes',
+                    'pricing_method' => 'per_kg',
+                    'custom_rate_per_kg' => '10.00',
+                ],
+                [
+                    'weight_kg' => '1.0000',
+                    'description' => 'Cosmetics',
+                    'pricing_method' => 'per_kg',
+                    'custom_rate_per_kg' => '18.00', // Custom: $18.00 * 1 = $18.00 (1800 cents)
+                ],
             ],
-            [
-                'weight_kg' => '1.0000',
-                'description' => 'Cosmetics',
-                'custom_rate_per_kg' => '18.00', // Custom: $18.00 * 1 = $18.00 (1800 cents)
-            ],
-        ],
-    ], $this->admin);
-
-    // Total expected = 1850 + 1800 = 3650 cents ($36.50)
-    expect($shipment->final_charge_cents)->toBe(3650);
+        ])
+        ->assertFormSet(['final_charge_usd' => '38.00']);
 });

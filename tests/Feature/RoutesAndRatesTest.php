@@ -4,6 +4,7 @@ use App\Models\Customer;
 use App\Models\CustomerRate;
 use App\Models\Route;
 use App\Models\Warehouse;
+use Illuminate\Database\UniqueConstraintViolationException;
 
 beforeEach(function () {
     $this->dubai = Warehouse::create(['name' => 'Dubai', 'location' => 'UAE']);
@@ -92,7 +93,7 @@ test('a customer has at most one rate per route', function () {
         'customer_id' => $customer->id, 'route_id' => $route->id,
         'rate_per_kg_cents' => 500,
     ]);
-})->throws(Illuminate\Database\UniqueConstraintViolationException::class);
+})->throws(UniqueConstraintViolationException::class);
 
 test('a rate must be a positive number of cents', function () {
     $customer = Customer::create(['name' => 'Omar', 'phone' => '+971500000003']);
@@ -123,7 +124,7 @@ test('a missing customer rate is reported as null rather than defaulted', functi
 test('customer phone numbers are unique', function () {
     Customer::create(['name' => 'First', 'phone' => '+971500000005']);
     Customer::create(['name' => 'Duplicate', 'phone' => '+971500000005']);
-})->throws(Illuminate\Database\UniqueConstraintViolationException::class);
+})->throws(UniqueConstraintViolationException::class);
 
 test('a customer is not a credit customer unless explicitly marked', function () {
     $customer = Customer::create(['name' => 'Cash Only', 'phone' => '+971500000006']);

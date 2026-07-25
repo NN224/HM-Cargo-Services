@@ -31,7 +31,7 @@ test('creating a customer returns to the list, not another form', function () {
     Livewire::test(CreateCustomer::class)
         ->fillForm(['name' => 'نبيل', 'phone' => '+971500001111'])
         ->call('create')
-        ->assertRedirect('/admin/customers');
+        ->assertRedirect('/customers');
 });
 
 test('saving an edited customer returns to the list', function () {
@@ -41,7 +41,7 @@ test('saving an edited customer returns to the list', function () {
     Livewire::test(EditCustomer::class, ['record' => $customer->getRouteKey()])
         ->fillForm(['name' => 'جديد', 'phone' => '+971500002222'])
         ->call('save')
-        ->assertRedirect('/admin/customers');
+        ->assertRedirect('/customers');
 
     expect($customer->fresh()->name)->toBe('جديد');
 });

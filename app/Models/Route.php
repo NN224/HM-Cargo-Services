@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use App\Models\Concerns\GuardsDeletion;
-
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 
 /**
@@ -23,15 +24,16 @@ use InvalidArgumentException;
  * @property int $destination_warehouse_id
  * @property int|null $transit_warehouse_id
  * @property bool $is_active
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Batch> $batches
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, Batch> $batches
  * @property-read int|null $batches_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CustomerRate> $customerRates
+ * @property-read Collection<int, CustomerRate> $customerRates
  * @property-read int|null $customer_rates_count
- * @property-read \App\Models\Warehouse $destinationWarehouse
- * @property-read \App\Models\Warehouse $originWarehouse
- * @property-read \App\Models\Warehouse|null $transitWarehouse
+ * @property-read Warehouse $destinationWarehouse
+ * @property-read Warehouse $originWarehouse
+ * @property-read Warehouse|null $transitWarehouse
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route query()
@@ -43,6 +45,7 @@ use InvalidArgumentException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereOriginWarehouseId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereTransitWarehouseId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class Route extends Model

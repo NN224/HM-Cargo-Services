@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\UserRole;
+use App\Models\Customer;
 use App\Models\Route;
 use App\Models\User;
 use App\Models\Warehouse;
@@ -47,30 +48,30 @@ class DatabaseSeeder extends Seeder
         Route::firstOrCreate(
             ['name' => 'Dubai → Lebanon'],
             [
-                'origin_warehouse_id'      => $dubai->id,
+                'origin_warehouse_id' => $dubai->id,
                 'destination_warehouse_id' => $beirut->id,
-                'transit_warehouse_id'     => null,
-                'is_active'                => true,
+                'transit_warehouse_id' => null,
+                'is_active' => true,
             ],
         );
 
         Route::firstOrCreate(
             ['name' => 'Dubai → Syria (Direct)'],
             [
-                'origin_warehouse_id'      => $dubai->id,
+                'origin_warehouse_id' => $dubai->id,
                 'destination_warehouse_id' => $damascus->id,
-                'transit_warehouse_id'     => null,
-                'is_active'                => true,
+                'transit_warehouse_id' => null,
+                'is_active' => true,
             ],
         );
 
         Route::firstOrCreate(
             ['name' => 'Dubai → Beirut → Syria'],
             [
-                'origin_warehouse_id'      => $dubai->id,
+                'origin_warehouse_id' => $dubai->id,
                 'destination_warehouse_id' => $damascus->id,
-                'transit_warehouse_id'     => $beirut->id,
-                'is_active'                => true,
+                'transit_warehouse_id' => $beirut->id,
+                'is_active' => true,
             ],
         );
 
@@ -88,11 +89,11 @@ class DatabaseSeeder extends Seeder
         User::firstOrCreate(
             ['email' => env('ADMIN_EMAIL', 'admin@hmcargo.ae')],
             [
-                'name'         => 'مدير النظام',
-                'password'     => $password,
-                'role'         => UserRole::Administrator,
+                'name' => 'مدير النظام',
+                'password' => $password,
+                'role' => UserRole::Administrator,
                 'warehouse_id' => $dubai->id,
-                'is_active'    => true,
+                'is_active' => true,
             ],
         );
 
@@ -130,7 +131,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($customers as $c) {
-            \App\Models\Customer::firstOrCreate(
+            Customer::firstOrCreate(
                 ['phone' => $c['phone']],
                 ['name' => $c['name']]
             );

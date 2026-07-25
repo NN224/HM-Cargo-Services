@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Enums\Capability;
 use App\Models\Batch;
 use App\Models\Customer;
-use App\Models\CustomerRate;
 use App\Models\Shipment;
 use App\Models\User;
 use DomainException;
@@ -52,8 +51,6 @@ class BatchIntakeService
 
             $customer = Customer::findOrFail($data['customer_id']);
 
-            $this->recordAgreedRateIfMissing($customer, $batch, $data, $actor);
-
             [$name, $phone] = $this->resolveRecipient($customer, $data);
 
             $shipment = Shipment::create([
@@ -74,34 +71,23 @@ class BatchIntakeService
                     'custom_rate_per_kg_cents' => filled($package['custom_rate_per_kg'] ?? null)
                         ? (int) round(((float) $package['custom_rate_per_kg']) * 100)
                         : null,
+                    'fixed_charge_cents' => filled($package['fixed_charge_usd'] ?? null)
+                        ? (int) round(((float) $package['fixed_charge_usd']) * 100)
+                        : null,
                 ]);
             }
 
             $shipment->recalculateTotalWeight();
 
-            // Pricing stays where it has always been. If the customer has no
-            // agreed rate for this route, assign() refuses and this whole
-            // transaction unwinds — no half-received cargo.
-            $shipment = $this->assignment->assign($shipment->fresh(), $batch);
+            // Assign the shipment to the batch. We use a flag to skip
+            // the strict route-rate check inside BatchAssignmentService
+            // because we are explicitly providing manual package rates.
+            $shipment = $this->assignment->assign($shipment->fresh(), $batch, skipRateCheck: true);
 
-            $hasCustomRates = false;
-            $customTotalCents = 0;
-            $defaultRateCents = $shipment->rate_per_kg_cents;
-
-            foreach ($packages as $pkg) {
-                $w = (float) ($pkg['weight_kg'] ?? 0);
-                if (isset($pkg['custom_rate_per_kg']) && filled($pkg['custom_rate_per_kg'])) {
-                    $hasCustomRates = true;
-                    $pkgRateCents = (int) round(((float) $pkg['custom_rate_per_kg']) * 100);
-                } else {
-                    $pkgRateCents = $defaultRateCents;
-                }
-                $customTotalCents += (int) round($w * $pkgRateCents);
-            }
-
-            if ($hasCustomRates) {
+            // Apply the final charge exactly as the user typed it in the form.
+            if (isset($data['final_charge_usd']) && filled($data['final_charge_usd'])) {
                 $shipment->forceFill([
-                    'final_charge_cents' => $customTotalCents,
+                    'final_charge_cents' => (int) round(((float) $data['final_charge_usd']) * 100),
                 ])->save();
             }
 
@@ -147,59 +133,5 @@ class BatchIntakeService
         }
 
         return [$data['recipient_name'], $data['recipient_phone']];
-    }
-
-    /**
-     * Record a first agreed rate, when one was supplied and none exists.
-     *
-     * A customer with no rate for this route is one nobody has settled terms
-     * with yet. The system still refuses to invent a figure — but a user
-     * entitled to record the agreement may do it here rather than break off
-     * to another screen mid-intake.
-     *
-     * An existing rate is never touched. Changing an agreed price belongs on
-     * the rates screen behind its confirmation, not to a side effect of
-     * receiving boxes.
-     *
-     * The Filament form only shows this field to a user holding
-     * Capability::ManageCustomers (see ReceiveIntoBatch::needsAgreedRate()),
-     * but that is a UI convenience, not authorization — AGENTS.md is explicit
-     * that authorization belongs in backend guards, never in hiding a field.
-     * A crafted Livewire property update could otherwise reach this method
-     * with a value for a user never entitled to set it, so the check is
-     * repeated here regardless of how the value arrived.
-     *
-     * @param  array<string, mixed>  $data
-     *
-     * @throws DomainException when the acting user may not set a rate, or
-     *                         when the supplied value is invalid
-     */
-    private function recordAgreedRateIfMissing(Customer $customer, Batch $batch, array $data, User $actor): void
-    {
-        $agreed = $data['agreed_rate_per_kg_cents'] ?? null;
-
-        if ($agreed === null) {
-            return;
-        }
-
-        if ($customer->rateForRoute($batch->route) !== null) {
-            return;
-        }
-
-        // An administrator holds every capability implicitly (D-022); the
-        // check below reflects that automatically via hasCapability().
-        if (! $actor->hasCapability(Capability::ManageCustomers)) {
-            throw new DomainException('لا يملك المستخدم صلاحية إدارة العملاء، ولا يمكنه تسجيل سعر متفق عليه.');
-        }
-
-        if ((int) $agreed <= 0) {
-            throw new DomainException('سعر الكيلو المتفق عليه يجب أن يكون أكبر من صفر.');
-        }
-
-        CustomerRate::create([
-            'customer_id' => $customer->id,
-            'route_id' => $batch->route_id,
-            'rate_per_kg_cents' => (int) $agreed,
-        ]);
     }
 }

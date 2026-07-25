@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use App\Models\Concerns\GuardsDeletion;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -13,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $amount_cents
  * @property string $method
  * @property string|null $custom_method_name
- * @property \Illuminate\Support\Carbon $collected_at
+ * @property Carbon $collected_at
  * @property int $collected_by
  * @property int $warehouse_id
  * @property string|null $reference
@@ -22,14 +24,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $type
  * @property int|null $reverses_payment_id
  * @property string|null $reversal_reason
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PaymentAllocation> $allocations
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, PaymentAllocation> $allocations
  * @property-read int|null $allocations_count
- * @property-read \App\Models\User $collector
- * @property-read \App\Models\Customer $customer
+ * @property-read User $collector
+ * @property-read Customer $customer
  * @property-read Payment|null $reversedPayment
- * @property-read \App\Models\Warehouse $warehouse
+ * @property-read Warehouse $warehouse
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment query()
@@ -49,6 +52,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment whereWarehouseId($value)
+ *
  * @mixin \Eloquent
  */
 class Payment extends Model
@@ -56,11 +60,15 @@ class Payment extends Model
     use GuardsDeletion;
 
     const METHOD_CASH = 'cash';
+
     const METHOD_WHISH = 'whish';
+
     const METHOD_BANK = 'bank_transfer';
+
     const METHOD_OTHER = 'other';
 
     const TYPE_PAYMENT = 'payment';
+
     const TYPE_REVERSAL = 'reversal';
 
     protected $fillable = [

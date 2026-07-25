@@ -3,6 +3,7 @@
 use App\Enums\UserRole;
 use App\Models\Customer;
 use App\Models\Payment;
+use App\Models\PaymentAllocation;
 use App\Models\Shipment;
 use App\Models\User;
 use App\Models\Warehouse;
@@ -84,8 +85,7 @@ test('statement reconciles running balance with outstanding and unapplied credit
     // Expected: 18000 - 2000 = 16000
 
     $totalOutstanding = $this->customer->shipments->sum(fn ($s) => $s->fresh()->outstandingCents());
-    $totalAllocated = \App\Models\PaymentAllocation::whereHas('payment', fn ($q) =>
-        $q->where('customer_id', $this->customer->id)
+    $totalAllocated = PaymentAllocation::whereHas('payment', fn ($q) => $q->where('customer_id', $this->customer->id)
     )->sum('amount_cents');
     $totalPaid = Payment::where('customer_id', $this->customer->id)->sum('amount_cents');
     $unapplied = $totalPaid - $totalAllocated;

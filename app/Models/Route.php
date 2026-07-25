@@ -16,6 +16,34 @@ use InvalidArgumentException;
  * Direct and transit routes are separate records and may carry different
  * customer prices, so Dubai->Syria direct and Dubai->Beirut->Syria are never
  * the same route (D-007).
+ *
+ * @property int $id
+ * @property string $name
+ * @property int $origin_warehouse_id
+ * @property int $destination_warehouse_id
+ * @property int|null $transit_warehouse_id
+ * @property bool $is_active
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Batch> $batches
+ * @property-read int|null $batches_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CustomerRate> $customerRates
+ * @property-read int|null $customer_rates_count
+ * @property-read \App\Models\Warehouse $destinationWarehouse
+ * @property-read \App\Models\Warehouse $originWarehouse
+ * @property-read \App\Models\Warehouse|null $transitWarehouse
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Route newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Route newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Route query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereDestinationWarehouseId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereOriginWarehouseId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereTransitWarehouseId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class Route extends Model
 {

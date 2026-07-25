@@ -16,6 +16,25 @@ use InvalidArgumentException;
  * Effective-dating is deferred past version 1 (D-018): there is exactly one
  * current rate per customer per route, and history is preserved by the rate
  * snapshot taken on the shipment at batch assignment.
+ *
+ * @property int $id
+ * @property int $customer_id
+ * @property int $route_id
+ * @property int $rate_per_kg_cents
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Customer $customer
+ * @property-read \App\Models\Route $route
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerRate newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerRate newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerRate query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerRate whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerRate whereCustomerId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerRate whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerRate whereRatePerKgCents($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerRate whereRouteId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerRate whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class CustomerRate extends Model
 {

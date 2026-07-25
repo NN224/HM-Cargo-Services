@@ -16,6 +16,32 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Batches are a core module, not optional tagging (D-004). A batch is what
  * makes its shipments billable, because the customer's price is specific to
  * the route the batch travels.
+ *
+ * @property int $id
+ * @property string $reference
+ * @property int $route_id
+ * @property BatchStatus $status
+ * @property int|null $cost_per_kg_cents
+ * @property \Illuminate\Support\Carbon|null $dispatched_on
+ * @property \Illuminate\Support\Carbon|null $arrived_on
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Route $route
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Shipment> $shipments
+ * @property-read int|null $shipments_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch whereArrivedOn($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch whereCostPerKgCents($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch whereDispatchedOn($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch whereReference($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch whereRouteId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class Batch extends Model
 {

@@ -15,6 +15,30 @@ use InvalidArgumentException;
  * Every package carries a system-generated barcode and an exact decimal
  * weight (D-011). Weight is never rounded and there is no minimum billable
  * weight (D-007).
+ *
+ * @property int $id
+ * @property int $shipment_id
+ * @property string $barcode
+ * @property string|null $source_barcode
+ * @property string|null $description
+ * @property numeric $weight_kg
+ * @property PackageStatus $status
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Shipment $shipment
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Package newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Package newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Package query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Package whereBarcode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Package whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Package whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Package whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Package whereShipmentId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Package whereSourceBarcode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Package whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Package whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Package whereWeightKg($value)
+ * @mixin \Eloquent
  */
 class Package extends Model
 {

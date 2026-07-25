@@ -18,6 +18,51 @@ use Illuminate\Support\Facades\DB;
  * The recipient is a snapshot of name and phone only. No address is stored —
  * different people may collect the same shipment, and the Beirut delivery
  * team takes the address at handover (D-019).
+ *
+ * @property int $id
+ * @property string $reference
+ * @property string $public_token
+ * @property int $customer_id
+ * @property string $recipient_name
+ * @property string $recipient_phone
+ * @property ShipmentStatus $status
+ * @property numeric $total_weight_kg
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property int|null $batch_id
+ * @property int|null $rate_per_kg_cents
+ * @property int|null $computed_charge_cents
+ * @property int|null $final_charge_cents
+ * @property int $paid_amount_cents
+ * @property string|null $priced_at
+ * @property int|null $destination_warehouse_id
+ * @property-read \App\Models\Batch|null $batch
+ * @property-read \App\Models\Customer $customer
+ * @property-read \App\Models\Warehouse|null $destinationWarehouse
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Package> $packages
+ * @property-read int|null $packages_count
+ * @method static Builder<static>|Shipment awaitingBatch()
+ * @method static Builder<static>|Shipment newModelQuery()
+ * @method static Builder<static>|Shipment newQuery()
+ * @method static Builder<static>|Shipment query()
+ * @method static Builder<static>|Shipment whereBatchId($value)
+ * @method static Builder<static>|Shipment whereComputedChargeCents($value)
+ * @method static Builder<static>|Shipment whereCreatedAt($value)
+ * @method static Builder<static>|Shipment whereCustomerId($value)
+ * @method static Builder<static>|Shipment whereDestinationWarehouseId($value)
+ * @method static Builder<static>|Shipment whereFinalChargeCents($value)
+ * @method static Builder<static>|Shipment whereId($value)
+ * @method static Builder<static>|Shipment wherePaidAmountCents($value)
+ * @method static Builder<static>|Shipment wherePricedAt($value)
+ * @method static Builder<static>|Shipment wherePublicToken($value)
+ * @method static Builder<static>|Shipment whereRatePerKgCents($value)
+ * @method static Builder<static>|Shipment whereRecipientName($value)
+ * @method static Builder<static>|Shipment whereRecipientPhone($value)
+ * @method static Builder<static>|Shipment whereReference($value)
+ * @method static Builder<static>|Shipment whereStatus($value)
+ * @method static Builder<static>|Shipment whereTotalWeightKg($value)
+ * @method static Builder<static>|Shipment whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class Shipment extends Model
 {

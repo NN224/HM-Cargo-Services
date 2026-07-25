@@ -9,6 +9,31 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $location
+ * @property bool $is_active
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Route> $routesAsDestination
+ * @property-read int|null $routes_as_destination_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Route> $routesAsOrigin
+ * @property-read int|null $routes_as_origin_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $users
+ * @property-read int|null $users_count
+ * @method static Builder<static>|Warehouse newModelQuery()
+ * @method static Builder<static>|Warehouse newQuery()
+ * @method static Builder<static>|Warehouse query()
+ * @method static Builder<static>|Warehouse visibleTo(\App\Models\User $user)
+ * @method static Builder<static>|Warehouse whereCreatedAt($value)
+ * @method static Builder<static>|Warehouse whereId($value)
+ * @method static Builder<static>|Warehouse whereIsActive($value)
+ * @method static Builder<static>|Warehouse whereLocation($value)
+ * @method static Builder<static>|Warehouse whereName($value)
+ * @method static Builder<static>|Warehouse whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
 class Warehouse extends Model
 {
     use GuardsDeletion, HasFactory;

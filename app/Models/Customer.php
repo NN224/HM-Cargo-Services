@@ -13,6 +13,29 @@ use Illuminate\Support\Facades\DB;
  *
  * A customer is distinct from a shipment recipient (D-006). The recipient
  * collects and normally pays, but carries no financial ownership.
+ *
+ * @property int $id
+ * @property string $name
+ * @property string $phone
+ * @property bool $is_credit_customer
+ * @property bool $is_active
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CustomerRate> $rates
+ * @property-read int|null $rates_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Shipment> $shipments
+ * @property-read int|null $shipments_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereIsCreditCustomer($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer wherePhone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class Customer extends Model
 {

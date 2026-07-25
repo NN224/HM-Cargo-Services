@@ -7,6 +7,9 @@ use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
+/**
+ * @property \App\Models\CustomerRate $record
+ */
 class EditCustomerRate extends EditRecord
 {
     protected static string $resource = CustomerRateResource::class;

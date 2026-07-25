@@ -123,7 +123,7 @@ class TrackingController extends Controller
         $parts = preg_split('/\s+/u', trim($name), flags: PREG_SPLIT_NO_EMPTY) ?: [];
 
         if (count($parts) === 1) {
-            return mb_substr($parts[0] ?? '', 0, 1).'***';
+            return mb_substr($parts[0], 0, 1).'***';
         }
 
         return implode(' ', array_map(

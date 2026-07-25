@@ -87,7 +87,7 @@ class Package extends Model
         // change — Filament repeater, an import, or a console command. Relying
         // on the UI to call recalculate() would leave the total wrong the first
         // time a package is touched from anywhere else.
-        $sync = fn (self $package) => $package->shipment?->recalculateTotalWeight();
+        $sync = fn (self $package) => $package->shipment->recalculateTotalWeight();
 
         static::created($sync);
         static::updated($sync);

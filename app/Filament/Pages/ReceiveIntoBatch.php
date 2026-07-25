@@ -37,7 +37,8 @@ use UnitEnum;
  *
  * The money fields exist only for a user who may price. An employee
  * receiving boxes records a customer and some weights and never sees a
- * figure — the rate was agreed before the cargo moved (D-024).
+ *
+ * @property \Filament\Schemas\Schema $form
  */
 class ReceiveIntoBatch extends Page
 {

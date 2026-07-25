@@ -12,6 +12,9 @@ use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
+/**
+ * @property \App\Models\Customer $record
+ */
 class EditCustomer extends EditRecord
 {
     protected static string $resource = CustomerResource::class;

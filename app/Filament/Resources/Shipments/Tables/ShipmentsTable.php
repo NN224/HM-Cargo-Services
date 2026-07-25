@@ -58,7 +58,7 @@ class ShipmentsTable
                         ShipmentStatus::InTransit, ShipmentStatus::PartialAtTransit, ShipmentStatus::AtTransit => 'info',
                         ShipmentStatus::PartialAtDestination => 'info',
                         ShipmentStatus::ReadyForCollection, ShipmentStatus::Arrived => 'primary',
-                        ShipmentStatus::Collected => 'success',
+                        ShipmentStatus::Collected, ShipmentStatus::PartiallyCollected => 'success',
                         ShipmentStatus::Cancelled => 'danger',
                         ShipmentStatus::Exception => 'danger',
                     }),

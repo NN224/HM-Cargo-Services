@@ -78,7 +78,7 @@ class BatchesTable
             ->emptyStateHeading(fn (): string => Route::query()->exists()
                 ? 'لا توجد رحلات بعد'
                 : 'لا يوجد أي مسار بعد')
-            ->emptyStateDescription(fn (): ?string => Route::query()->exists()
+            ->emptyStateDescription(fn (): string => Route::query()->exists()
                 ? 'الرحلة هي الحمولة المسافرة: تختار لها مساراً، ثم تستلم فيها بضاعة العملاء حتى موعد إرسالها.'
                 : 'الرحلة تسير على مسار، والمسار يحدد مستودع المنشأ والوجهة. أنشئ مساراً واحداً أولاً ثم عد إلى هنا.')
             ->emptyStateActions([

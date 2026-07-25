@@ -29,6 +29,8 @@ use Illuminate\Support\Facades\DB;
  * @property numeric $total_weight_kg
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $intake_notified_at
+ * @property \Illuminate\Support\Carbon|null $arrival_notified_at
  * @property int|null $batch_id
  * @property int|null $rate_per_kg_cents
  * @property int|null $computed_charge_cents

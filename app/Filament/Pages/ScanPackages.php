@@ -24,6 +24,9 @@ use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\HtmlString;
 use UnitEnum;
 
+/**
+ * @property \Filament\Schemas\Schema $form
+ */
 class ScanPackages extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedQrCode;

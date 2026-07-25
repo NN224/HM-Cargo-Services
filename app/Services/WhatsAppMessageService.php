@@ -53,7 +53,7 @@ class WhatsAppMessageService
     {
         $name = $shipment->recipient_name;
         $reference = $shipment->reference;
-        $warehouse = $shipment->batch?->route?->destinationWarehouse?->name ?? 'مستودع الوصول';
+        $warehouse = $shipment->batch?->route?->destinationWarehouse->name ?? 'مستودع الوصول';
         $total = $this->formatUsd((int) $shipment->final_charge_cents);
         $remaining = $this->formatUsd($shipment->outstandingCents());
 

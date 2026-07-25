@@ -10,6 +10,9 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Schema;
 
+/**
+ * @property \App\Models\Customer $record
+ */
 class StatementCustomer extends ViewRecord
 {
     protected static string $resource = CustomerResource::class;

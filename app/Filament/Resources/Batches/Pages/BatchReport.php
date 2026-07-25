@@ -12,6 +12,9 @@ use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
+/**
+ * @property \App\Models\Batch $record
+ */
 class BatchReport extends ViewRecord
 {
     use LocksWhenUnauthorized;

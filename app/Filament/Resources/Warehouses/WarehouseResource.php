@@ -42,7 +42,10 @@ class WarehouseResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->visibleTo(auth()->user());
+        /** @var Builder<Warehouse> $query */
+        $query = parent::getEloquentQuery();
+
+        return $query->visibleTo(auth()->user());
     }
 
     public static function form(Schema $schema): Schema

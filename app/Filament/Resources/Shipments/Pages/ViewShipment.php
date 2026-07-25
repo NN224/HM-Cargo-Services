@@ -22,6 +22,8 @@ use Filament\Schemas\Schema;
  * Package status is per row on purpose. A shipment sitting at
  * partial_at_destination is telling the operator that some box has not
  * arrived, and this is the only screen that says which one.
+ *
+ * @property \App\Models\Shipment $record
  */
 class ViewShipment extends ViewRecord
 {
@@ -86,7 +88,7 @@ class ViewShipment extends ViewRecord
                 'customer' => $shipment->customer->name,
                 'recipient' => $shipment->recipient_name,
                 'recipient_phone' => $shipment->recipient_phone,
-                'destination' => $shipment->destinationWarehouse?->name ?? '—',
+                'destination' => $shipment->destinationWarehouse->name ?? '—',
                 'status' => $shipment->status->label(),
                 'total_weight' => $this->formatWeight($shipment->total_weight_kg),
                 'intake_notified' => $intakeText,
@@ -161,7 +163,7 @@ class ViewShipment extends ViewRecord
      */
     private function formatWeight(string $weightKg): string
     {
-        $trimmed = rtrim(rtrim(number_format($weightKg, 4, '.', ''), '0'), '.');
+        $trimmed = rtrim(rtrim(number_format((float) $weightKg, 4, '.', ''), '0'), '.');
 
         return ($trimmed === '' ? '0' : $trimmed).' كغ';
     }

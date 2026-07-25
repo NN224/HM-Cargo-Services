@@ -51,9 +51,12 @@ class BatchResource extends Resource
         return BatchesTable::configure($table);
     }
 
-    /** @return Builder<Batch> */
+    /**
+     * @return Builder<Batch>
+     */
     public static function getEloquentQuery(): Builder
     {
+        /** @var Builder<Batch> $query */
         $query = parent::getEloquentQuery();
         $user = auth()->user();
 
@@ -138,7 +141,7 @@ class BatchResource extends Resource
         return $user->canUseRoute($route);
     }
 
-    private static function currentUserCanPrice(): bool
+    protected static function currentUserCanPrice(): bool
     {
         $user = auth()->user();
 
@@ -146,7 +149,7 @@ class BatchResource extends Resource
             && $user->hasCapability(Capability::PriceShipments);
     }
 
-    private static function isVisibleToCurrentUser(Batch $batch): bool
+    protected static function isVisibleToCurrentUser(Batch $batch): bool
     {
         $user = auth()->user();
 

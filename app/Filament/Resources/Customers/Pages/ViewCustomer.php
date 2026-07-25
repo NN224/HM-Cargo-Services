@@ -26,6 +26,9 @@ use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
+/**
+ * @property \App\Models\Customer $record
+ */
 class ViewCustomer extends ViewRecord
 {
     protected static string $resource = CustomerResource::class;

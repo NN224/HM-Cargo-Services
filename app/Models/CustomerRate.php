@@ -50,7 +50,7 @@ class CustomerRate extends Model
     protected static function booted(): void
     {
         static::saving(function (self $rate): void {
-            if ($rate->rate_per_kg_cents === null || $rate->rate_per_kg_cents <= 0) {
+            if ($rate->rate_per_kg_cents <= 0) {
                 throw new InvalidArgumentException('السعر لكل كيلوغرام يجب أن يكون أكبر من صفر.');
             }
         });

@@ -105,8 +105,7 @@ class OperationalReports extends Page
         }
 
         return $user->isAdministrator()
-            || $user->hasCapability(Capability::RecordPayments)
-            || $user->hasCapability(Capability::ViewBatchReports);
+            || $user->hasCapability(Capability::RecordPayments);
     }
 
     /**
@@ -175,7 +174,7 @@ class OperationalReports extends Page
 
             $totalWeightGrams = $shipments->sum('total_weight_grams');
             $totalRevenueCents = $shipments->sum('final_charge_cents');
-            $totalCostCents = $batches->sum(fn ($b) => $b->total_cost_cents);
+            $totalCostCents = $batches->sum(fn (\App\Models\Batch $b) => $b->costCents());
             $netProfitCents = $totalRevenueCents - $totalCostCents;
 
             $results[] = [
@@ -268,6 +267,18 @@ class OperationalReports extends Page
             'missing_packages' => $missingPackages,
             'damaged_packages' => $damagedPackages,
             'cancelled_shipments' => $cancelledShipments,
+        ];
+    }
+
+    protected function getViewData(): array
+    {
+        return [
+            'warehouses' => Warehouse::all(),
+            'routes' => Route::all(),
+            'cargo' => $this->activeTab === 'cargo' ? $this->getCargoReport() : null,
+            'routeData' => $this->activeTab === 'routes' ? $this->getRouteReport() : null,
+            'fin' => $this->activeTab === 'financial' && $this->canViewMoney() ? $this->getFinancialReport() : null,
+            'exc' => $this->activeTab === 'exceptions' ? $this->getExceptionsReport() : null,
         ];
     }
 }

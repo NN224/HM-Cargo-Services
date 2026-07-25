@@ -494,7 +494,7 @@
         <div class="cta-card">
             <div class="cta-title">هل لديك أي استفسار حول الشحنة؟</div>
             <div class="cta-subtitle">فريق خدمة العملاء جاهز لمساعدتك مباشرةً</div>
-            <a href="https://wa.me/?text={{ urlencode('مرحباً، أستفسر عن شحنتي رقم ' . $tracking['reference']) }}" target="_blank" class="cta-button">
+            <a href="https://wa.me/971521616814?text={{ urlencode('مرحباً، أستفسر عن شحنتي رقم ' . $tracking['reference']) }}" target="_blank" class="cta-button">
                 💬 التواصل المباشر عبر الواتساب
             </a>
         </div>

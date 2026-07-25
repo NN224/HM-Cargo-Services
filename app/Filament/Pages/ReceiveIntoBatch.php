@@ -106,15 +106,11 @@ class ReceiveIntoBatch extends Page
 
                                 Select::make('route_id')
                                     ->label('المسار')
-                                    ->relationship(
-                                        'route',
-                                        'name',
-                                        modifyQueryUsing: fn (Builder $query): Builder => BatchResource::scopeRouteQuery($query),
-                                    )
+                                    ->options(fn (): array => BatchResource::scopeRouteQuery(Route::query())->pluck('name', 'id')->all())
                                     ->searchable()
                                     ->preload()
                                     ->required()
-                                    ->createOptionForm([
+                            ->createOptionForm([
                                         TextInput::make('name')
                                             ->label('اسم المسار')
                                             ->required()

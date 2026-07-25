@@ -146,6 +146,11 @@ class ShipmentsTable
                 'xl' => 3,
             ])
             ->filters([
+                SelectFilter::make('batch_id')
+                    ->label('الرحلة')
+                    ->relationship('batch', 'reference')
+                    ->placeholder('جميع الرحلات'),
+
                 SelectFilter::make('status')
                     ->label('الحالة التشغيلية')
                     ->options(ShipmentStatus::options()),
@@ -186,6 +191,18 @@ class ShipmentsTable
                         return $query;
                     }),
             ])
+            ->groups([
+                \Filament\Tables\Grouping\Group::make('batch.reference')
+                    ->label('حسب الرحلة')
+                    ->getTitleFromRecordUsing(fn (Shipment $record): string => $record->batch ? '🚚 الرحلة: '.$record->batch->reference : '📦 شحنات غير مسندة لرحلة')
+                    ->collapsible(),
+
+                \Filament\Tables\Grouping\Group::make('status')
+                    ->label('حسب الحالة التشغيلية')
+                    ->getTitleFromRecordUsing(fn (Shipment $record): string => 'الحالة: '.$record->status->label())
+                    ->collapsible(),
+            ])
+            ->defaultGroup('batch.reference')
             ->extraAttributes([
                 'class' => 'fi-transparent-panel',
                 'style' => 'background-color: transparent !important; box-shadow: none !important; border: none !important; --ring-color: transparent;',

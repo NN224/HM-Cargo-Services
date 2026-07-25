@@ -49,7 +49,8 @@ class UsersTable
             ])
             ->defaultSort('name')
             ->recordActions([
-                EditAction::make(),
+                \Filament\Actions\ActionGroup::make([
+                    EditAction::make(),
                 // Deactivation is the sanctioned removal path: AGENTS.md forbids
                 // hard-deleting operational records, so this replaces a delete
                 // button rather than sitting beside one.
@@ -63,6 +64,10 @@ class UsersTable
                     // Only an administrator reaches this screen anyway, but it's good practice.
                     ->visible(fn (): bool => auth()->user()?->isAdministrator() ?? false)
                     ->action(fn ($record) => $record->update(['is_active' => ! $record->is_active])),
+                ])
+                ->label('إجراءات')
+                ->icon('heroicon-m-ellipsis-vertical')
+                ->button(),
             ])
             ->toolbarActions([]);
     }

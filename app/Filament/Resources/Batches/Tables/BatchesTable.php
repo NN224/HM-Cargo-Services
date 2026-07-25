@@ -93,8 +93,9 @@ class BatchesTable
             ])
             ->defaultSort('created_at', 'desc')
             ->recordActions([
-                ViewAction::make(),
-                // Hidden once the batch is no longer editable — a dispatched
+                \Filament\Actions\ActionGroup::make([
+                    ViewAction::make(),
+                    // Hidden once the batch is no longer editable — a dispatched
                 // batch is locked (D-016), so a visible Edit button that only
                 // dead-ends at a 403 reads as broken. canEdit is the same rule
                 // the edit page enforces.
@@ -127,6 +128,10 @@ class BatchesTable
                                 ->send();
                         }
                     }),
+                ])
+                ->label('إجراءات')
+                ->icon('heroicon-m-ellipsis-vertical')
+                ->button(),
             ])
             ->toolbarActions([]);
     }

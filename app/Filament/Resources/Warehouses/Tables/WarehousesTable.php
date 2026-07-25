@@ -38,7 +38,8 @@ class WarehousesTable
                 TernaryFilter::make('is_active')->label('الحالة'),
             ])
             ->recordActions([
-                EditAction::make(),
+                \Filament\Actions\ActionGroup::make([
+                    EditAction::make(),
                 Action::make('toggleActive')
                     ->label(fn ($record): string => $record->is_active ? 'تعطيل' : 'تفعيل')
                     ->icon(fn ($record): string => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
@@ -72,6 +73,10 @@ class WarehousesTable
                                 ->send();
                         }
                     }),
+                ])
+                ->label('إجراءات')
+                ->icon('heroicon-m-ellipsis-vertical')
+                ->button(),
             ])
             ->toolbarActions([]);
     }

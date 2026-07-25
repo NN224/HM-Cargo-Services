@@ -141,9 +141,9 @@ class ShipmentsTable
             ])
             ->defaultSort('created_at', 'desc')
             ->recordActions([
-                ViewAction::make(),
-
-                EditAction::make(),
+                \Filament\Actions\ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make(),
 
                 Action::make('copyTrackingLink')
                     ->label('رابط التتبع')
@@ -230,6 +230,10 @@ class ShipmentsTable
                                 ->send();
                         }
                     }),
+                ])
+                ->label('إجراءات')
+                ->icon('heroicon-m-ellipsis-vertical')
+                ->button(),
             ])
             ->toolbarActions([]);
     }

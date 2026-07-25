@@ -47,7 +47,8 @@ class RoutesTable
             ->emptyStateDescription('المسار هو الطريق الذي تسلكه البضاعة: من أي مستودع تنطلق، وعبر أي مستودع تمر، وأين تصل. الرحلات وأسعار العملاء كلاهما مبني عليه.')
             ->defaultSort('name')
             ->recordActions([
-                EditAction::make(),
+                \Filament\Actions\ActionGroup::make([
+                    EditAction::make(),
                 Action::make('toggleActive')
                     ->label(fn ($record): string => $record->is_active ? 'تعطيل' : 'تفعيل')
                     ->icon(fn ($record): string => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
@@ -81,6 +82,10 @@ class RoutesTable
                                 ->send();
                         }
                     }),
+                ])
+                ->label('إجراءات')
+                ->icon('heroicon-m-ellipsis-vertical')
+                ->button(),
             ])
             ->toolbarActions([]);
     }

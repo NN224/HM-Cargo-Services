@@ -79,8 +79,9 @@ class CustomersTable
             ])
             ->defaultSort('name')
             ->recordActions([
-                ViewAction::make(),
-                Action::make('recordPayment')
+                \Filament\Actions\ActionGroup::make([
+                    ViewAction::make(),
+                    Action::make('recordPayment')
                     ->label('تسجيل دفعة')
                     ->icon('heroicon-o-banknotes')
                     ->color('success')
@@ -176,6 +177,10 @@ class CustomersTable
                                 ->send();
                         }
                     }),
+                ])
+                ->label('إجراءات')
+                ->icon('heroicon-m-ellipsis-vertical')
+                ->button(),
             ])
             ->toolbarActions([]);
     }

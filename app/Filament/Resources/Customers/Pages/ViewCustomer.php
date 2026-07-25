@@ -155,7 +155,9 @@ class ViewCustomer extends ViewRecord
                 Section::make('البيانات الأساسية')
                     ->schema([
                         TextEntry::make('name')->label('اسم العميل'),
-                        TextEntry::make('phone')->label('رقم الهاتف'),
+                        TextEntry::make('phone')
+                            ->label('رقم الهاتف')
+                            ->extraAttributes(['style' => 'direction: ltr; unicode-bidi: embed;']),
                         IconEntry::make('is_credit_customer')->label('عميل آجل')->boolean(),
                         IconEntry::make('is_active')->label('حالة الحساب (نشط)')->boolean(),
                     ])
@@ -215,7 +217,7 @@ class ViewCustomer extends ViewRecord
                         ->state($shipments->map(fn (Shipment $s): array => [
                             'reference' => $s->reference,
                             'status' => $s->status->label(),
-                            'weight' => number_format($s->total_weight_grams / 1000, 2) . ' كغ',
+                            'weight' => number_format((float) $s->total_weight_kg, 2) . ' كغ',
                             'total' => $s->final_charge_cents ? '$' . number_format($s->final_charge_cents / 100, 2) : 'غير مسعر',
                             'payment_status' => $s->paymentStatusLabel(),
                             'url' => ShipmentResource::getUrl('view', ['record' => $s]),

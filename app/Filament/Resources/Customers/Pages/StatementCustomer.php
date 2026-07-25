@@ -26,7 +26,8 @@ class StatementCustomer extends ViewRecord
                 ->label('طباعة كشف الحساب')
                 ->icon('heroicon-o-printer')
                 ->color('gray')
-                ->extraAttributes(['onclick' => 'window.print(); return false;']),
+                ->url(fn (\App\Models\Customer $record) => route('customers.statement.print', $record))
+                ->openUrlInNewTab(),
         ];
     }
 

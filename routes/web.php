@@ -20,4 +20,7 @@ Route::middleware(['auth'])->group(function () {
         
     Route::get('/labels/shipments/{shipment}', [\App\Http\Controllers\LabelController::class, 'printShipment'])
         ->name('labels.shipment');
+
+    Route::get('/customers/{customer}/statement/print', [\App\Http\Controllers\CustomerStatementController::class, 'printStatement'])
+        ->name('customers.statement.print');
 });

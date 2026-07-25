@@ -29,7 +29,7 @@
             background: white;
             border: 2px solid #000;
             border-radius: 8px;
-            padding: 20px;
+            padding: 15px;
             margin-bottom: 20px;
             width: 100mm;
             height: 140mm;
@@ -40,28 +40,29 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            overflow: hidden;
         }
         .text-center { text-align: center; }
-        .barcode-container { margin: 15px 0; text-align: center; }
-        .barcode-container svg { width: 100%; max-height: 100px; }
+        .barcode-container { margin: 8px 0; text-align: center; }
+        .barcode-container svg { width: 100%; max-height: 90px; }
         .details-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 15px;
+            gap: 10px;
+            margin-top: 10px;
             border-top: 2px solid #000;
-            padding-top: 15px;
+            padding-top: 10px;
         }
         .detail-item { font-size: 16px; }
         .detail-label { font-weight: normal; color: #333; display: block; font-size: 14px; margin-bottom: 4px; }
         .detail-value { font-weight: bold; font-size: 18px; }
         .big-destination { 
-            font-size: 28px; 
+            font-size: 26px; 
             font-weight: bold; 
             text-align: center; 
-            margin-top: 20px; 
+            margin-top: 10px; 
             border: 3px solid #000; 
-            padding: 10px;
+            padding: 6px;
             border-radius: 4px;
         }
         .barcode-text {
@@ -69,8 +70,8 @@
             font-weight: bold;
             letter-spacing: 2px;
         }
-        .qr-container { margin: 12px 0; }
-        .qr-code { width: 150px; height: 150px; margin: 0 auto; }
+        .qr-container { margin: 8px 0; }
+        .qr-code { width: 110px; height: 110px; margin: 0 auto; }
         .qr-code svg { width: 100%; height: 100%; }
         .tracking-url {
             font-size: 12px;
@@ -107,9 +108,9 @@
     @foreach($labels as $label)
     <div class="label-card {{ !$loop->last ? 'page-break' : '' }}">
         <div>
-            <div class="text-center" style="display: flex; align-items: center; justify-content: center; gap: 10px; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 15px;">
-                <img src="{{ asset('images/logo.png') }}" alt="HM Cargo Services" style="height: 44px; width: auto; object-fit: contain;">
-                <h2 style="margin: 0; font-size: 20px; font-weight: 800;">HM Cargo Services</h2>
+            <div class="text-center" style="display: flex; align-items: center; justify-content: center; gap: 10px; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px;">
+                <img src="{{ asset('images/logo.png') }}" alt="HM Cargo Services" style="height: 38px; width: auto; object-fit: contain;">
+                <h2 style="margin: 0; font-size: 18px; font-weight: 800;">HM Cargo Services</h2>
             </div>
             
             <div class="barcode-container">

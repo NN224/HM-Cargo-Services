@@ -191,35 +191,6 @@ class ShipmentsTable
                         return $query;
                     }),
             ])
-            ->groups([
-                \Filament\Tables\Grouping\Group::make('batch.reference')
-                    ->label('حسب الرحلة')
-                    ->titlePrefixedWithLabel(false)
-                    ->getTitleFromRecordUsing(function (Shipment $record): string {
-                        if (! $record->batch) {
-                            $unassignedCount = Shipment::whereNull('batch_id')->count();
-                            $unassignedWeight = rtrim(rtrim(number_format((float) Shipment::whereNull('batch_id')->sum('total_weight_kg'), 2), '0'), '.');
-
-                            return "📦 شحنات غير مسندة لرحلة — ({$unassignedCount} شحنات | {$unassignedWeight} كغ)";
-                        }
-
-                        $batch = $record->batch;
-                        $routeName = $batch->route?->name ?? '';
-                        $routeSuffix = $routeName ? " ({$routeName})" : '';
-                        $shipmentsCount = $batch->shipments()->count();
-                        $weightSum = rtrim(rtrim(number_format((float) $batch->shipments()->sum('total_weight_kg'), 2), '0'), '.');
-
-                        return "🚚 الرحلة: {$batch->reference}{$routeSuffix} — 📦 {$shipmentsCount} شحنات | ⚖️ {$weightSum} كغ";
-                    })
-                    ->collapsible(),
-
-                \Filament\Tables\Grouping\Group::make('status')
-                    ->label('حسب الحالة التشغيلية')
-                    ->getTitleFromRecordUsing(fn (Shipment $record): string => 'الحالة: '.$record->status->label())
-                    ->collapsible(),
-            ])
-            ->defaultGroup('batch.reference')
-            ->groupingSettingsHidden()
             ->extraAttributes([
                 'class' => 'fi-transparent-panel',
                 'style' => 'background-color: transparent !important; box-shadow: none !important; border: none !important; --ring-color: transparent;',

@@ -12,7 +12,10 @@ class ListShipments extends ListRecords
 {
     public function getSubheading(): string|Htmlable|null
     {
-        return new HtmlString('<style>
+        $selectorBarHtml = view('filament.tables.components.batch-selector-bar')->render();
+
+        $css = <<<'HTML'
+<style>
 /* Clean up panel backgrounds */
 .fi-ta-panel,
 .dark .fi-ta-panel { 
@@ -24,12 +27,6 @@ class ListShipments extends ListRecords
 .fi-ta-content { 
     background-color: transparent !important; 
     border: none !important; 
-}
-
-/* Enable separate border collapse for table spacing */
-.fi-ta-content table {
-    border-collapse: separate !important;
-    border-spacing: 0 0.875rem !important;
 }
 
 /* Style top search & filter header toolbar cleanly */
@@ -48,25 +45,6 @@ class ListShipments extends ListRecords
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Style table group headers as standalone cards */
-.fi-ta-group-header-row td,
-.fi-ta-group-header-cell {
-    background: #18181b !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-radius: 0.875rem !important;
-    padding: 0.875rem 1.25rem !important;
-    font-weight: 700 !important;
-    font-size: 0.95rem !important;
-    color: #60a5fa !important;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
-}
-
-.fi-ta-group-header-cell button,
-.fi-ta-group-header-cell span {
-    font-weight: 700 !important;
-    color: #60a5fa !important;
-}
-
 /* Order card actions nicely at top */
 .fi-ta-record {
     display: flex;
@@ -78,7 +56,10 @@ class ListShipments extends ListRecords
     display: flex;
     justify-content: flex-end;
 }
-</style>');
+</style>
+HTML;
+
+        return new HtmlString($selectorBarHtml.$css);
     }
 
     protected static string $resource = ShipmentResource::class;

@@ -4,10 +4,15 @@ namespace App\Filament\Resources\Customers\Tables;
 
 use App\Enums\Capability;
 use App\Models\Customer;
+use App\Models\Warehouse;
+use App\Services\PaymentService;
 use DomainException;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -70,6 +75,62 @@ class CustomersTable
             ])
             ->defaultSort('name')
             ->recordActions([
+                Action::make('recordPayment')
+                    ->label('تسجيل دفعة')
+                    ->icon('heroicon-o-banknotes')
+                    ->color('success')
+                    ->visible(fn (): bool => auth()->user()?->hasCapability(Capability::RecordPayments) ?? false)
+                    ->form([
+                        TextInput::make('amount')
+                            ->label('مبلغ الدفعة (دولار)')
+                            ->numeric()
+                            ->prefix('$')
+                            ->required()
+                            ->minValue(0.01)
+                            ->helperText(fn (Customer $record): string => sprintf('الرصيد المتبقي المستحق على العميل حالياً: $%s', number_format($record->outstandingCents() / 100, 2))),
+
+                        Select::make('method')
+                            ->label('طريقة الدفع')
+                            ->options([
+                                'cash' => 'كاش (نقدي)',
+                                'whish' => 'ويش (Whish Money)',
+                                'bank_transfer' => 'تحويل بنكي',
+                                'other' => 'طريقة أخرى',
+                            ])
+                            ->default('cash')
+                            ->required()
+                            ->live(),
+
+                        TextInput::make('custom_method_name')
+                            ->label('اسم طريقة الدفع')
+                            ->visible(fn (Get $get): bool => $get('method') === 'other')
+                            ->required(fn (Get $get): bool => $get('method') === 'other'),
+
+                        TextInput::make('notes')
+                            ->label('ملاحظات (اختياري)'),
+                    ])
+                    ->action(function (array $data, Customer $record, PaymentService $paymentService): void {
+                        $actor = auth()->user();
+                        $warehouseId = $actor->warehouse_id ?? Warehouse::first()?->id;
+
+                        $paymentService->recordPayment([
+                            'customer_id' => $record->id,
+                            'amount_cents' => (int) round(((float) $data['amount']) * 100),
+                            'method' => $data['method'],
+                            'custom_method_name' => $data['custom_method_name'] ?? null,
+                            'collected_at' => now(),
+                            'collected_by' => $actor->id,
+                            'warehouse_id' => $warehouseId,
+                            'notes' => $data['notes'] ?? null,
+                        ]);
+
+                        Notification::make()
+                            ->title('تم تسجيل الدفعة بنجاح')
+                            ->body(sprintf('تم تسجيل دفعة بقيمة $%s للعميل %s وتخصيصها لحسابه.', number_format((float) $data['amount'], 2), $record->name))
+                            ->success()
+                            ->send();
+                    }),
+
                 EditAction::make(),
                 Action::make('toggleActive')
                     ->label(fn ($record): string => $record->is_active ? 'تعطيل' : 'تفعيل')

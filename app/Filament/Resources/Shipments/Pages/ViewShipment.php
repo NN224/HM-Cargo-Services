@@ -141,24 +141,13 @@ class ViewShipment extends ViewRecord
                                     ->label('حالة الطرد')
                                     ->badge()
                                     ->formatStateUsing(fn (PackageStatus $state): string => $state->label())
-                                    // A RepeatableEntry item's array data is bound via
-                                    // constantState(), not ->record(): a child closure's
-                                    // $record then resolves to the parent ViewRecord's
-                                    // Shipment (Eloquent's ArrayAccess silently returns null
-                                    // for a missing key instead of erroring, so this compiles
-                                    // and passes assertSee tests while quietly colouring every
-                                    // row the same). $get('sibling_key') fails the same way
-                                    // when the sibling isn't itself a registered component.
-                                    // $state is the one value Filament always binds correctly
-                                    // to this entry's own row, so the colour is matched on it
-                                    // directly instead of a sibling field.
                                     ->color(fn (PackageStatus $state): string => match (true) {
                                         $state === PackageStatus::Cancelled => 'gray',
                                         $state->isException() => 'danger',
                                         default => 'success',
                                     }),
                             ])
-                            ->columns(6),
+                            ->columns(['default' => 1, 'sm' => 2, 'md' => 3, 'lg' => 6]),
                     ]),
             ]);
     }

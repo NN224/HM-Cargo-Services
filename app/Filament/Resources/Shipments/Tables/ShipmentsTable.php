@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Shipments\Tables;
 use App\Enums\Capability;
 use App\Enums\ShipmentStatus;
 use App\Models\Shipment;
+use App\Services\ShipmentCollectionService;
 use App\Services\WhatsAppMessageService;
 use DomainException;
 use Filament\Actions\Action;
@@ -14,6 +15,7 @@ use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ShipmentsTable
 {
@@ -61,6 +63,17 @@ class ShipmentsTable
                         ShipmentStatus::Exception => 'danger',
                     }),
 
+                TextColumn::make('payment_status')
+                    ->label('حالة الدفع')
+                    ->state(fn (Shipment $record): string => $record->paymentStatusLabel())
+                    ->badge()
+                    ->color(fn (string $state): string => match (true) {
+                        str_contains($state, 'بالكامل') => 'success',
+                        str_contains($state, 'جزئياً') => 'warning',
+                        str_contains($state, 'غير مدفوع') => 'danger',
+                        default => 'gray',
+                    }),
+
                 TextColumn::make('notification_status')
                     ->label('الإشعار')
                     ->state(function (Shipment $record): string {
@@ -89,8 +102,42 @@ class ShipmentsTable
             ])
             ->filters([
                 SelectFilter::make('status')
-                    ->label('الحالة')
+                    ->label('الحالة التشغيلية')
                     ->options(ShipmentStatus::options()),
+
+                SelectFilter::make('delivery_status')
+                    ->label('موقف التسليم')
+                    ->options([
+                        'collected' => 'تم التسليم للمستلم',
+                        'not_collected' => 'لم يتم التسليم بعد',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (($data['value'] ?? null) === 'collected') {
+                            return $query->where('status', ShipmentStatus::Collected->value);
+                        }
+                        if (($data['value'] ?? null) === 'not_collected') {
+                            return $query->where('status', '!=', ShipmentStatus::Collected->value);
+                        }
+                        return $query;
+                    }),
+
+                SelectFilter::make('payment_filter')
+                    ->label('تصفية المالية والدفع')
+                    ->options([
+                        'paid' => 'مدفوع بالكامل',
+                        'unpaid' => 'غير مدفوع / متبقي عليه مبلغ',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (($data['value'] ?? null) === 'paid') {
+                            return $query->whereNotNull('final_charge_cents')
+                                ->whereRaw('(SELECT COALESCE(SUM(pa.amount_cents), 0) FROM payment_allocations pa INNER JOIN payments p ON p.id = pa.payment_id WHERE pa.shipment_id = shipments.id AND p.type != \'reversal\') >= shipments.final_charge_cents');
+                        }
+                        if (($data['value'] ?? null) === 'unpaid') {
+                            return $query->whereNotNull('final_charge_cents')
+                                ->whereRaw('(SELECT COALESCE(SUM(pa.amount_cents), 0) FROM payment_allocations pa INNER JOIN payments p ON p.id = pa.payment_id WHERE pa.shipment_id = shipments.id AND p.type != \'reversal\') < shipments.final_charge_cents');
+                        }
+                        return $query;
+                    }),
             ])
             ->defaultSort('created_at', 'desc')
             ->recordActions([
@@ -116,6 +163,34 @@ class ShipmentsTable
                     ->color('gray')
                     ->url(fn (Shipment $record): string => route('labels.shipment', $record))
                     ->openUrlInNewTab(),
+
+                Action::make('partialCollect')
+                    ->label('تسليم جزئي (بموافقة الإدارة)')
+                    ->icon('heroicon-o-check-badge')
+                    ->color('warning')
+                    ->visible(fn (Shipment $record): bool => (auth()->user()?->isAdministrator() ?? false) && in_array($record->status, [ShipmentStatus::PartialAtDestination, ShipmentStatus::PartiallyCollected, ShipmentStatus::InTransit, ShipmentStatus::AtTransit]))
+                    ->requiresConfirmation()
+                    ->modalHeading('تسليم جزئي بموافقة الإدارة (D-029)')
+                    ->modalDescription('سيتم تسليم الطرود الواصلة فقط لمستودع الوجهة وتعديل حالة الشحنة إلى (تسليم جزئي)، ويبقى متبقي الطرود قيد المتابعة.')
+                    ->action(function (Shipment $record, ShipmentCollectionService $service): void {
+                        $actor = auth()->user();
+                        $warehouse = $actor->warehouse ?? $record->destinationWarehouse;
+
+                        try {
+                            $service->collectPartially($record, $warehouse, $actor);
+                            Notification::make()
+                                ->title('تم التسليم الجزئي بنجاح')
+                                ->body('تم تسليم الطرود الواصلة وتحديث حالة الشحنة بنجاح.')
+                                ->success()
+                                ->send();
+                        } catch (DomainException $e) {
+                            Notification::make()
+                                ->title('تعذر التسليم الجزئي')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
 
                 Action::make('whatsappArrival')
                     ->label('واتساب: إشعار الوصول')

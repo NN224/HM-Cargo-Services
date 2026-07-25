@@ -27,6 +27,10 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->brandLogo(fn () => asset('images/logo.png'))
+            ->brandLogoHeight('3.25rem')
+            ->favicon(fn () => asset('images/logo.png'))
+            ->brandName('HM Cargo Services')
             ->colors([
                 'primary' => Color::Amber,
             ])

@@ -15,6 +15,7 @@ use BackedEnum;
 use DomainException;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -98,6 +99,12 @@ class ReceiveIntoBatch extends Page
                             ->live()
                             ->afterStateUpdated(fn (Get $get, Set $set) => $set('rate_per_kg', self::agreedRatePerKg($get)))
                             ->createOptionForm([
+                                TextInput::make('reference')
+                                    ->label('رقم/اسم الرحلة (اختياري)')
+                                    ->placeholder('اتركه فارغاً للتوليد التلقائي')
+                                    ->maxLength(255)
+                                    ->unique('batches', 'reference'),
+
                                 Select::make('route_id')
                                     ->label('المسار')
                                     ->relationship(
@@ -137,6 +144,7 @@ class ReceiveIntoBatch extends Page
                             ])
                             ->createOptionUsing(fn (array $data): int => Batch::create([
                                 'route_id' => $data['route_id'],
+                                'reference' => filled($data['reference'] ?? null) ? $data['reference'] : null,
                             ])->id)
                             ->createOptionAction(fn (Action $action): Action => $action
                                 ->authorize(fn (): bool => auth()->user()?->hasCapability(Capability::PriceShipments) ?? false)),
@@ -236,17 +244,71 @@ class ReceiveIntoBatch extends Page
                                     ->numeric()
                                     ->step('0.0001')
                                     ->minValue(0.0001)
-                                    ->required(),
+                                    ->required()
+                                    ->live(onBlur: true),
 
                                 TextInput::make('description')
                                     ->label('وصف اختياري'),
 
                                 TextInput::make('source_barcode')
                                     ->label('باركود المورّد (اختياري)'),
+
+                                TextInput::make('custom_rate_per_kg')
+                                    ->label('سعر الكيلو الخاص بالطرد (دولار - اختياري)')
+                                    ->placeholder('تلقائي (سعر المسار)')
+                                    ->numeric()
+                                    ->step('0.01')
+                                    ->minValue(0.01)
+                                    ->prefix('$')
+                                    ->live(onBlur: true)
+                                    ->helperText('اتركه فارغاً لاستخدام سعر المسار الافتراضي.'),
                             ])
                             ->minItems(1)
                             ->defaultItems(1)
                             ->addActionLabel('إضافة طرد'),
+
+                        Placeholder::make('estimated_summary')
+                            ->label('إجمالي الاستلام الحسابي المباشر')
+                            ->content(function (Get $get): string {
+                                $packages = $get('packages') ?? [];
+                                $totalWeight = 0;
+                                $estimatedTotal = 0;
+
+                                $defaultRateStr = self::agreedRatePerKg($get);
+                                if (! $defaultRateStr && $get('agreed_rate_per_kg_cents')) {
+                                    $defaultRateStr = number_format(((float) $get('agreed_rate_per_kg_cents')) / 100, 2);
+                                }
+
+                                $defaultRate = $defaultRateStr ? (float) $defaultRateStr : 0;
+                                $hasCustomRate = false;
+
+                                foreach ($packages as $pkg) {
+                                    $w = (float) ($pkg['weight_kg'] ?? 0);
+                                    $totalWeight += $w;
+
+                                    $pkgRate = (isset($pkg['custom_rate_per_kg']) && filled($pkg['custom_rate_per_kg']))
+                                        ? (float) $pkg['custom_rate_per_kg']
+                                        : $defaultRate;
+
+                                    if (isset($pkg['custom_rate_per_kg']) && filled($pkg['custom_rate_per_kg'])) {
+                                        $hasCustomRate = true;
+                                    }
+
+                                    $estimatedTotal += round($w * $pkgRate, 2);
+                                }
+
+                                if ($totalWeight <= 0) {
+                                    return 'أدخل أوزان الطرود لحساب الإجمالي المالي تلقائياً.';
+                                }
+
+                                if ($defaultRate > 0 || $hasCustomRate) {
+                                    $rateInfo = $hasCustomRate ? '(يتضمن طروداً بأسعار مخصصة)' : sprintf('(بسعر $%s / كغ)', number_format($defaultRate, 2));
+                                    return sprintf('⚖️ الوزن الكلي: %s كغ  |  💵 الإجمالي المقدر: $%s %s', number_format($totalWeight, 4), number_format($estimatedTotal, 2), $rateInfo);
+                                }
+
+                                return sprintf('⚖️ الوزن الكلي: %s كغ', number_format($totalWeight, 4));
+                            })
+                            ->visible(fn (): bool => auth()->user()?->hasCapability(Capability::PriceShipments) ?? false),
                     ]),
             ])
             ->statePath('data');

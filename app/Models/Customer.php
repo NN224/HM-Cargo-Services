@@ -3,10 +3,10 @@
 namespace App\Models;
 
 use App\Models\Concerns\GuardsDeletion;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 /**
  * The billing customer: owns route rates, credit, balance, and statements.
@@ -65,5 +65,17 @@ class Customer extends Model
     public function shipments(): HasMany
     {
         return $this->hasMany(Shipment::class);
+    }
+
+    public function outstandingCents(): int
+    {
+        $charged = (int) $this->shipments()->whereNotNull('final_charge_cents')->sum('final_charge_cents');
+        $allocated = (int) DB::table('payment_allocations')
+            ->join('payments', 'payments.id', '=', 'payment_allocations.payment_id')
+            ->where('payments.customer_id', $this->id)
+            ->where('payments.type', '!=', 'reversal')
+            ->sum('payment_allocations.amount_cents');
+
+        return max(0, $charged - $allocated);
     }
 }

@@ -43,7 +43,9 @@ class Batch extends Model
     protected static function booted(): void
     {
         static::creating(function (self $batch): void {
-            $batch->reference ??= self::generateReference();
+            if (! filled($batch->reference)) {
+                $batch->reference = self::generateReference();
+            }
         });
     }
 

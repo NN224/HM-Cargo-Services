@@ -60,4 +60,55 @@ class ShipmentCollectionService
             return $shipment;
         });
     }
+
+    /**
+     * D-029: Admin-approved partial package collection.
+     *
+     * Allows an Administrator to release packages that have arrived at destination
+     * even if other packages in the shipment are still in transit/missing.
+     */
+    public function collectPartially(Shipment $shipment, Warehouse $warehouse, User $user): Shipment
+    {
+        Gate::forUser($user)->authorize('view', $warehouse);
+
+        if (! $user->isAdministrator()) {
+            throw new DomainException('التسليم الجزئي يحتاج إلى موافقة وبطاقة مدير النظام (Administrator).');
+        }
+
+        return DB::transaction(function () use ($shipment, $warehouse, $user): Shipment {
+            $shipment = Shipment::query()->lockForUpdate()->findOrFail($shipment->id);
+            $route = $shipment->batch?->route;
+
+            if (! $route || $route->destination_warehouse_id !== $warehouse->id) {
+                throw new DomainException('لا يمكن تسليم الشحنة من مستودع غير مستودع وجهتها.');
+            }
+
+            $arrivedPackages = $shipment->packages()
+                ->where('status', PackageStatus::ArrivedDestination->value)
+                ->lockForUpdate()
+                ->get();
+
+            if ($arrivedPackages->isEmpty()) {
+                throw new DomainException('لا توجد أي طرود واصلة لمستودع الوجهة لتسليمها جزئياً.');
+            }
+
+            foreach ($arrivedPackages as $package) {
+                $package->forceFill(['status' => PackageStatus::Collected])->save();
+
+                DB::table('package_status_events')->insert([
+                    'package_id' => $package->id,
+                    'status' => PackageStatus::Collected->value,
+                    'warehouse_id' => $warehouse->id,
+                    'user_id' => $user->id,
+                    'scanned_at' => now(),
+                    'source' => 'partial_collection',
+                    'note' => 'تسليم جزئي بموافقة الإدارة',
+                ]);
+            }
+
+            $shipment->recalculateOperationalStatus();
+
+            return $shipment;
+        });
+    }
 }

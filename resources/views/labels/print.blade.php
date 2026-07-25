@@ -82,18 +82,34 @@
     </style>
 </head>
 <body>
-    <div class="no-print text-center" style="margin-bottom: 20px;">
-        <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px; cursor: pointer; background: #000; color: #fff; border: none; border-radius: 4px;">طباعة الملصقات (A4)</button>
-        @isset($whatsappUrl)
-            <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" style="display: inline-block; padding: 10px 20px; font-size: 16px; margin-right: 10px; background: #25D366; color: #fff; border-radius: 4px; text-decoration: none;">إرسال رابط التتبّع عبر واتساب</a>
-        @endisset
+    <div class="no-print" style="margin-bottom: 25px; padding: 15px 20px; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <button onclick="window.print()" style="padding: 10px 20px; font-size: 15px; font-weight: bold; cursor: pointer; background: #111827; color: #fff; border: none; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;">
+                🖨️ طباعة الملصقات (A4)
+            </button>
+            @isset($whatsappUrl)
+                <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; font-size: 15px; font-weight: bold; background: #25D366; color: #fff; border-radius: 8px; text-decoration: none;">
+                    💬 إرسال التتبّع عبر واتساب
+                </a>
+            @endisset
+            <a href="{{ route('filament.admin.pages.receive-into-batch') }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; font-size: 15px; font-weight: bold; background: #059669; color: #fff; border-radius: 8px; text-decoration: none;">
+                📦 استلام شحنة جديدة
+            </a>
+        </div>
+
+        <div>
+            <a href="{{ route('filament.admin.resources.shipments.view', $shipment) }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; font-size: 15px; font-weight: bold; background: #ef4444; color: #ffffff; border-radius: 8px; text-decoration: none;">
+                ❌ إغلاق / العودة للشحنة
+            </a>
+        </div>
     </div>
 
     @foreach($labels as $label)
     <div class="label-card {{ !$loop->last ? 'page-break' : '' }}">
         <div>
-            <div class="text-center">
-                <h2 style="margin: 0; font-size: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px;">HM Cargo Services</h2>
+            <div class="text-center" style="display: flex; align-items: center; justify-content: center; gap: 10px; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 15px;">
+                <img src="{{ asset('images/logo.png') }}" alt="HM Cargo Services" style="height: 44px; width: auto; object-fit: contain;">
+                <h2 style="margin: 0; font-size: 20px; font-weight: 800;">HM Cargo Services</h2>
             </div>
             
             <div class="barcode-container">

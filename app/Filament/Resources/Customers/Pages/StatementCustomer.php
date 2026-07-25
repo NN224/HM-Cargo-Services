@@ -16,6 +16,17 @@ class StatementCustomer extends ViewRecord
 
     protected static ?string $title = 'كشف الحساب';
 
+    protected function getHeaderActions(): array
+    {
+        return [
+            \Filament\Actions\Action::make('print')
+                ->label('طباعة كشف الحساب')
+                ->icon('heroicon-o-printer')
+                ->color('gray')
+                ->extraAttributes(['onclick' => 'window.print(); return false;']),
+        ];
+    }
+
     private function statementService(): CustomerStatementService
     {
         return app(CustomerStatementService::class);
@@ -36,6 +47,15 @@ class StatementCustomer extends ViewRecord
                 'summary_unapplied' => $this->formatUsd($summary['unapplied_credit_cents']),
             ])
             ->components([
+                Section::make('معلومات الفاتورة والشركة')
+                    ->schema([
+                        TextEntry::make('company_name')->label('شركة الشحن')->default('HM Cargo Services'),
+                        TextEntry::make('company_phone')->label('هاتف الشركة')->default('+971521616814'),
+                        TextEntry::make('customer_name')->label('اسم العميل')->default($customer->name),
+                        TextEntry::make('customer_phone')->label('هاتف العميل')->default($customer->phone),
+                    ])
+                    ->columns(4),
+
                 Section::make('ملخص الحساب')
                     ->schema([
                         TextEntry::make('summary_charged')

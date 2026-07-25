@@ -73,10 +73,10 @@ has tried the scan flow on a real phone in a real warehouse.
 | Money screens gated by capability; shared locked-page notice | done |
 | Dashboard — operational counts for all, money for a money-holder | done |
 | Per-employee page locking, enforced centrally (D-026) | done |
+| Operational reports by warehouse, route and date range | done, with screen |
 
 ## Not built
 
-- Operational reports by warehouse, route and date range
 - PostgreSQL (Phase 7)
 
 ---
@@ -201,6 +201,16 @@ recipient address (D-019).
 
 Its tracking numbers are four digits and guessable, which is why ours separates
 a readable staff reference from a 48-character random public token.
+
+---
+
+## Future Enhancements & Post V1 Roadmap
+
+1. **Automated Direct WhatsApp Integration (`evolution-go`):**
+   - Proposal to deploy a self-hosted `evolution-go` Docker container (Go-based WhatsApp REST API engine utilizing `whatsmeow`).
+   - Enables background automatic messaging for intake tracking links and arrival notifications without opening `wa.me` links in WhatsApp Web.
+   - Includes a dedicated Admin-only toggle switch (`isAdministrator()`) to enable (`auto`) or disable (`manual fallback`) automatic sending at any time.
+   - Low resource footprint (~25MB RAM), fully self-hosted, 0 monthly API costs.
 
 ---
 

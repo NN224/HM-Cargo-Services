@@ -75,14 +75,34 @@ class WhatsAppMessageService
     }
 
     /**
-     * Strip everything except digits from the phone number.
+     * Strip non-digits and normalize phone numbers for wa.me links.
      *
-     * wa.me expects the country code without a leading plus, e.g.
-     * 96171112233 rather than +961 71-112233.
+     * wa.me expects country code without leading plus or 00 (e.g. 96171112233).
+     * If a local 8-digit Lebanese number is passed without country code,
+     * this automatically prepends the 961 country code so WhatsApp works seamlessly.
      */
     public function normalisePhone(string $phone): string
     {
-        return preg_replace('/\D/', '', $phone);
+        $digits = preg_replace('/\D/', '', $phone);
+
+        if (empty($digits)) {
+            return '';
+        }
+
+        if (str_starts_with($digits, '00')) {
+            $digits = substr($digits, 2);
+        }
+
+        if (strlen($digits) === 8 && ! str_starts_with($digits, '961') && ! str_starts_with($digits, '963') && ! str_starts_with($digits, '971') && ! str_starts_with($digits, '966')) {
+            if (str_starts_with($digits, '0')) {
+                $digits = substr($digits, 1);
+            }
+            $digits = '961'.$digits;
+        } elseif (strlen($digits) === 7 && str_starts_with($digits, '3')) {
+            $digits = '961'.$digits;
+        }
+
+        return $digits;
     }
 
     /**

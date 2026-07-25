@@ -96,6 +96,46 @@ class DatabaseSeeder extends Seeder
             ],
         );
 
-        $this->command?->info('Administrator and initial routes seeded. Change the password after first login.');
+        // Initial Real Customers List with Normalized Country Codes (+961 / +963 / +971)
+        $customers = [
+            ['name' => 'ahmad m', 'phone' => '+961 76 821 824'],
+            ['name' => 'AMANI EL ASHI', 'phone' => '+961 70 660 048'],
+            ['name' => 'BILAL KATRANJE', 'phone' => '+961 71 445 221'],
+            ['name' => 'CARINE AWAD', 'phone' => '+961 76 386 975'],
+            ['name' => 'DIANA HASSAN', 'phone' => '+961 70 699 075'],
+            ['name' => 'ELINA CHAKOUR', 'phone' => '+961 81 707 943'],
+            ['name' => 'FATIMA FARASHA', 'phone' => '+961 71 598 429'],
+            ['name' => 'GHYDAA EL NADAF', 'phone' => '+961 81 318 424'],
+            ['name' => 'HASAN ABOLHASAN', 'phone' => '+961 76 988 874'],
+            ['name' => 'JANA MATTAR', 'phone' => '+961 70 350 901'],
+            ['name' => 'JESSY ISSA', 'phone' => '+961 71 537 456'],
+            ['name' => 'LAILA BAGHDADI', 'phone' => '+963 940 881 483'],
+            ['name' => 'LINA SALMAN', 'phone' => '+961 76 823 868'],
+            ['name' => 'MAGUY HAFEZ', 'phone' => '+961 71 056 265'],
+            ['name' => 'MARIANNE BAAKLINI', 'phone' => '+961 71 064 967'],
+            ['name' => 'MARIANNE SALIBA', 'phone' => '+961 81 568 611'],
+            ['name' => 'MAROUN MERHJ', 'phone' => '+961 3 462 265'],
+            ['name' => 'MARYAM MEHYDINE', 'phone' => '+961 78 837 061'],
+            ['name' => 'MONZER AWADA', 'phone' => '+961 70 489 088'],
+            ['name' => 'nabil', 'phone' => '+971 54 366 5548'],
+            ['name' => 'NABILLA AL ARAB', 'phone' => '+961 3 595 116'],
+            ['name' => 'NOUR AL HAJJ', 'phone' => '+961 81 808 137'],
+            ['name' => 'NOUR EL HAJJ', 'phone' => '+961 81 808 137'],
+            ['name' => 'RENEE EL CHEIKH', 'phone' => '+961 71 067 084'],
+            ['name' => 'RIM ABOU HAMDAN', 'phone' => '+961 70 275 050'],
+            ['name' => 'RITA NASRALLAH', 'phone' => '+961 76 386 975'],
+            ['name' => 'SAMIRA EL NAHHAS', 'phone' => '+961 70 041 071'],
+            ['name' => 'SHIPSHARKS', 'phone' => '+961 81 175 526'],
+            ['name' => 'VANESSA MELHEM', 'phone' => '+961 76 564 848'],
+        ];
+
+        foreach ($customers as $c) {
+            \App\Models\Customer::firstOrCreate(
+                ['name' => $c['name']],
+                ['phone' => $c['phone']]
+            );
+        }
+
+        $this->command?->info('Administrator, initial routes, and customer list seeded successfully.');
     }
 }

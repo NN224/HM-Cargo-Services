@@ -194,7 +194,15 @@ class ShipmentsTable
             ->groups([
                 \Filament\Tables\Grouping\Group::make('batch.reference')
                     ->label('حسب الرحلة')
-                    ->getTitleFromRecordUsing(fn (Shipment $record): string => $record->batch ? '🚚 الرحلة: '.$record->batch->reference : '📦 شحنات غير مسندة لرحلة')
+                    ->titlePrefixedWithLabel(false)
+                    ->getTitleFromRecordUsing(function (Shipment $record): \Illuminate\Contracts\Support\Htmlable {
+                        return new \Illuminate\Support\HtmlString(
+                            view('filament.tables.components.batch-group-header', [
+                                'batch' => $record->batch,
+                                'record' => $record,
+                            ])->render()
+                        );
+                    })
                     ->collapsible(),
 
                 \Filament\Tables\Grouping\Group::make('status')

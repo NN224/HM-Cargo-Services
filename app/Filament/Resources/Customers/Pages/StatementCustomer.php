@@ -16,6 +16,17 @@ class StatementCustomer extends ViewRecord
 
     protected static ?string $title = 'كشف الحساب';
 
+    protected function getHeaderActions(): array
+    {
+        return [
+            \Filament\Actions\Action::make('print')
+                ->label('طباعة كشف الحساب')
+                ->icon('heroicon-o-printer')
+                ->color('gray')
+                ->extraAttributes(['onclick' => 'window.print(); return false;']),
+        ];
+    }
+
     private function statementService(): CustomerStatementService
     {
         return app(CustomerStatementService::class);

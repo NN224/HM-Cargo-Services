@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Customers\Tables;
 
 use App\Enums\Capability;
+use App\Filament\Resources\Customers\CustomerResource;
 use App\Models\Customer;
 use App\Models\Warehouse;
 use App\Services\PaymentService;
@@ -130,6 +131,12 @@ class CustomersTable
                             ->success()
                             ->send();
                     }),
+
+                Action::make('statement')
+                    ->label('كشف حساب')
+                    ->icon('heroicon-o-document-text')
+                    ->color('info')
+                    ->url(fn (Customer $record): string => CustomerResource::getUrl('statement', ['record' => $record])),
 
                 EditAction::make(),
                 Action::make('toggleActive')

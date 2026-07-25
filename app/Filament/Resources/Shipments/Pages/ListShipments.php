@@ -29,13 +29,17 @@ class ListShipments extends ListRecords
     border: none !important; 
 }
 
-/* Style top search & filter header toolbar cleanly */
-.fi-ta-ctn {
+/* Style top container transparently */
+.fi-ta-ctn,
+.fi-ta-header-ctn {
     border: none !important;
     box-shadow: none !important;
     background: transparent !important;
+    padding: 0 !important;
+    margin-bottom: 0 !important;
 }
-.fi-ta-header-ctn,
+
+/* Style single header search/filter toolbar cleanly */
 .fi-ta-header-toolbar {
     background: #18181b !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
@@ -43,6 +47,11 @@ class ListShipments extends ListRecords
     padding: 0.625rem 1rem !important;
     margin-bottom: 1rem !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Hide duplicate empty secondary sort toolbar boxes */
+.fi-ta-header-ctn > div:not(.fi-ta-header-toolbar) {
+    display: none !important;
 }
 
 /* Order card actions nicely at top */

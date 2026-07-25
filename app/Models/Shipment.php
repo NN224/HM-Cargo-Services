@@ -297,4 +297,43 @@ class Shipment extends Model
     {
         $this->update(['arrival_notified_at' => now()]);
     }
+
+    public function paidCents(): int
+    {
+        return (int) DB::table('payment_allocations')
+            ->join('payments', 'payments.id', '=', 'payment_allocations.payment_id')
+            ->where('payment_allocations.shipment_id', $this->id)
+            ->where('payments.type', '!=', 'reversal')
+            ->sum('payment_allocations.amount_cents');
+    }
+
+    public function isFullyPaid(): bool
+    {
+        if ($this->final_charge_cents === null || $this->final_charge_cents === 0) {
+            return false;
+        }
+
+        return $this->paidCents() >= $this->final_charge_cents;
+    }
+
+    public function paymentStatusLabel(): string
+    {
+        if ($this->final_charge_cents === null || $this->final_charge_cents === 0) {
+            return 'غير مسعر';
+        }
+
+        $paid = $this->paidCents();
+
+        if ($paid >= $this->final_charge_cents) {
+            return 'مدفوع بالكامل';
+        }
+
+        if ($paid > 0) {
+            $remainingDollars = number_format(($this->final_charge_cents - $paid) / 100, 2);
+            return "مدفوع جزئياً (متبقي $$remainingDollars)";
+        }
+
+        $totalDollars = number_format($this->final_charge_cents / 100, 2);
+        return "غير مدفوع ($$totalDollars)";
+    }
 }

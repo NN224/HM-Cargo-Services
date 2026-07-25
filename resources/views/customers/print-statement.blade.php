@@ -13,9 +13,13 @@
             color: #111827;
         }
         @media print {
+            @page {
+                size: A4;
+                margin: 0; /* Removes browser headers and footers (like URL) */
+            }
             body {
                 background: white;
-                padding: 0;
+                padding: 1.5cm; /* Add padding here so content doesn't touch edges */
                 margin: 0;
             }
             .no-print {
@@ -33,7 +37,7 @@
         @media print {
             .container {
                 box-shadow: none;
-                padding: 20px;
+                padding: 0;
                 max-width: 100%;
             }
         }

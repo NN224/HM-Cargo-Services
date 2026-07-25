@@ -55,10 +55,17 @@ class ListShipments extends ListRecords
     display: none !important;
 }
 
-/* Order card actions nicely at top */
+/* Order card actions nicely at top and contain overflow */
 .fi-ta-record {
     display: flex;
     flex-direction: column;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+.fi-ta-record > div,
+.fi-ta-col-wrp {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 .fi-ta-record > div:last-child:has(.fi-ac-action) {
     order: -1;

@@ -6,6 +6,11 @@
         border-radius: 0.875rem;
         padding: 0.75rem 0.875rem;
         margin-top: 0.375rem;
+        box-sizing: border-box !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
     }
 
     .pj-header-row {

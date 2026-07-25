@@ -54,9 +54,9 @@ class StatementCustomer extends ViewRecord
                 Section::make('معلومات الفاتورة والشركة')
                     ->schema([
                         TextEntry::make('company_name')->label('شركة الشحن')->default('HM Cargo Services'),
-                        TextEntry::make('company_phone')->label('هاتف الشركة')->default("🇦🇪 +971 52 153 0190\n🇱🇧 +961 81 059 063"),
+                        TextEntry::make('company_phone')->label('هاتف الشركة')->default("🇦🇪 +971 52 153 0190\n🇱🇧 +961 81 059 063")->extraAttributes(['dir' => 'ltr', 'style' => 'text-align: right;']),
                         TextEntry::make('customer_name')->label('اسم العميل')->default($customer->name),
-                        TextEntry::make('customer_phone')->label('هاتف العميل')->default($customer->phone),
+                        TextEntry::make('customer_phone')->label('هاتف العميل')->default($customer->phone)->extraAttributes(['dir' => 'ltr', 'style' => 'text-align: right;']),
                     ])
                     ->columns(4),
 

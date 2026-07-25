@@ -108,7 +108,7 @@ class ViewShipment extends ViewRecord
                         TextEntry::make('reference')->label('رقم الشحنة'),
                         TextEntry::make('customer')->label('العميل'),
                         TextEntry::make('recipient')->label('المستلم'),
-                        TextEntry::make('recipient_phone')->label('هاتف المستلم'),
+                        TextEntry::make('recipient_phone')->label('هاتف المستلم')->extraAttributes(['dir' => 'ltr', 'style' => 'text-align: right;']),
                         TextEntry::make('destination')->label('مستودع الوجهة'),
                         TextEntry::make('status')->label('حالة الشحنة')->badge(),
                         TextEntry::make('total_weight')->label('الوزن الإجمالي'),

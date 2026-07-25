@@ -160,7 +160,7 @@ class ViewCustomer extends ViewRecord
                         TextEntry::make('name')->label('اسم العميل'),
                         TextEntry::make('phone')
                             ->label('رقم الهاتف')
-                            ->extraAttributes(['style' => 'direction: ltr; unicode-bidi: embed;']),
+                            ->extraAttributes(['dir' => 'ltr', 'style' => 'text-align: right;']),
                         IconEntry::make('is_credit_customer')->label('عميل آجل')->boolean(),
                         IconEntry::make('is_active')->label('حالة الحساب (نشط)')->boolean(),
                     ])

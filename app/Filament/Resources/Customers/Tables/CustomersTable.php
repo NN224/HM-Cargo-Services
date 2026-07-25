@@ -37,7 +37,7 @@ class CustomersTable
                 TextColumn::make('phone')
                     ->label('رقم الهاتف')
                     ->searchable()
-                    ->extraAttributes(['style' => 'direction: ltr; unicode-bidi: embed; text-align: right;']),
+                    ->extraAttributes(['dir' => 'ltr', 'style' => 'text-align: right;']),
 
                 TextColumn::make('outstanding_cents')
                     ->label('الرصيد المتبقي (ديون)')

@@ -5,6 +5,8 @@ namespace App\Providers;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Number;
+use Filament\Tables\Table;
+use Filament\Schemas\Schema;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,5 +32,13 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Number::useLocale('en');
+
+        Table::configureUsing(function (Table $table) {
+            $table->defaultNumberLocale('en');
+        });
+
+        Schema::configureUsing(function (Schema $schema) {
+            $schema->defaultNumberLocale('en');
+        });
     }
 }

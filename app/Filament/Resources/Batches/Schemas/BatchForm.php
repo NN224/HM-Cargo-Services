@@ -20,6 +20,14 @@ class BatchForm
             ->components([
                 Section::make('تفاصيل الرحلة')
                     ->schema([
+                        TextInput::make('reference')
+                            ->label('رقم/اسم الرحلة')
+                            ->placeholder('مثال: BCH-101 أو اتركه فارغاً للتوليد التلقائي')
+                            ->maxLength(255)
+                            ->unique('batches', 'reference', ignoreRecord: true)
+                            ->helperText('يمكنك إدخال رقم أو اسم للرحلة يدوياً، أو تركه فارغاً ليقوم النظام بتوليده تلقائياً.')
+                            ->hiddenOn('view'),
+
                         TextEntry::make('reference')
                             ->label('رقم الرحلة')
                             ->visibleOn('view'),

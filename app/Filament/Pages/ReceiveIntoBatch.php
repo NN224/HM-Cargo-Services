@@ -98,6 +98,12 @@ class ReceiveIntoBatch extends Page
                             ->live()
                             ->afterStateUpdated(fn (Get $get, Set $set) => $set('rate_per_kg', self::agreedRatePerKg($get)))
                             ->createOptionForm([
+                                TextInput::make('reference')
+                                    ->label('رقم/اسم الرحلة (اختياري)')
+                                    ->placeholder('اتركه فارغاً للتوليد التلقائي')
+                                    ->maxLength(255)
+                                    ->unique('batches', 'reference'),
+
                                 Select::make('route_id')
                                     ->label('المسار')
                                     ->relationship(
@@ -137,6 +143,7 @@ class ReceiveIntoBatch extends Page
                             ])
                             ->createOptionUsing(fn (array $data): int => Batch::create([
                                 'route_id' => $data['route_id'],
+                                'reference' => filled($data['reference'] ?? null) ? $data['reference'] : null,
                             ])->id)
                             ->createOptionAction(fn (Action $action): Action => $action
                                 ->authorize(fn (): bool => auth()->user()?->hasCapability(Capability::PriceShipments) ?? false)),

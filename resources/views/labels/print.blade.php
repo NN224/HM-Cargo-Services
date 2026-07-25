@@ -107,8 +107,9 @@
     @foreach($labels as $label)
     <div class="label-card {{ !$loop->last ? 'page-break' : '' }}">
         <div>
-            <div class="text-center">
-                <h2 style="margin: 0; font-size: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px;">HM Cargo Services</h2>
+            <div class="text-center" style="display: flex; align-items: center; justify-content: center; gap: 10px; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 15px;">
+                <img src="{{ asset('images/logo.png') }}" alt="HM Cargo Services" style="height: 44px; width: auto; object-fit: contain;">
+                <h2 style="margin: 0; font-size: 20px; font-weight: 800;">HM Cargo Services</h2>
             </div>
             
             <div class="barcode-container">

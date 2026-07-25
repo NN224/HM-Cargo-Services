@@ -1,4 +1,18 @@
 <x-filament-panels::page>
+    <!-- Official Company Header -->
+    <div class="flex items-center justify-between bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 mb-4">
+        <div class="flex items-center gap-4">
+            <img src="{{ asset('images/logo.png') }}" alt="HM Cargo Services" class="h-12 w-auto object-contain">
+            <div>
+                <h2 class="text-lg font-bold text-gray-900 dark:text-white">HM Cargo Services</h2>
+                <p class="text-xs text-gray-500 dark:text-gray-400">التقارير التشغيلية والمالية الرسمية — هاتف: +971521616814</p>
+            </div>
+        </div>
+        <div class="text-left text-xs text-gray-400">
+            {{ now()->format('Y-m-d H:i') }}
+        </div>
+    </div>
+
     <!-- Filter Section -->
     <div class="fi-section rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 mb-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">

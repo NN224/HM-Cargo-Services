@@ -6,13 +6,13 @@ use Illuminate\Support\Facades\Route;
 // HM Cargo Services is an administration application, so the root has no
 // public landing page of its own. Tracking is the deliberately small public
 // surface; its throttle limits token and barcode guessing before auth exists.
-Route::redirect('/', '/admin');
+Route::redirect('/', 'https://hmcargoservices.com');
 
 Route::get('/track/{token}', [TrackingController::class, 'show'])
     ->middleware('throttle:20,1')
     ->name('tracking.show');
 
-Route::redirect('/login', '/admin/login')->name('login');
+Route::redirect('/login', '/' . env('FILAMENT_PATH', 'portal') . '/login')->name('login');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/labels/packages/{package}', [\App\Http\Controllers\LabelController::class, 'printPackage'])

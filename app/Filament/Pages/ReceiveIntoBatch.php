@@ -15,6 +15,7 @@ use BackedEnum;
 use DomainException;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -243,7 +244,8 @@ class ReceiveIntoBatch extends Page
                                     ->numeric()
                                     ->step('0.0001')
                                     ->minValue(0.0001)
-                                    ->required(),
+                                    ->required()
+                                    ->live(onBlur: true),
 
                                 TextInput::make('description')
                                     ->label('وصف اختياري'),
@@ -254,6 +256,34 @@ class ReceiveIntoBatch extends Page
                             ->minItems(1)
                             ->defaultItems(1)
                             ->addActionLabel('إضافة طرد'),
+
+                        Placeholder::make('estimated_summary')
+                            ->label('إجمالي الاستلام الحسابي المباشر')
+                            ->content(function (Get $get): string {
+                                $packages = $get('packages') ?? [];
+                                $totalWeight = 0;
+                                foreach ($packages as $pkg) {
+                                    $totalWeight += (float) ($pkg['weight_kg'] ?? 0);
+                                }
+
+                                if ($totalWeight <= 0) {
+                                    return 'أدخل أوزان الطرود لحساب الإجمالي المالي تلقائياً.';
+                                }
+
+                                $rateStr = self::agreedRatePerKg($get);
+                                if (! $rateStr && $get('agreed_rate_per_kg_cents')) {
+                                    $rateStr = number_format(((float) $get('agreed_rate_per_kg_cents')) / 100, 2);
+                                }
+
+                                if ($rateStr) {
+                                    $rate = (float) $rateStr;
+                                    $estimatedTotal = round($totalWeight * $rate, 2);
+                                    return sprintf('⚖️ الوزن الكلي: %s كغ  |  💵 الإجمالي المقدر: $%s (بسعر $%s / كغ)', number_format($totalWeight, 4), number_format($estimatedTotal, 2), number_format($rate, 2));
+                                }
+
+                                return sprintf('⚖️ الوزن الكلي: %s كغ', number_format($totalWeight, 4));
+                            })
+                            ->visible(fn (): bool => auth()->user()?->hasCapability(Capability::PriceShipments) ?? false),
                     ]),
             ])
             ->statePath('data');

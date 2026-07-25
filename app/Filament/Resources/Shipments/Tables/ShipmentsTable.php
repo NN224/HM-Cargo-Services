@@ -13,8 +13,12 @@ use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Notifications\Notification;
+use Filament\Tables\Columns\Layout\Grid;
+use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -24,83 +28,110 @@ class ShipmentsTable
     {
         return $table
             ->columns([
-                TextColumn::make('reference')
-                    ->label('رقم الشحنة')
-                    ->searchable()
-                    ->sortable()
-                    ->copyable(),
+                Stack::make([
+                    Grid::make(3)->schema([
+                        TextColumn::make('reference')
+                            ->description('رقم الشحنة', 'above')
+                            ->weight('bold')
+                            ->searchable()
+                            ->sortable()
+                            ->copyable(),
 
-                TextColumn::make('customer.name')
-                    ->label('العميل')
-                    ->searchable()
-                    ->sortable(),
+                        TextColumn::make('batch.reference')
+                            ->description('الرحلة', 'above')
+                            ->icon('heroicon-m-truck')
+                            ->placeholder('غير مسندة لرحلة')
+                            ->searchable()
+                            ->sortable(),
 
-                TextColumn::make('recipient_name')
-                    ->label('المستلم')
-                    ->searchable(),
+                        TextColumn::make('created_at')
+                            ->description('التاريخ', 'above')
+                            ->date('Y-m-d')
+                            ->sortable(),
+                    ]),
 
-                TextColumn::make('packages_count')
-                    ->label('الطرود')
-                    ->counts('packages')
-                    ->alignCenter(),
+                    Grid::make(2)->schema([
+                        TextColumn::make('customer.name')
+                            ->description('العميل', 'above')
+                            ->icon('heroicon-m-user')
+                            ->searchable()
+                            ->sortable(),
 
-                TextColumn::make('total_weight_kg')
-                    ->label('الوزن')
-                    ->formatStateUsing(fn ($state): string => rtrim(rtrim(number_format((float) $state, 4), '0'), '.').' كغ')
-                    ->sortable(),
+                        TextColumn::make('recipient_name')
+                            ->description('المستلم', 'above')
+                            ->icon('heroicon-m-truck')
+                            ->searchable(),
+                    ]),
 
-                TextColumn::make('status')
-                    ->label('الحالة')
-                    ->badge()
-                    ->formatStateUsing(fn (ShipmentStatus $state): string => $state->label())
-                    ->color(fn (ShipmentStatus $state): string => match ($state) {
-                        ShipmentStatus::Draft, ShipmentStatus::AwaitingBatch, ShipmentStatus::Assigned => 'gray',
-                        ShipmentStatus::Pending => 'warning',
-                        ShipmentStatus::InTransit, ShipmentStatus::PartialAtTransit, ShipmentStatus::AtTransit => 'info',
-                        ShipmentStatus::PartialAtDestination => 'info',
-                        ShipmentStatus::ReadyForCollection, ShipmentStatus::Arrived => 'primary',
-                        ShipmentStatus::Collected, ShipmentStatus::PartiallyCollected => 'success',
-                        ShipmentStatus::Cancelled => 'danger',
-                        ShipmentStatus::Exception => 'danger',
-                    }),
+                    Grid::make(2)->schema([
+                        TextColumn::make('packages_count')
+                            ->description('الطرود', 'above')
+                            ->icon('heroicon-m-cube')
+                            ->counts('packages'),
 
-                TextColumn::make('payment_status')
-                    ->label('حالة الدفع')
-                    ->state(fn (Shipment $record): string => $record->paymentStatusLabel())
-                    ->badge()
-                    ->color(fn (string $state): string => match (true) {
-                        str_contains($state, 'بالكامل') => 'success',
-                        str_contains($state, 'جزئياً') => 'warning',
-                        str_contains($state, 'غير مدفوع') => 'danger',
-                        default => 'gray',
-                    }),
+                        TextColumn::make('total_weight_kg')
+                            ->description('الوزن', 'above')
+                            ->icon('heroicon-m-scale')
+                            ->formatStateUsing(fn ($state): string => rtrim(rtrim(number_format((float) $state, 4), '0'), '.').' كغ')
+                            ->sortable(),
+                    ]),
 
-                TextColumn::make('notification_status')
-                    ->label('الإشعار')
-                    ->state(function (Shipment $record): string {
-                        if ($record->arrival_notified_at !== null) {
-                            return 'تم إشعار الوصول';
-                        }
-                        if ($record->status === ShipmentStatus::ReadyForCollection) {
-                            return '⚠️ يحتاج إشعار وصول!';
-                        }
-                        if ($record->intake_notified_at !== null) {
-                            return 'تم إرسال التتبع';
-                        }
+                    Grid::make(2)->schema([
+                        TextColumn::make('status')
+                            ->description('الحالة', 'above')
+                            ->badge()
+                            ->formatStateUsing(fn (ShipmentStatus $state): string => $state->label())
+                            ->color(fn (ShipmentStatus $state): string => match ($state) {
+                                ShipmentStatus::Draft, ShipmentStatus::AwaitingBatch, ShipmentStatus::Assigned => 'gray',
+                                ShipmentStatus::Pending => 'warning',
+                                ShipmentStatus::InTransit, ShipmentStatus::PartialAtTransit, ShipmentStatus::AtTransit => 'info',
+                                ShipmentStatus::PartialAtDestination => 'info',
+                                ShipmentStatus::ReadyForCollection, ShipmentStatus::Arrived => 'primary',
+                                ShipmentStatus::Collected, ShipmentStatus::PartiallyCollected => 'success',
+                                ShipmentStatus::Cancelled => 'danger',
+                                ShipmentStatus::Exception => 'danger',
+                            }),
 
-                        return '—';
-                    })
-                    ->badge()
-                    ->color(fn (string $state): string => match (true) {
-                        str_contains($state, 'تم') => 'success',
-                        str_contains($state, '⚠️') => 'warning',
-                        default => 'gray',
-                    }),
+                        TextColumn::make('payment_status')
+                            ->description('حالة الدفع', 'above')
+                            ->state(fn (Shipment $record): string => $record->paymentStatusLabel())
+                            ->badge()
+                            ->color(fn (string $state): string => match (true) {
+                                str_contains($state, 'بالكامل') => 'success',
+                                str_contains($state, 'جزئياً') => 'warning',
+                                str_contains($state, 'غير مدفوع') => 'danger',
+                                default => 'gray',
+                            }),
+                    ]),
 
-                TextColumn::make('created_at')
-                    ->label('التاريخ')
-                    ->date('Y-m-d')
-                    ->sortable(),
+                    Grid::make(1)->schema([
+                        TextColumn::make('notification_status')
+                            ->description('الإشعار', 'above')
+                            ->state(function (Shipment $record): string {
+                                if ($record->arrival_notified_at !== null) {
+                                    return 'تم إشعار الوصول';
+                                }
+                                if ($record->status === ShipmentStatus::ReadyForCollection) {
+                                    return '⚠️ يحتاج إشعار وصول!';
+                                }
+                                if ($record->intake_notified_at !== null) {
+                                    return 'تم إرسال التتبع';
+                                }
+
+                                return '—';
+                            })
+                            ->badge()
+                            ->color(fn (string $state): string => match (true) {
+                                str_contains($state, 'تم') => 'success',
+                                str_contains($state, '⚠️') => 'warning',
+                                default => 'gray',
+                            }),
+                    ]),
+                ])->space(3),
+            ])
+            ->contentGrid([
+                'md' => 2,
+                'xl' => 3,
             ])
             ->filters([
                 SelectFilter::make('status')
@@ -143,7 +174,19 @@ class ShipmentsTable
                         return $query;
                     }),
             ])
+            ->extraAttributes([
+                'class' => 'fi-transparent-panel',
+                'style' => 'background-color: transparent !important; box-shadow: none !important; border: none !important; --ring-color: transparent;',
+            ])
+            ->groups([
+                Group::make('batch_id')
+                    ->label('الرحلة')
+                    ->getTitleFromRecordUsing(fn (Shipment $record): string => $record->batch?->reference ? "الرحلة: {$record->batch->reference}" : 'شحنات غير مسندة لرحلة')
+                    ->collapsible(),
+            ])
+            ->defaultGroup('batch_id')
             ->defaultSort('created_at', 'desc')
+            ->actionsPosition(RecordActionsPosition::BeforeColumns)
             ->recordActions([
                 ActionGroup::make([
                     ViewAction::make(),
@@ -169,12 +212,21 @@ class ShipmentsTable
                         ->openUrlInNewTab(),
 
                     Action::make('partialCollect')
-                        ->label('تسليم جزئي (بموافقة الإدارة)')
+                        ->label('تسليم الطرود الواصلة')
                         ->icon('heroicon-o-check-badge')
                         ->color('warning')
-                        ->visible(fn (Shipment $record): bool => (auth()->user()?->isAdministrator() ?? false) && in_array($record->status, [ShipmentStatus::PartialAtDestination, ShipmentStatus::PartiallyCollected, ShipmentStatus::InTransit, ShipmentStatus::AtTransit]))
+                        ->visible(fn (Shipment $record): bool => in_array(
+                            $record->status,
+                            [
+                                ShipmentStatus::PartialAtDestination,
+                                ShipmentStatus::PartiallyCollected,
+                                ShipmentStatus::InTransit,
+                                ShipmentStatus::AtTransit,
+                            ],
+                            true,
+                        ))
                         ->requiresConfirmation()
-                        ->modalHeading('تسليم جزئي بموافقة الإدارة (D-029)')
+                        ->modalHeading('تسليم الطرود الواصلة')
                         ->modalDescription('سيتم تسليم الطرود الواصلة فقط لمستودع الوجهة وتعديل حالة الشحنة إلى (تسليم جزئي)، ويبقى متبقي الطرود قيد المتابعة.')
                         ->action(function (Shipment $record, ShipmentCollectionService $service): void {
                             $actor = auth()->user();

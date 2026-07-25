@@ -105,8 +105,8 @@ Show operational facts without misleading percentage comparisons:
 - Show expected incoming batches and packages.
 - Scan each package on arrival.
 - Mark missing or damaged exceptions without falsely marking the entire shipment complete.
-- Mark a shipment ready for collection only after all active packages arrive at the destination warehouse.
-- Version 1 does not permit partial pickup.
+- Mark a shipment ready for complete collection only after all active packages arrive at the destination warehouse.
+- Allow a destination warehouse employee to release only the packages that have arrived while unarrived packages remain in transit (D-029).
 
 ### 4.7 WhatsApp notification
 
@@ -181,7 +181,6 @@ Package, shipment, and batch statuses are separate. The system supports normal t
 - User-editable status/workflow engine.
 - Fine-grained permission checklists.
 - SMTP configuration and automated email delivery.
-- Partial pickup when only some packages have arrived.
 
 ## 8. Non-functional requirements
 
@@ -201,10 +200,9 @@ Package, shipment, and batch statuses are separate. The system supports normal t
 - A Dubai employee can create a multi-package shipment, generate barcodes, record exact weights, and print A4 labels.
 - A shipment can be assigned to a compatible batch and priced with the correct customer route rate and rounding rule.
 - Batch cost and profit are calculated from exact weights and preserved cents.
-- A warehouse employee can scan every arriving package and the shipment becomes ready only when all active packages arrive.
+- A warehouse employee can scan every arriving package, release arrived packages partially, and complete the shipment when all active packages are collected.
 - The recipient can open public tracking without login and see progress and payment summary without private account data.
 - A warehouse employee can record full, partial, or credit collection using supported payment methods.
 - Statements and batch reports reconcile charges, payments, allocations, reversals, outstanding amounts, cost, and profit.
 - Warehouse access restrictions and privileged corrections are enforced and audited.
 - No delivery fee, multi-currency, fleet, or paid-database behavior exists in version 1.
-

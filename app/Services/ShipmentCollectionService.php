@@ -62,18 +62,12 @@ class ShipmentCollectionService
     }
 
     /**
-     * D-029: Admin-approved partial package collection.
-     *
-     * Allows an Administrator to release packages that have arrived at destination
-     * even if other packages in the shipment are still in transit/missing.
+     * Release packages that reached the destination while the remaining
+     * packages continue through their normal operational lifecycle (D-029).
      */
     public function collectPartially(Shipment $shipment, Warehouse $warehouse, User $user): Shipment
     {
         Gate::forUser($user)->authorize('view', $warehouse);
-
-        if (! $user->isAdministrator()) {
-            throw new DomainException('التسليم الجزئي يحتاج إلى موافقة وبطاقة مدير النظام (Administrator).');
-        }
 
         return DB::transaction(function () use ($shipment, $warehouse, $user): Shipment {
             $shipment = Shipment::query()->lockForUpdate()->findOrFail($shipment->id);
@@ -102,7 +96,7 @@ class ShipmentCollectionService
                     'user_id' => $user->id,
                     'scanned_at' => now(),
                     'source' => 'partial_collection',
-                    'note' => 'تسليم جزئي بموافقة الإدارة',
+                    'note' => 'تسليم جزئي للطرود الواصلة',
                 ]);
             }
 

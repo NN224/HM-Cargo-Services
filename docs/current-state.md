@@ -1,7 +1,7 @@
 # Current State — Handoff
 
-**Last updated:** 2026-07-23, end of session
-**Tests:** 291 passing, 938 assertions, working tree clean
+**Last updated:** 2026-07-25
+**Tests:** 297 passing, 961 assertions
 
 Read this first if you are picking the project up. It says what exists, what
 does not, and what to do next. The binding rules live in [`../AGENTS.md`](../AGENTS.md)
@@ -60,7 +60,7 @@ has tried the scan flow on a real phone in a real warehouse.
 | Shipments and packages, exact weight, safe identifiers | done, with screen |
 | Batch pricing on assignment, dispatch, profitability widget | done, with screen |
 | Package scanning and `package_status_events` | done, with mobile screen |
-| Collection gate — all active packages must have arrived | done |
+| Complete and partial collection — release arrived packages and retain the rest in transit (D-029) | done |
 | Payments, oldest-first allocation, reversals | done, with screen |
 | Public tracking on `/track/{token}`, rate limited | done |
 | A4 labels with a scannable tracking QR + link, no price printed | done, wired into the shipment UI and after intake |
@@ -84,7 +84,7 @@ has tried the scan flow on a real phone in a real warehouse.
 ## Suggested next step
 
 Try it against a real shipment before adding anything else. The feature list
-is close to complete and entirely unexercised: every one of the 291 tests was
+is close to complete and entirely unexercised: every one of the 297 tests was
 written by the same session that wrote the code it tests. A single real
 shipment — created in Dubai, priced into a batch, scanned in, collected and
 paid — will find more than the next feature would.

@@ -4,10 +4,12 @@ namespace App\Filament\Pages;
 
 use App\Enums\BatchStatus;
 use App\Enums\Capability;
+use App\Enums\ShipmentStatus;
 use App\Filament\Resources\Batches\BatchResource;
 use App\Models\Batch;
 use App\Models\Customer;
 use App\Models\Route;
+use App\Models\Shipment;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\BatchIntakeService;
@@ -15,6 +17,7 @@ use BackedEnum;
 use DomainException;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -97,6 +100,7 @@ class ReceiveIntoBatch extends Page
                             // A change in route no longer fetches fixed prices,
                             // but still needed for batch creation.
                             ->live()
+                            ->afterStateUpdated(fn (Get $get, Set $set) => self::loadExistingShipmentIfAny($get, $set))
                             ->createOptionForm([
                                 TextInput::make('reference')
                                     ->label('رقم/اسم الرحلة (اختياري)')
@@ -110,7 +114,7 @@ class ReceiveIntoBatch extends Page
                                     ->searchable()
                                     ->preload()
                                     ->required()
-                            ->createOptionForm([
+                                    ->createOptionForm([
                                         TextInput::make('name')
                                             ->label('اسم المسار')
                                             ->required()
@@ -153,6 +157,7 @@ class ReceiveIntoBatch extends Page
                             ->searchable()
                             ->required()
                             ->live()
+                            ->afterStateUpdated(fn (Get $get, Set $set) => self::loadExistingShipmentIfAny($get, $set))
                             // A walk-in customer should not send the operator to
                             // another screen mid-intake. The gate lives on the
                             // action itself via ->authorize(), the same pattern
@@ -201,6 +206,7 @@ class ReceiveIntoBatch extends Page
                         Repeater::make('packages')
                             ->label('الطرود')
                             ->schema([
+                                Hidden::make('id'),
                                 TextInput::make('weight_kg')
                                     ->label('الوزن (كغ)')
                                     ->numeric()
@@ -312,6 +318,98 @@ class ReceiveIntoBatch extends Page
         }
 
         return $total > 0 ? number_format($total, 2, '.', '') : null;
+    }
+
+    public static function loadExistingShipmentIfAny(Get $get, Set $set): void
+    {
+        $batchId = $get('batch_id');
+        $customerId = $get('customer_id');
+
+        if (! $batchId || ! $customerId) {
+            return;
+        }
+
+        $batch = Batch::with('route')->find($batchId);
+        $customer = Customer::find($customerId);
+
+        $customerRateCents = null;
+        if ($batch && $customer && $batch->route) {
+            $cRate = $customer->rateForRoute($batch->route);
+            if ($cRate && $cRate->rate_per_kg_cents > 0) {
+                $customerRateCents = $cRate->rate_per_kg_cents;
+            }
+        }
+
+        $existing = Shipment::query()
+            ->where('batch_id', $batchId)
+            ->where('customer_id', $customerId)
+            ->whereNotIn('status', [ShipmentStatus::Collected->value, ShipmentStatus::Cancelled->value])
+            ->with(['packages', 'customer'])
+            ->first();
+
+        if ($existing) {
+            $previousPackageRateCents = $existing->packages
+                ->pluck('custom_rate_per_kg_cents')
+                ->filter(fn (?int $rateCents): bool => ($rateCents ?? 0) > 0)
+                ->last();
+            $defaultRateCents = $previousPackageRateCents
+                ?? $existing->rate_per_kg_cents
+                ?? $customerRateCents;
+
+            $packagesState = [];
+            foreach ($existing->packages as $pkg) {
+                $rateCents = $pkg->fixed_charge_cents
+                    ? null
+                    : ($pkg->custom_rate_per_kg_cents ?? $defaultRateCents);
+                $rateFormatted = $rateCents ? number_format($rateCents / 100, 2, '.', '') : null;
+
+                $packagesState[] = [
+                    'id' => $pkg->id,
+                    'weight_kg' => (string) $pkg->weight_kg,
+                    'description' => $pkg->description,
+                    'source_barcode' => $pkg->source_barcode,
+                    'pricing_method' => $pkg->fixed_charge_cents ? 'fixed' : 'per_kg',
+                    'custom_rate_per_kg' => $rateFormatted,
+                    'fixed_charge_usd' => $pkg->fixed_charge_cents ? number_format($pkg->fixed_charge_cents / 100, 2, '.', '') : null,
+                ];
+            }
+
+            $set('packages', $packagesState);
+            $set('recipient_name', $existing->recipient_name);
+            $set('recipient_phone', $existing->recipient_phone);
+
+            $isCustomer = $existing->customer && $existing->recipient_name === $existing->customer->name && $existing->recipient_phone === $existing->customer->phone;
+            $set('recipient_is_customer', $isCustomer);
+
+            $calcTotal = self::calculateTotal($packagesState);
+            if ($existing->final_charge_cents) {
+                $set('final_charge_usd', number_format($existing->final_charge_cents / 100, 2, '.', ''));
+            } else {
+                $set('final_charge_usd', $calcTotal);
+            }
+
+            Notification::make()
+                ->title('تم التحرير على شحنة سابقة')
+                ->body("تم العثور على الشحنة ({$existing->reference}) لهذا العميل على نفس الرحلة، وتم تحميل طرودها وأسعارها السابقة. يمكنك إضافة الطرود الجديدة إليها الآن.")
+                ->info()
+                ->send();
+        } elseif ($customerRateCents) {
+            $defaultRateFormatted = number_format($customerRateCents / 100, 2, '.', '');
+            $packagesState = $get('packages') ?? [];
+            if (is_array($packagesState)) {
+                $updated = false;
+                foreach ($packagesState as &$pkgItem) {
+                    if (empty($pkgItem['custom_rate_per_kg']) && empty($pkgItem['fixed_charge_usd'])) {
+                        $pkgItem['custom_rate_per_kg'] = $defaultRateFormatted;
+                        $updated = true;
+                    }
+                }
+                if ($updated) {
+                    $set('packages', $packagesState);
+                    $set('final_charge_usd', self::calculateTotal($packagesState));
+                }
+            }
+        }
     }
 
     public function receive(): void

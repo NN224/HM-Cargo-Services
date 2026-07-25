@@ -113,7 +113,7 @@ Rules:
 ## 8. Credit collection
 
 - A customer may be marked credit-eligible.
-- A credit-eligible recipient may collect all packages without immediate payment.
+- A credit-eligible recipient may collect arrived packages, fully or partially under D-029, without immediate payment.
 - Collection does not mark the financial balance paid.
 - Outstanding charge remains on the billing customer's statement.
 - Later account payments allocate oldest outstanding first.
@@ -155,4 +155,3 @@ It must not show payment references, collector names, internal notes, other ship
 ## 12. No delivery finance
 
 Do not create delivery fees, delivery costs, driver payments, or delivery profit. Customers may arrange local delivery with Beirut or another party outside HM Cargo Services; it has no effect on this ledger.
-

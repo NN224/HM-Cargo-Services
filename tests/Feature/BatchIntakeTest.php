@@ -144,3 +144,26 @@ test('a package with no supplier barcode is still accepted', function () {
 
     expect($shipment->packages->first()->source_barcode)->toBeNull();
 });
+
+test('subsequent intake for the same customer on the same batch appends packages to existing shipment', function () {
+    $shipment1 = $this->service->receive($this->batch, [
+        'customer_id' => $this->customer->id,
+        'recipient_is_customer' => true,
+        'packages' => [['weight_kg' => 2.0, 'description' => 'طرد 1']],
+    ], $this->actor);
+
+    $pkg1Id = $shipment1->packages->first()->id;
+
+    $shipment2 = $this->service->receive($this->batch, [
+        'customer_id' => $this->customer->id,
+        'recipient_is_customer' => true,
+        'packages' => [
+            ['id' => $pkg1Id, 'weight_kg' => 2.0, 'description' => 'طرد 1'],
+            ['weight_kg' => 3.0, 'description' => 'طرد 2'],
+        ],
+    ], $this->actor);
+
+    expect($shipment2->id)->toBe($shipment1->id)
+        ->and($shipment2->packages)->toHaveCount(2)
+        ->and((string) $shipment2->total_weight_kg)->toBe('5.0000');
+});

@@ -240,8 +240,7 @@ The following operations must be atomic:
 
 - Assign shipment to batch, snapshot route/rate, and post initial charge.
 - Scan package arrival and update aggregate shipment state.
-- Collect complete shipment and write all package/shipment events.
+- Collect all arrived packages, derive complete or partial shipment status, and write all package/shipment events.
 - Create payment and allocations.
 - Reverse payment and release/reapply allocations.
 - Reprice dispatched shipment and post adjustment.
-

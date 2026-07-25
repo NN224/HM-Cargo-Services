@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\Capability;
+use App\Enums\ShipmentStatus;
 use App\Models\Batch;
 use App\Models\Customer;
 use App\Models\Shipment;
@@ -53,18 +54,31 @@ class BatchIntakeService
 
             [$name, $phone] = $this->resolveRecipient($customer, $data);
 
-            $shipment = Shipment::create([
-                'customer_id' => $customer->id,
-                'recipient_name' => $name,
-                'recipient_phone' => $phone,
-                // The operator is standing inside a batch bound somewhere
-                // specific. Asking them to retype that destination only
-                // creates a chance to contradict it.
-                'destination_warehouse_id' => $batch->route->destination_warehouse_id,
-            ]);
+            $existingShipment = Shipment::query()
+                ->where('customer_id', $customer->id)
+                ->where('batch_id', $batch->id)
+                ->whereNotIn('status', [ShipmentStatus::Collected->value, ShipmentStatus::Cancelled->value])
+                ->first();
 
+            if ($existingShipment) {
+                $shipment = $existingShipment;
+                $shipment->update([
+                    'recipient_name' => $name,
+                    'recipient_phone' => $phone,
+                ]);
+            } else {
+                $shipment = Shipment::create([
+                    'customer_id' => $customer->id,
+                    'recipient_name' => $name,
+                    'recipient_phone' => $phone,
+                    'destination_warehouse_id' => $batch->route->destination_warehouse_id,
+                ]);
+            }
+
+            $submittedPackageIds = [];
             foreach ($packages as $package) {
-                $shipment->packages()->create([
+                $pkgId = $package['id'] ?? null;
+                $payload = [
                     'weight_kg' => $package['weight_kg'],
                     'description' => $package['description'] ?? null,
                     'source_barcode' => $package['source_barcode'] ?? null,
@@ -74,15 +88,29 @@ class BatchIntakeService
                     'fixed_charge_cents' => filled($package['fixed_charge_usd'] ?? null)
                         ? (int) round(((float) $package['fixed_charge_usd']) * 100)
                         : null,
-                ]);
+                ];
+
+                if ($pkgId && $existingPkg = $shipment->packages()->find($pkgId)) {
+                    $existingPkg->update($payload);
+                    $submittedPackageIds[] = $existingPkg->id;
+                } else {
+                    $newPkg = $shipment->packages()->create($payload);
+                    $submittedPackageIds[] = $newPkg->id;
+                }
+            }
+
+            if ($existingShipment) {
+                $shipment->packages()->whereNotIn('id', $submittedPackageIds)->delete();
             }
 
             $shipment->recalculateTotalWeight();
 
-            // Assign the shipment to the batch. We use a flag to skip
-            // the strict route-rate check inside BatchAssignmentService
-            // because we are explicitly providing manual package rates.
-            $shipment = $this->assignment->assign($shipment->fresh(), $batch, skipRateCheck: true);
+            if ($shipment->batch_id === null) {
+                // Assign the shipment to the batch. We use a flag to skip
+                // the strict route-rate check inside BatchAssignmentService
+                // because we are explicitly providing manual package rates.
+                $shipment = $this->assignment->assign($shipment->fresh(), $batch, skipRateCheck: true);
+            }
 
             // Apply the final charge exactly as the user typed it in the form.
             if (isset($data['final_charge_usd']) && filled($data['final_charge_usd'])) {

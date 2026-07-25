@@ -70,6 +70,7 @@ Routes are data, not hard-coded branches. Future routes can be added by an admin
 - `at_transit` - all active packages scanned at transit.
 - `partial_at_destination` - only some packages scanned at destination.
 - `ready_for_collection` - all active packages arrived at destination.
+- `partially_collected` - some arrived packages were released while other active packages remain uncollected.
 - `collected` - all active packages released to the recipient.
 - `cancelled` - shipment cancelled under an approved exception flow.
 - `exception` - at least one active package is missing or damaged and requires resolution.
@@ -90,7 +91,8 @@ Routes are data, not hard-coded branches. Future routes can be added by an admin
 - Package scans are the source of truth for physical arrival.
 - A shipment becomes `partial_at_destination` when at least one but not all active packages have arrived.
 - A shipment becomes `ready_for_collection` only when every active, non-cancelled package is `arrived_destination`.
-- Version 1 does not allow releasing only some packages. The collect action is disabled until the shipment is ready.
+- A destination warehouse employee may release packages in `arrived_destination` before the remaining active packages arrive (D-029).
+- After a partial collection, released packages become `collected`, unarrived packages keep their existing status, and the shipment becomes `partially_collected`.
 - A shipment becomes `collected` only when all active packages are marked collected in one controlled transaction.
 - A batch is not closed merely because one shipment is collected.
 - A batch becomes eligible for closure only when all shipments are collected, cancelled, or have an explicitly resolved exception.
@@ -118,7 +120,8 @@ For direct routes, transit statuses are skipped; they are not created with fake 
 5. When all packages arrive, the system prepares an Arabic WhatsApp arrival message with the secure tracking link and amount due.
 6. When the recipient arrives, the employee opens the shipment by barcode.
 7. Payment is recorded as full, partial, or credit according to `pricing-payments.md`.
-8. The employee confirms collection; the system records user, warehouse, date/time, and package collection events.
+8. The employee may release all arrived packages even when other packages remain in transit.
+9. The system records user, warehouse, date/time, and package collection events for every released package.
 
 Local delivery coordination is outside the system. Reaching `ready_for_collection` means HM Cargo Services has made the shipment available at the warehouse; it does not represent last-mile delivery.
 
@@ -168,4 +171,3 @@ After batch dispatch:
 - Mark the package damaged with notes.
 - Set the shipment to `exception` until an administrator records the resolution.
 - Do not automatically change the charge; financial handling is an explicit adjustment.
-

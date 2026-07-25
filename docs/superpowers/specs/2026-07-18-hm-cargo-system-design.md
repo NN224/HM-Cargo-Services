@@ -100,8 +100,8 @@ Shipment charges, adjustments, payments, reversals, and allocations form an audi
 7. Derive partial/complete shipment status from package events.
 8. When all packages arrive, prepare WhatsApp arrival/amount/tracking message.
 9. Recipient opens tracking or arrives at warehouse.
-10. Record full, partial, or credit collection and generate receipt.
-11. Collect all packages in one controlled transaction.
+10. Record full, partial, or credit payment and generate receipt.
+11. Collect all arrived packages in one controlled transaction; keep the shipment partially collected while active packages remain.
 12. Customer statement and batch report update from ledger and events.
 13. Close the batch only after every shipment is collected, cancelled, or resolved.
 
@@ -110,7 +110,7 @@ Shipment charges, adjustments, payments, reversals, and allocations form an audi
 - Reject batch assignment when customer route rate is missing.
 - Reject route/destination mismatches.
 - Reject duplicate package barcodes and non-positive weights.
-- Reject collection while any active package is not at destination.
+- For complete collection, reject while any active package is not at destination; partial collection releases only packages already at destination.
 - Reject employee actions outside the assigned warehouse.
 - Reject post-dispatch protected edits by employees.
 - Use transactions for scan/aggregate updates, pricing/posting, payment/allocation, reversal, collection, and repricing.
@@ -146,7 +146,7 @@ Shipment charges, adjustments, payments, reversals, and allocations form an audi
 - Shipment creation and multi-package barcode issuance.
 - Batch assignment and validation.
 - Direct and transit scan workflows.
-- Complete-package collection gate.
+- Complete and partial package collection rules.
 - Full, partial, and credit payment flows.
 - Public tracking privacy and payment summary.
 
@@ -166,11 +166,10 @@ Shipment charges, adjustments, payments, reversals, and allocations form an audi
 
 ## 10. Scope controls
 
-Version 1 deliberately excludes delivery logistics, delivery fees, drivers/fleet, multiple currencies, online payments, fine-grained roles, SMTP, carrier APIs, configurable workflow engines, multi-tenant SaaS, and partial package pickup.
+Version 1 deliberately excludes delivery logistics, delivery fees, drivers/fleet, multiple currencies, online payments, fine-grained roles, SMTP, carrier APIs, configurable workflow engines, and multi-tenant SaaS.
 
 Any agent proposing these features must stop and obtain owner approval before changing canonical documents or code.
 
 ## 11. Success definition
 
 The product succeeds when Dubai can create and dispatch multi-package cargo, destination warehouses can scan and collect it, customers can track and understand their amount due without login, payments and credit reconcile, and management can see accurate batch profitability—without requiring paid database services or unrelated courier complexity.
-

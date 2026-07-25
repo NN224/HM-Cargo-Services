@@ -73,10 +73,10 @@ has tried the scan flow on a real phone in a real warehouse.
 | Money screens gated by capability; shared locked-page notice | done |
 | Dashboard — operational counts for all, money for a money-holder | done |
 | Per-employee page locking, enforced centrally (D-026) | done |
+| Operational reports by warehouse, route and date range | done, with screen |
 
 ## Not built
 
-- Operational reports by warehouse, route and date range
 - PostgreSQL (Phase 7)
 
 ---

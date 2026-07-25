@@ -326,3 +326,15 @@ registered number.
 link carries the secret `public_token`; the list deliberately never prints it
 (D-025/ShipmentUiTest), so the intake WhatsApp button lives on the labels page,
 and only the token-free arrival message is offered as a row action.
+
+## D-029: Admin-approved partial package collection
+
+**Date:** 2026-07-25  
+**Status:** Approved by owner confirmation.
+
+Extends D-015: Standard warehouse employees are blocked from collecting a shipment if any active package has not arrived at the destination warehouse. However, an Administrator (or an employee authorized with explicit Admin approval) may collect the packages that have arrived at destination (`PackageStatus::ArrivedDestination`).
+
+- Only packages that have arrived at destination transition to `PackageStatus::Collected`.
+- Unarrived packages remain in their current status (`InTransit` / `ArrivedTransit`).
+- The shipment operational status transitions to `ShipmentStatus::PartiallyCollected`.
+- Payments may be recorded for the partially delivered shipment and allocated normally.

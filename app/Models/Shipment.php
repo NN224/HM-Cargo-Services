@@ -213,6 +213,12 @@ class Shipment extends Model
             return;
         }
 
+        if ($collectedCount > 0) {
+            $this->forceFill(['status' => ShipmentStatus::PartiallyCollected])->save();
+
+            return;
+        }
+
         $destinationCount = (clone $active)
             ->whereIn('status', [
                 PackageStatus::ArrivedDestination->value,

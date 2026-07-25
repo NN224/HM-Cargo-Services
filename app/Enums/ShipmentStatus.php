@@ -24,6 +24,7 @@ enum ShipmentStatus: string
     case PartialAtDestination = 'partial_at_destination';
     case ReadyForCollection = 'ready_for_collection';
     case Arrived = 'arrived';
+    case PartiallyCollected = 'partially_collected';
     case Collected = 'collected';
     case Cancelled = 'cancelled';
     case Exception = 'exception';
@@ -41,6 +42,7 @@ enum ShipmentStatus: string
             self::PartialAtDestination => 'وصل بعضها إلى الوجهة',
             self::ReadyForCollection => 'جاهزة للتسليم',
             self::Arrived => 'وصلت',
+            self::PartiallyCollected => 'تسليم جزئي (بانتظار متبقي الطرود)',
             self::Collected => 'تم التسليم',
             self::Cancelled => 'ملغاة',
             self::Exception => 'استثناء يحتاج معالجة',

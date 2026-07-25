@@ -38,7 +38,7 @@ The system must remain simpler than the reference dashboard. Do not add generic 
 - A batch has one total cost-per-kilogram for its entire route, even when the route includes a transit warehouse.
 - A shipment may belong to only one active batch at a time.
 - Package status, shipment status, and batch status are separate state machines.
-- A shipment cannot be completed or collected until all active packages have arrived at the destination warehouse. Partial package pickup is out of scope for version 1.
+- A shipment cannot be completed or collected until all active packages have arrived at the destination warehouse, unless an Administrator explicitly approves a partial collection per D-029.
 - Customer credit payments are allocated to the oldest outstanding shipments first unless a payment is explicitly recorded against a particular shipment.
 - Payments may be full or partial and may use cash, Whish, bank transfer, or a manually named other method.
 - Payment reversals must preserve an audit trail. Never hard-delete financial records.

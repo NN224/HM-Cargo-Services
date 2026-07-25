@@ -131,3 +131,41 @@ test('warehouse policy refuses collection outside the assigned warehouse', funct
 
     expect($shipment->fresh()->status)->not->toBe(ShipmentStatus::Collected);
 });
+
+test('d029 partial collection is refused for non-administrator employees', function () {
+    $shipment = collectionTestShipment($this->batch, $this->customer, [
+        PackageStatus::ArrivedDestination,
+        PackageStatus::InTransit,
+    ]);
+
+    expect(fn () => app(ShipmentCollectionService::class)->collectPartially(
+        $shipment,
+        $this->destination,
+        $this->employee,
+    ))->toThrow(DomainException::class, 'التسليم الجزئي يحتاج إلى موافقة وبطاقة مدير النظام');
+});
+
+test('d029 partial collection succeeds with administrator approval', function () {
+    $admin = User::create([
+        'name' => 'المدير العام',
+        'email' => 'admin_partial@hmcargo.test',
+        'password' => 'secret',
+        'role' => UserRole::Administrator,
+        'warehouse_id' => $this->destination->id,
+    ]);
+
+    $shipment = collectionTestShipment($this->batch, $this->customer, [
+        PackageStatus::ArrivedDestination,
+        PackageStatus::InTransit,
+    ]);
+
+    $partiallyCollected = app(ShipmentCollectionService::class)->collectPartially(
+        $shipment,
+        $this->destination,
+        $admin,
+    );
+
+    expect($partiallyCollected->status)->toBe(ShipmentStatus::PartiallyCollected)
+        ->and($shipment->packages()->where('status', PackageStatus::Collected->value)->count())->toBe(1)
+        ->and($shipment->packages()->where('status', PackageStatus::InTransit->value)->count())->toBe(1);
+});

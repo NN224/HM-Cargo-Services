@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Shipments\Tables;
 use App\Enums\Capability;
 use App\Enums\ShipmentStatus;
 use App\Models\Shipment;
+use App\Services\ShipmentCollectionService;
 use App\Services\WhatsAppMessageService;
 use DomainException;
 use Filament\Actions\Action;
@@ -162,6 +163,34 @@ class ShipmentsTable
                     ->color('gray')
                     ->url(fn (Shipment $record): string => route('labels.shipment', $record))
                     ->openUrlInNewTab(),
+
+                Action::make('partialCollect')
+                    ->label('تسليم جزئي (بموافقة الإدارة)')
+                    ->icon('heroicon-o-check-badge')
+                    ->color('warning')
+                    ->visible(fn (Shipment $record): bool => (auth()->user()?->isAdministrator() ?? false) && in_array($record->status, [ShipmentStatus::PartialAtDestination, ShipmentStatus::PartiallyCollected, ShipmentStatus::InTransit, ShipmentStatus::AtTransit]))
+                    ->requiresConfirmation()
+                    ->modalHeading('تسليم جزئي بموافقة الإدارة (D-029)')
+                    ->modalDescription('سيتم تسليم الطرود الواصلة فقط لمستودع الوجهة وتعديل حالة الشحنة إلى (تسليم جزئي)، ويبقى متبقي الطرود قيد المتابعة.')
+                    ->action(function (Shipment $record, ShipmentCollectionService $service): void {
+                        $actor = auth()->user();
+                        $warehouse = $actor->warehouse ?? $record->destinationWarehouse;
+
+                        try {
+                            $service->collectPartially($record, $warehouse, $actor);
+                            Notification::make()
+                                ->title('تم التسليم الجزئي بنجاح')
+                                ->body('تم تسليم الطرود الواصلة وتحديث حالة الشحنة بنجاح.')
+                                ->success()
+                                ->send();
+                        } catch (DomainException $e) {
+                            Notification::make()
+                                ->title('تعذر التسليم الجزئي')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
 
                 Action::make('whatsappArrival')
                     ->label('واتساب: إشعار الوصول')

@@ -131,8 +131,8 @@ class DatabaseSeeder extends Seeder
 
         foreach ($customers as $c) {
             \App\Models\Customer::firstOrCreate(
-                ['name' => $c['name']],
-                ['phone' => $c['phone']]
+                ['phone' => $c['phone']],
+                ['name' => $c['name']]
             );
         }
 

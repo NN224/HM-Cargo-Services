@@ -31,11 +31,13 @@ class CustomersTable
                 TextColumn::make('name')
                     ->label('اسم العميل')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->extraAttributes(['style' => 'direction: ltr; unicode-bidi: embed; text-align: right;']),
 
                 TextColumn::make('phone')
                     ->label('رقم الهاتف')
-                    ->searchable(),
+                    ->searchable()
+                    ->extraAttributes(['style' => 'direction: ltr; unicode-bidi: embed; text-align: right;']),
 
                 TextColumn::make('outstanding_cents')
                     ->label('الرصيد المتبقي (ديون)')

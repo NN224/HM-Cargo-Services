@@ -299,6 +299,7 @@ class ShipmentsTable
                     ->icon('heroicon-m-ellipsis-vertical')
                     ->button(),
             ])
+            ->header(view('filament.tables.components.batch-selector-bar'))
             ->toolbarActions([]);
     }
 }

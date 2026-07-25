@@ -29,8 +29,8 @@
         display: flex;
         gap: 0.875rem;
         overflow-x: auto;
-        padding: 0.5rem 0.25rem 0.875rem;
-        margin-bottom: 0.75rem;
+        padding: 0.25rem 0.125rem 0.5rem;
+        margin-bottom: 0.25rem;
         scrollbar-width: thin;
         scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
     }

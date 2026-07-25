@@ -12,10 +12,7 @@ class ListShipments extends ListRecords
 {
     public function getSubheading(): string|Htmlable|null
     {
-        $selectorBarHtml = view('filament.tables.components.batch-selector-bar')->render();
-
-        $css = <<<'HTML'
-<style>
+        return new HtmlString('<style>
 /* Clean up panel backgrounds */
 .fi-ta-panel,
 .dark .fi-ta-panel { 
@@ -29,29 +26,41 @@ class ListShipments extends ListRecords
     border: none !important; 
 }
 
-/* Style top container transparently */
-.fi-ta-ctn,
-.fi-ta-header-ctn {
+.fi-ta-ctn {
     border: none !important;
     box-shadow: none !important;
     background: transparent !important;
-    padding: 0 !important;
-    margin-bottom: 0 !important;
 }
 
-/* Style single header search/filter toolbar cleanly */
-.fi-ta-header-toolbar {
+/* Style single unified dark header box panel containing batch cards & search toolbar */
+.fi-ta-header-ctn {
     background: #18181b !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 0.875rem !important;
-    padding: 0.625rem 1rem !important;
-    margin-bottom: 1rem !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    border-radius: 1rem !important;
+    padding: 0.875rem 1rem 0.5rem !important;
+    margin-bottom: 1.25rem !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+}
+
+/* Inner search and filter toolbar sits cleanly at bottom of unified container */
+.fi-ta-header-toolbar {
+    background: transparent !important;
+    border: none !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 0 !important;
+    padding-top: 0.625rem !important;
+    padding-bottom: 0.125rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-bottom: 0 !important;
+    box-shadow: none !important;
 }
 
 /* Completely hide duplicate sorting toolbar box */
-.fi-ta-sorting-settings,
-.fi-ta-header-ctn > div:not(.fi-ta-header-toolbar) {
+.fi-ta-sorting-settings {
     display: none !important;
 }
 
@@ -73,10 +82,7 @@ class ListShipments extends ListRecords
     display: flex;
     justify-content: flex-end;
 }
-</style>
-HTML;
-
-        return new HtmlString($selectorBarHtml.$css);
+</style>');
     }
 
     protected static string $resource = ShipmentResource::class;

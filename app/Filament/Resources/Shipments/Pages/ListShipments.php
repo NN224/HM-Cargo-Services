@@ -42,6 +42,18 @@ class ListShipments extends ListRecords
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
+/* Style table group headers cleanly */
+.fi-ta-group-header-row,
+.fi-ta-group-header-cell,
+.fi-ta-group-header {
+    background-color: #18181b !important;
+    border-radius: 0.75rem !important;
+    margin-top: 1rem !important;
+    margin-bottom: 0.75rem !important;
+    font-weight: 700 !important;
+    color: #60a5fa !important;
+}
+
 /* Order card actions nicely at top */
 .fi-ta-record {
     display: flex;

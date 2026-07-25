@@ -195,13 +195,15 @@ class ShipmentsTable
                 \Filament\Tables\Grouping\Group::make('batch.reference')
                     ->label('حسب الرحلة')
                     ->titlePrefixedWithLabel(false)
-                    ->getTitleFromRecordUsing(function (Shipment $record): \Illuminate\Contracts\Support\Htmlable {
-                        return new \Illuminate\Support\HtmlString(
-                            view('filament.tables.components.batch-group-header', [
-                                'batch' => $record->batch,
-                                'record' => $record,
-                            ])->render()
-                        );
+                    ->getTitleFromRecordUsing(function (Shipment $record): string {
+                        if (! $record->batch) {
+                            return '📦 شحنات غير مسندة لرحلة';
+                        }
+
+                        $routeName = $record->batch->route?->name ?? '';
+                        $routeSuffix = $routeName ? " ({$routeName})" : '';
+
+                        return '🚚 الرحلة: '.$record->batch->reference.$routeSuffix;
                     })
                     ->collapsible(),
 

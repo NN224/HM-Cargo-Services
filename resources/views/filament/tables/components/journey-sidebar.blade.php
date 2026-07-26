@@ -34,10 +34,11 @@
         $minJourneyData = null;
         foreach ($b->shipments as $shipment) {
             $jd = app(PackageJourneyProjection::class)->forShipment($shipment);
-            if (($jd['package_count'] ?? 0) === 0) continue;
+            $jdPkgCount = $jd['package_count'] ?? 0;
+            if ($jdPkgCount === 0) continue;
             $sCurrent = -1; $sLastDone = -1;
             foreach (($jd['steps'] ?? []) as $idx => $step) {
-                if ($step['completed_count'] > 0) $sLastDone = $idx;
+                if ($step['completed_count'] >= $jdPkgCount && $jdPkgCount > 0) $sLastDone = $idx;
                 if ($step['current_count'] > 0) { $sCurrent = $idx; break; }
             }
             $sIdx = $sCurrent >= 0 ? $sCurrent : ($sLastDone >= 0 ? $sLastDone : 0);
@@ -52,10 +53,11 @@
 
         $jd = $minJourneyData;
         $steps = $jd['steps'] ?? [];
+        $jdPackageCount = $jd['package_count'] ?? 0;
         $currentStepIdx = -1; $lastCompletedIdx = -1;
         if (!empty($steps)) {
             foreach ($steps as $idx => $step) {
-                if ($step['completed_count'] > 0) $lastCompletedIdx = $idx;
+                if ($step['completed_count'] >= $jdPackageCount && $jdPackageCount > 0) $lastCompletedIdx = $idx;
                 if ($step['current_count'] > 0) { $currentStepIdx = $idx; break; }
             }
         }

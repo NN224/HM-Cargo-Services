@@ -32,10 +32,9 @@ final class ManageJourneyAction
 
                 CheckboxList::make('package_ids')
                     ->label('الطرود')
-                    ->options(fn (Shipment $record): array => $record->packages()
-                        ->orderBy('id')
-                        ->pluck('barcode', 'id')
-                        ->all())
+                    ->options(function ($record): array {
+                        return $record ? $record->packages()->orderBy('id')->pluck('barcode', 'id')->all() : [];
+                    })
                     ->required()
                     ->validationMessages([
                         'required' => 'اختر طرداً واحداً على الأقل.',
@@ -48,19 +47,26 @@ final class ManageJourneyAction
                     ->visible(fn (Get $get): bool => ($get('operation') === 'correct') && (auth()->user()?->isAdministrator() ?? false)),
 
                 Textarea::make('reason')
-                    ->label('السبب')
+                    ->label(fn (Get $get): string => in_array($get('operation'), ['delay', 'correct'], true) ? 'السبب' : 'إشعار للعميل (اختياري)')
                     ->required(fn (Get $get): bool => in_array($get('operation'), ['delay', 'correct'], true)),
 
                 Toggle::make('publish_reason')
-                    ->label('إظهار السبب للعميل في رابط التتبع')
+                    ->label('إظهار السبب/الإشعار للعميل في رابط التتبع')
                     ->default(false),
             ])
-            ->action(function (Shipment $record, array $data, PackageJourneyService $service): void {
+            ->action(function (array $data, PackageJourneyService $service, $record): void {
                 $actor = auth()->user();
 
                 try {
                     match ($data['operation']) {
-                        'advance' => $service->advance($record, $data['package_ids'] ?? [], $actor),
+                        'advance' => $service->advance(
+                            $record,
+                            $data['package_ids'] ?? [],
+                            $actor,
+                            'journey_progress',
+                            null,
+                            ($data['publish_reason'] ?? false) && filled($data['reason'] ?? '') ? (string) $data['reason'] : null,
+                        ),
                         'delay' => $service->delay(
                             $record,
                             $data['package_ids'] ?? [],

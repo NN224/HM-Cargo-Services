@@ -66,7 +66,7 @@ class Package extends Model
     ];
 
     protected $attributes = [
-        'status' => PackageStatus::Received->value,
+        'status' => PackageStatus::Created->value,
         'is_delayed' => false,
         'delay_reason_is_public' => false,
     ];

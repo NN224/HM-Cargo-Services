@@ -22,6 +22,7 @@ use Illuminate\Support\HtmlString;
 class ListShipments extends ListRecords
 {
     public ?int $managingBatchId = null;
+    public ?int $managingShipmentId = null;
 
     public ?int $selectedBatchId = null;
 
@@ -31,7 +32,8 @@ class ListShipments extends ListRecords
 
     public ?string $bulkTargetStatus = null;
 
-    public string $bulkCorrectionReason = '';
+    public string $bulkReason = '';
+    public string $bulkMessage = '';
 
     /** @var array<int, int> */
     public array $selectedShipmentIds = [];
@@ -45,7 +47,8 @@ class ListShipments extends ListRecords
         $this->selectedBatchId = $batchId;
         $this->selectedShipmentIds = [];
         $this->bulkTargetStatus = null;
-        $this->bulkCorrectionReason = '';
+        $this->bulkReason = '';
+        $this->bulkMessage = '';
         $this->resetTable();
     }
 
@@ -59,7 +62,8 @@ class ListShipments extends ListRecords
     {
         $this->selectedShipmentIds = [];
         $this->bulkTargetStatus = null;
-        $this->bulkCorrectionReason = '';
+        $this->bulkReason = '';
+        $this->bulkMessage = '';
     }
 
     /** @param array<int, int> $shipmentIds */
@@ -126,30 +130,19 @@ class ListShipments extends ListRecords
             ->get();
 
         $targetStatus = null;
-        $correctionReason = 'تصحيح جماعي من شاشة الشحنات';
+        $reason = trim($this->bulkReason) !== '' ? trim($this->bulkReason) : null;
+
         if (filled($this->bulkTargetStatus)) {
             $targetStatus = PackageStatus::tryFrom((string) $this->bulkTargetStatus);
 
-            if (! $targetStatus || $targetStatus->journeyPosition() === null) {
+            if (! $targetStatus || $targetStatus->journeyPosition() === null || ! $actor->isAdministrator()) {
                 Notification::make()
-                    ->title('اختر حالة مسار صحيحة')
+                    ->title('فشل التحديث')
+                    ->body('حالة غير صالحة أو صلاحيات غير كافية.')
                     ->danger()
                     ->send();
 
                 return;
-            }
-
-            if (! $actor->isAdministrator()) {
-                Notification::make()
-                    ->title('تصحيح الحالة يتطلب صلاحية المدير')
-                    ->danger()
-                    ->send();
-
-                return;
-            }
-
-            if (trim($this->bulkCorrectionReason) !== '') {
-                $correctionReason = trim($this->bulkCorrectionReason);
             }
         }
 
@@ -161,7 +154,8 @@ class ListShipments extends ListRecords
                 ->filter(fn (Package $package): bool => ($package->status === PackageStatus::Created || $package->status->journeyPosition() !== null)
                     && $package->status !== PackageStatus::Collected
                     && $package->status !== PackageStatus::Cancelled
-                    && ! $package->status->isException())
+                    && ! $package->status->isException()
+                    && ($targetStatus !== null || $package->status !== PackageStatus::ArrivedDestination))
                 ->pluck('id')
                 ->all();
 
@@ -173,9 +167,10 @@ class ListShipments extends ListRecords
 
             try {
                 if ($targetStatus instanceof PackageStatus) {
-                    $service->correct($shipment, $packageIds, $targetStatus, $actor, $correctionReason, false);
+                    $finalReason = $reason ?? 'تصحيح جماعي من شاشة الشحنات';
+                    $service->correct($shipment, $packageIds, $targetStatus, $actor, $finalReason, false);
                 } else {
-                    $service->advance($shipment, $packageIds, $actor, 'selected_shipments_bulk_progress');
+                    $service->advance($shipment, $packageIds, $actor, 'selected_shipments_bulk_progress', null, $reason);
                 }
 
                 $updatedCount++;
@@ -187,12 +182,88 @@ class ListShipments extends ListRecords
         if ($updatedCount > 0) {
             $this->selectedShipmentIds = [];
             $this->bulkTargetStatus = null;
-            $this->bulkCorrectionReason = '';
+            $this->bulkReason = '';
         }
 
         Notification::make()
             ->title($updatedCount > 0 ? 'تم تحديث الشحنات المحددة' : 'تعذر تحديث الشحنات المحددة')
             ->body($failedCount > 0 ? "تم تحديث {$updatedCount} وتعذر تحديث {$failedCount}." : "تم تحديث {$updatedCount} شحنات.")
+            ->{$updatedCount > 0 ? 'success' : 'danger'}()
+            ->send();
+    }
+
+    public function bulkSendMessageSelectedShipments(PackageJourneyService $service): void
+    {
+        $actor = auth()->user();
+
+        if (! $actor) {
+            Notification::make()
+                ->title('تعذر إرسال الرسالة')
+                ->body('يجب تسجيل الدخول أولاً.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $shipmentIds = array_values(array_unique(array_map('intval', $this->selectedShipmentIds)));
+
+        if ($shipmentIds === []) {
+            Notification::make()
+                ->title('اختر شحنة واحدة على الأقل')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        $message = trim($this->bulkMessage);
+        if ($message === '') {
+            Notification::make()
+                ->title('يرجى إدخال رسالة')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        $shipments = Shipment::query()
+            ->with('packages')
+            ->whereKey($shipmentIds)
+            ->orderBy('id')
+            ->get();
+
+        $updatedCount = 0;
+        $failedCount = 0;
+
+        foreach ($shipments as $shipment) {
+            $packageIds = $shipment->packages
+                ->filter(fn (Package $package): bool => ($package->status === PackageStatus::Created || $package->status->journeyPosition() !== null)
+                    && $package->status !== PackageStatus::Cancelled)
+                ->pluck('id')
+                ->all();
+
+            if ($packageIds === []) {
+                $failedCount++;
+                continue;
+            }
+
+            try {
+                $service->addNote($shipment, $packageIds, $actor, $message);
+                $updatedCount++;
+            } catch (DomainException) {
+                $failedCount++;
+            }
+        }
+
+        if ($updatedCount > 0) {
+            $this->selectedShipmentIds = [];
+            $this->bulkMessage = '';
+        }
+
+        Notification::make()
+            ->title($updatedCount > 0 ? 'تم إضافة الإشعار للشحنات المحددة' : 'تعذر إضافة الإشعار')
+            ->body($failedCount > 0 ? "تم إضافة الإشعار لـ {$updatedCount} شحنات وتعذر إضافة {$failedCount}." : "تم إضافة الإشعار لـ {$updatedCount} شحنات.")
             ->{$updatedCount > 0 ? 'success' : 'danger'}()
             ->send();
     }

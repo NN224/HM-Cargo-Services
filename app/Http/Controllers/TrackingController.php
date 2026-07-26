@@ -173,12 +173,11 @@ class TrackingController extends Controller
     {
         return match (PackageStatus::tryFrom($status)) {
             PackageStatus::Created => 'تم إنشاء طرد',
-            PackageStatus::ReceivedOrigin, PackageStatus::Received => 'تم استلام طرد في مستودع المنشأ',
+            PackageStatus::ReceivedOrigin => 'تم استلام طرد في مستودع المنشأ',
             PackageStatus::ArrivedOriginAirport => 'وصل طرد إلى مطار الانطلاق',
             PackageStatus::InTransit => 'طرد في الطريق',
             PackageStatus::ArrivedTransit,
-            PackageStatus::ArrivedDestination,
-            PackageStatus::Arrived => "وصل طرد إلى مستودع {$warehouse}",
+            PackageStatus::ArrivedDestination => "وصل طرد إلى مستودع {$warehouse}",
             PackageStatus::DepartedTransit => 'غادر طرد مستودع العبور',
             PackageStatus::Collected => 'تم تسليم طرد',
             PackageStatus::Cancelled => 'أُلغي طرد من الشحنة',

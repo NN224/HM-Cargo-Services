@@ -91,7 +91,7 @@ class ShipmentsTable
                         TextColumn::make('status')
                             ->description('الحالة', 'above')
                             ->badge()
-                            ->formatStateUsing(fn (ShipmentStatus $state): string => $state->label())
+                            ->formatStateUsing(fn (ShipmentStatus $state, Shipment $record): string => app(\App\Services\PackageJourneyProjection::class)->labelForShipment($record->batch?->route, $state))
                             ->color(fn (ShipmentStatus $state): string => match ($state) {
                                 ShipmentStatus::Draft, ShipmentStatus::AwaitingBatch, ShipmentStatus::Assigned => 'gray',
                                 ShipmentStatus::Pending => 'warning',
@@ -252,6 +252,16 @@ class ShipmentsTable
                                     ->danger()
                                     ->send();
                             }
+                        }),
+
+                    Action::make('whatsappIntake')
+                        ->label('واتساب: رابط التتبع')
+                        ->icon('heroicon-o-chat-bubble-left-right')
+                        ->color('success')
+                        ->action(function (Shipment $record, $livewire): void {
+                            $record->markIntakeNotified();
+                            $url = (new \App\Services\WhatsAppMessageService)->intakeUrl($record);
+                            $livewire->js('window.open('.json_encode($url).', "_blank")');
                         }),
 
                     Action::make('whatsappArrival')

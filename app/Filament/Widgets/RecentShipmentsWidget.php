@@ -53,7 +53,7 @@ class RecentShipmentsWidget extends TableWidget
                 TextColumn::make('status')
                     ->label('الحالة')
                     ->badge()
-                    ->formatStateUsing(fn (ShipmentStatus $state): string => $state->label())
+                    ->formatStateUsing(fn (ShipmentStatus $state, Shipment $record): string => app(\App\Services\PackageJourneyProjection::class)->labelForShipment($record->batch?->route, $state))
                     ->color(fn (ShipmentStatus $state): string => match ($state) {
                         ShipmentStatus::Draft,
                         ShipmentStatus::AwaitingBatch => 'gray',

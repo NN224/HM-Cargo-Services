@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Enums\BatchStatus;
+use App\Enums\PackageStatus;
 use App\Enums\Capability;
 use App\Enums\ShipmentStatus;
 use App\Filament\Resources\Batches\BatchResource;
@@ -85,6 +86,15 @@ class ReceiveIntoBatch extends Page
                             ->label('الرحلة')
                             ->options(fn (): array => Batch::query()
                                 ->where('status', BatchStatus::Open)
+                                ->whereDoesntHave('shipments.packages', function (Builder $query) {
+                                    $query->whereIn('status', [
+                                        PackageStatus::InTransit,
+                                        PackageStatus::ArrivedTransit,
+                                        PackageStatus::DepartedTransit,
+                                        PackageStatus::ArrivedDestination,
+                                        PackageStatus::Collected,
+                                    ]);
+                                })
                                 // Same route scope BatchResource applies to
                                 // its own index (getEloquentQuery()) and to
                                 // BatchForm's route select — reused here

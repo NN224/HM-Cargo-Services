@@ -36,11 +36,11 @@ final class ManageBatchJourneyAction
                     ->visible(fn (Get $get): bool => ($get('operation') === 'correct') && (auth()->user()?->isAdministrator() ?? false)),
 
                 Textarea::make('reason')
-                    ->label('السبب / الملاحظة')
+                    ->label(fn (Get $get): string => in_array($get('operation'), ['delay', 'correct'], true) ? 'السبب' : 'إشعار للعميل (اختياري)')
                     ->required(fn (Get $get): bool => in_array($get('operation'), ['delay', 'correct'], true)),
 
                 Toggle::make('publish_reason')
-                    ->label('إظهار السبب للعملاء في روابط التتبع')
+                    ->label('إظهار السبب/الإشعار للعملاء في روابط التتبع')
                     ->default(false),
             ])
             ->action(function ($record, array $data, PackageJourneyService $service, Action $action): void {
@@ -56,7 +56,13 @@ final class ManageBatchJourneyAction
 
                 try {
                     match ($data['operation']) {
-                        'advance' => $service->advanceBatch($record, $actor, 'batch_journey_progress', (string) ($data['reason'] ?? null)),
+                        'advance' => $service->advanceBatch(
+                            $record,
+                            $actor,
+                            'batch_journey_progress',
+                            null,
+                            ($data['publish_reason'] ?? false) && filled($data['reason'] ?? '') ? (string) $data['reason'] : null,
+                        ),
                         'delay' => $service->delayBatch(
                             $record,
                             $actor,

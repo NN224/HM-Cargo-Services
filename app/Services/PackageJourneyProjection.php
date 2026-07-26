@@ -66,6 +66,19 @@ class PackageJourneyProjection
         };
     }
 
+    public function labelForShipment(?Route $route, \App\Enums\ShipmentStatus $status): string
+    {
+        return match ($status) {
+            \App\Enums\ShipmentStatus::Pending => 'وصلت مستودع '.$this->safeLabel($route?->originWarehouse?->name),
+            \App\Enums\ShipmentStatus::InTransit => 'غادرت '.$this->safeLabel($route?->origin_airport_name),
+            \App\Enums\ShipmentStatus::PartialAtTransit => 'وصل بعضها إلى '.$this->safeLabel($route?->destination_airport_name),
+            \App\Enums\ShipmentStatus::AtTransit => 'وصلت '.$this->safeLabel($route?->destination_airport_name),
+            \App\Enums\ShipmentStatus::PartialAtDestination => 'وصل بعضها إلى '.$this->safeLabel($route?->delivery_office_name),
+            \App\Enums\ShipmentStatus::Arrived => 'وصلت '.$this->safeLabel($route?->delivery_office_name),
+            default => $status->label(),
+        };
+    }
+
     private function safeLabel(?string $value): string
     {
         return filled($value) ? $value : 'غير مضبوط';

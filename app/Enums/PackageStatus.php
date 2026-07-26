@@ -12,12 +12,10 @@ enum PackageStatus: string
 {
     case Created = 'created';
     case ReceivedOrigin = 'received_origin';
-    case Received = 'received';
     case ArrivedOriginAirport = 'arrived_origin_airport';
     case InTransit = 'in_transit';
     case ArrivedTransit = 'arrived_transit';
     case DepartedTransit = 'departed_transit';
-    case Arrived = 'arrived';
     case ArrivedDestination = 'arrived_destination';
     case Collected = 'collected';
     case Missing = 'missing';
@@ -29,12 +27,10 @@ enum PackageStatus: string
         return match ($this) {
             self::Created => 'تم الإنشاء',
             self::ReceivedOrigin => 'مستلم في مستودع المنشأ',
-            self::Received => 'تم الاستلام',
             self::ArrivedOriginAirport => 'وصل إلى مطار الانطلاق',
             self::InTransit => 'في الطريق',
             self::ArrivedTransit => 'وصل إلى مستودع العبور',
             self::DepartedTransit => 'غادر مستودع العبور',
-            self::Arrived => 'وصل',
             self::ArrivedDestination => 'وصل إلى مستودع الوجهة',
             self::Collected => 'تم التسليم',
             self::Missing => 'مفقود',

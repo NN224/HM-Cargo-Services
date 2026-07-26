@@ -314,6 +314,16 @@ class Shipment extends Model
                 $this->forceFill(['status' => ShipmentStatus::InTransit])->save();
             } elseif ($movementCount > 0) {
                 $this->forceFill(['status' => ShipmentStatus::PartialAtTransit])->save();
+            } else {
+                // All active packages are at ReceivedOrigin (first journey step)
+                // or still at Created — update to Assigned if at least in ReceivedOrigin.
+                $receivedOriginCount = (clone $active)
+                    ->where('status', PackageStatus::ReceivedOrigin->value)
+                    ->count();
+
+                if ($receivedOriginCount > 0) {
+                    $this->forceFill(['status' => ShipmentStatus::Assigned])->save();
+                }
             }
         }
     }

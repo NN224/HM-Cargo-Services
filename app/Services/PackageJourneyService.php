@@ -24,8 +24,9 @@ class PackageJourneyService
         User $actor,
         string $source = 'journey_progress',
         ?string $note = null,
+        ?string $publicReason = null,
     ): Shipment {
-        return DB::transaction(function () use ($shipment, $packageIds, $actor, $source, $note): Shipment {
+        return DB::transaction(function () use ($shipment, $packageIds, $actor, $source, $note, $publicReason): Shipment {
             [$lockedShipment, $route, $packages] = $this->lockedSelection($shipment, $packageIds, $actor);
 
             foreach ($packages as $package) {
@@ -54,7 +55,7 @@ class PackageJourneyService
                     'source' => $source,
                     'note' => $note,
                     'private_reason' => null,
-                    'public_reason' => null,
+                    'public_reason' => $publicReason,
                 ]);
             }
 
@@ -106,6 +107,46 @@ class PackageJourneyService
                     'note' => null,
                     'private_reason' => $publishReason ? null : $reason,
                     'public_reason' => $publishReason ? $reason : null,
+                ]);
+            }
+
+            return $lockedShipment->fresh();
+        });
+    }
+
+    /**
+     * @param  array<int, int|string>  $packageIds
+     */
+    public function addNote(
+        Shipment $shipment,
+        array $packageIds,
+        User $actor,
+        string $publicReason,
+    ): Shipment {
+        $publicReason = trim($publicReason);
+
+        if ($publicReason === '') {
+            throw new DomainException('يجب إدخال نص الرسالة.');
+        }
+
+        return DB::transaction(function () use ($shipment, $packageIds, $actor, $publicReason): Shipment {
+            [$lockedShipment, $route, $packages] = $this->lockedSelection($shipment, $packageIds, $actor);
+
+            foreach ($packages as $package) {
+                $warehouseId = $this->authorizedWarehouseIdForCurrentStatus($route, $package->status, $actor);
+
+                DB::table('package_status_events')->insert([
+                    'package_id' => $package->id,
+                    'previous_status' => $package->status->value,
+                    'status' => $package->status->value,
+                    'event_kind' => 'note',
+                    'warehouse_id' => $warehouseId,
+                    'user_id' => $actor->id,
+                    'scanned_at' => now(),
+                    'source' => 'journey_note',
+                    'note' => null,
+                    'private_reason' => null,
+                    'public_reason' => $publicReason,
                 ]);
             }
 
@@ -343,8 +384,9 @@ class PackageJourneyService
         User $actor,
         string $source = 'batch_journey_progress',
         ?string $note = null,
+        ?string $publicReason = null,
     ): Batch {
-        return DB::transaction(function () use ($batch, $actor, $source, $note): Batch {
+        return DB::transaction(function () use ($batch, $actor, $source, $note, $publicReason): Batch {
             $lockedBatch = Batch::query()->lockForUpdate()->findOrFail($batch->id);
             $shipments = $lockedBatch->shipments()->with('packages')->get();
 
@@ -363,7 +405,7 @@ class PackageJourneyService
                     ->all();
 
                 if (! empty($progressablePackageIds)) {
-                    $this->advance($shipment, $progressablePackageIds, $actor, $source, $note);
+                    $this->advance($shipment, $progressablePackageIds, $actor, $source, $note, $publicReason);
                     $advancedCount++;
                 }
             }

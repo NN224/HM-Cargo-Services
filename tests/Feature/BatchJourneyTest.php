@@ -65,6 +65,28 @@ test('can advance all shipments in a batch collectively', function () {
     expect($pkg2->fresh()->status)->toBe(PackageStatus::ArrivedOriginAirport);
 });
 
+test('can advance newly created packages in a batch to the origin warehouse stage', function () {
+    $batch = Batch::create([
+        'route_id' => $this->route->id,
+        'status' => BatchStatus::Open,
+    ]);
+
+    $shipment = Shipment::create([
+        'customer_id' => $this->customer->id,
+        'recipient_name' => 'المستلم',
+        'recipient_phone' => '+963900000913',
+        'status' => ShipmentStatus::Draft,
+    ]);
+    $shipment->forceFill(['batch_id' => $batch->id])->save();
+
+    $pkg = $shipment->packages()->create(['weight_kg' => 10, 'status' => PackageStatus::Created]);
+
+    $service = app(PackageJourneyService::class);
+    $service->advanceBatch($batch, $this->admin);
+
+    expect($pkg->fresh()->status)->toBe(PackageStatus::ReceivedOrigin);
+});
+
 test('can delay all shipments in a batch collectively', function () {
     $batch = Batch::create([
         'route_id' => $this->route->id,
@@ -112,6 +134,29 @@ test('administrator can correct all packages in a batch to a target status', fun
     expect($pkg2->fresh()->status)->toBe(PackageStatus::ArrivedDestination);
 
     expect(AuditLog::where('action', 'package_journey_corrected')->count())->toBe(2);
+});
+
+test('administrator can correct newly created packages in a batch to a target journey status', function () {
+    $batch = Batch::create([
+        'route_id' => $this->route->id,
+        'status' => BatchStatus::Open,
+    ]);
+
+    $shipment = Shipment::create([
+        'customer_id' => $this->customer->id,
+        'recipient_name' => 'المستلم',
+        'recipient_phone' => '+963900000914',
+        'status' => ShipmentStatus::Draft,
+    ]);
+    $shipment->forceFill(['batch_id' => $batch->id])->save();
+
+    $pkg = $shipment->packages()->create(['weight_kg' => 5, 'status' => PackageStatus::Created]);
+
+    $service = app(PackageJourneyService::class);
+    $service->correctBatch($batch, PackageStatus::InTransit, $this->admin, 'تصحيح إداري', false);
+
+    expect($pkg->fresh()->status)->toBe(PackageStatus::InTransit)
+        ->and(AuditLog::where('action', 'package_journey_corrected')->count())->toBe(1);
 });
 
 test('correctBatch is refused for non-administrator', function () {

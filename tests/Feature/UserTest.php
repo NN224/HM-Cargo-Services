@@ -1,7 +1,10 @@
 <?php
 
-test('example', function () {
-    $response = $this->get('/');
+use App\Models\User;
 
-    $response->assertStatus(200);
+test('user model can be created', function () {
+    $user = User::factory()->create();
+
+    expect($user)->toBeInstanceOf(User::class);
+    expect($user->exists)->toBeTrue();
 });

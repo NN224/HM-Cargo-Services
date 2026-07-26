@@ -306,6 +306,20 @@ test('custom shipment bulk update advances selected shipments one journey step',
         ->and($s2->packages()->pluck('status')->all())->each->toBe(PackageStatus::ArrivedOriginAirport);
 });
 
+test('custom shipment bulk update starts newly created packages at origin warehouse stage', function () {
+    $shipment = journeyUiShipment($this->batch, $this->customer);
+    $shipment->packages()->update(['status' => PackageStatus::Created]);
+
+    $component = Livewire::actingAs($this->employee)
+        ->test(ListShipments::class)
+        ->call('toggleShipmentSelection', $shipment->id)
+        ->call('bulkAdvanceSelectedShipments')
+        ->assertNotified('تم تحديث الشحنات المحددة');
+
+    expect($component->get('selectedShipmentIds'))->toBe([])
+        ->and($shipment->packages()->pluck('status')->all())->each->toBe(PackageStatus::ReceivedOrigin);
+});
+
 test('administrator can choose a target status for selected shipment bulk update', function () {
     $admin = User::create([
         'name' => 'مدير المسار',
@@ -357,4 +371,26 @@ test('administrator can bulk correct selected shipments back to origin warehouse
         ->assertNotified('تم تحديث الشحنات المحددة');
 
     expect($shipment->packages()->pluck('status')->all())->each->toBe(PackageStatus::ReceivedOrigin);
+});
+
+test('administrator can bulk correct newly created packages to a selected journey stage', function () {
+    $admin = User::create([
+        'name' => 'مدير تصحيح الطرود الجديدة',
+        'email' => 'bulk-created-admin@hmcargo.test',
+        'password' => 'secret',
+        'role' => UserRole::Administrator,
+        'warehouse_id' => $this->origin->id,
+    ]);
+
+    $shipment = journeyUiShipment($this->batch, $this->customer);
+    $shipment->packages()->update(['status' => PackageStatus::Created]);
+
+    Livewire::actingAs($admin)
+        ->test(ListShipments::class)
+        ->call('toggleShipmentSelection', $shipment->id)
+        ->set('bulkTargetStatus', PackageStatus::InTransit->value)
+        ->call('bulkAdvanceSelectedShipments')
+        ->assertNotified('تم تحديث الشحنات المحددة');
+
+    expect($shipment->packages()->pluck('status')->all())->each->toBe(PackageStatus::InTransit);
 });

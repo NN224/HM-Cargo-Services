@@ -145,7 +145,7 @@ class PackageJourneyService
             foreach ($packages as $package) {
                 $previous = $package->status;
 
-                if ($previous->journeyPosition() === null) {
+                if ($previous->journeyPosition() === null && $previous !== PackageStatus::Created) {
                     throw new DomainException("الطرد {$package->barcode} ليس في مرحلة رحلة قابلة للتصحيح.");
                 }
 
@@ -250,7 +250,7 @@ class PackageJourneyService
                 throw new DomainException('الطرود المحددة لا تطابق طرود هذه الشحنة.');
             }
 
-            if ($package->status->journeyPosition() === null && ! $package->status->isException()) {
+            if ($package->status->journeyPosition() === null && $package->status !== PackageStatus::Created && ! $package->status->isException()) {
                 throw new DomainException("الطرد {$package->barcode} ليس في مرحلة رحلة قابلة للتعديل.");
             }
         }
@@ -278,6 +278,10 @@ class PackageJourneyService
 
     private function nextStatus(PackageStatus $status): PackageStatus
     {
+        if ($status === PackageStatus::Created) {
+            return PackageStatus::ReceivedOrigin;
+        }
+
         $position = $status->journeyPosition();
         $steps = PackageStatus::journeySteps();
 
@@ -353,7 +357,8 @@ class PackageJourneyService
             $advancedCount = 0;
             foreach ($shipments as $shipment) {
                 $progressablePackageIds = $shipment->packages
-                    ->filter(fn (Package $p) => $p->status->journeyPosition() !== null && $p->status->journeyPosition() < $maxJourneyPosition)
+                    ->filter(fn (Package $p) => $p->status === PackageStatus::Created
+                        || ($p->status->journeyPosition() !== null && $p->status->journeyPosition() < $maxJourneyPosition))
                     ->pluck('id')
                     ->all();
 
@@ -426,7 +431,7 @@ class PackageJourneyService
             $correctedCount = 0;
             foreach ($shipments as $shipment) {
                 $correctablePackageIds = $shipment->packages
-                    ->filter(fn (Package $p) => $p->status->journeyPosition() !== null)
+                    ->filter(fn (Package $p) => $p->status === PackageStatus::Created || $p->status->journeyPosition() !== null)
                     ->pluck('id')
                     ->all();
 

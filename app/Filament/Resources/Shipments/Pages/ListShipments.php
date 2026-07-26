@@ -158,7 +158,7 @@ class ListShipments extends ListRecords
 
         foreach ($shipments as $shipment) {
             $packageIds = $shipment->packages
-                ->filter(fn (Package $package): bool => $package->status->journeyPosition() !== null
+                ->filter(fn (Package $package): bool => ($package->status === PackageStatus::Created || $package->status->journeyPosition() !== null)
                     && $package->status !== PackageStatus::Collected
                     && $package->status !== PackageStatus::Cancelled
                     && ! $package->status->isException())

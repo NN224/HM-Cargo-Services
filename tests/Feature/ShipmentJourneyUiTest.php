@@ -60,13 +60,13 @@ test('shipment cards show the seven dynamic journey labels without duplicated gr
 
     Livewire::actingAs($this->employee)
         ->test(ListShipments::class)
-        ->assertSee('وصل مستودع دبي', escape: false)
-        ->assertSee('وصل مطار دبي', escape: false)
-        ->assertSee('غادر مطار دبي', escape: false)
-        ->assertSee('وصل مطار دمشق', escape: false)
-        ->assertSee('غادر مطار دمشق', escape: false)
-        ->assertSee('وصل مكتب دمشق', escape: false)
-        ->assertSee('استلمه العميل', escape: false)
+        ->assertSee('وصلت مستودع دبي', escape: false)
+        ->assertSee('وصلت مطار دبي', escape: false)
+        ->assertSee('غادرت مطار دبي', escape: false)
+        ->assertSee('وصلت مطار دمشق', escape: false)
+        ->assertSee('غادرت مطار دمشق', escape: false)
+        ->assertSee('وصلت مكتب دمشق', escape: false)
+        ->assertSee('استلمها العميل', escape: false)
         ->assertDontSee('الرحلة: الرحلة:', escape: false);
 });
 
@@ -161,4 +161,200 @@ test('administrator can perform batch journey correction via page action', funct
     $shipment->packages->each(function ($pkg) {
         expect($pkg->fresh()->status)->toBe(PackageStatus::ArrivedDestination);
     });
+});
+
+test('selecting a batch filters the table to its shipments only', function () {
+    $batch2 = Batch::create([
+        'route_id' => $this->route->id,
+        'status' => BatchStatus::Open,
+        'reference' => 'BATCH-SELECT-TEST',
+    ]);
+
+    $s1 = journeyUiShipment($this->batch, $this->customer);
+    $s2 = journeyUiShipment($batch2, $this->customer);
+
+    Livewire::actingAs($this->employee)
+        ->test(ListShipments::class)
+        ->assertSee($s1->reference)
+        ->assertSee($s2->reference)
+        ->call('selectBatch', $this->batch->id)
+        ->assertSee($s1->reference)
+        ->assertDontSee($s2->reference);
+});
+
+test('selecting all batches clears the filter', function () {
+    $s1 = journeyUiShipment($this->batch, $this->customer);
+
+    Livewire::actingAs($this->employee)
+        ->test(ListShipments::class)
+        ->call('selectBatch', $this->batch->id)
+        ->assertSee($s1->reference)
+        ->call('selectBatch', null)
+        ->assertSee($s1->reference)
+        ->assertSee('جميع الرحلات');
+});
+
+test('completed and cancelled batches do not appear in sidebar', function () {
+    Batch::create([
+        'route_id' => $this->route->id,
+        'status' => BatchStatus::Completed,
+        'reference' => 'BATCH-DONE',
+    ]);
+    Batch::create([
+        'route_id' => $this->route->id,
+        'status' => BatchStatus::Cancelled,
+        'reference' => 'BATCH-CXL',
+    ]);
+
+    journeyUiShipment($this->batch, $this->customer);
+
+    Livewire::actingAs($this->employee)
+        ->test(ListShipments::class)
+        ->assertDontSee('BATCH-DONE')
+        ->assertDontSee('BATCH-CXL');
+});
+
+test('workspace header shows selected batch info', function () {
+    $batch = Batch::create([
+        'route_id' => $this->route->id,
+        'status' => BatchStatus::Open,
+        'reference' => 'BATCH-WS-HEADER',
+    ]);
+    $s = journeyUiShipment($batch, $this->customer);
+    $s->forceFill(['batch_id' => $batch->id, 'total_weight_kg' => 15])->save();
+
+    Livewire::actingAs($this->employee)
+        ->test(ListShipments::class)
+        ->call('selectBatch', $batch->id)
+        ->assertSee('BATCH-WS-HEADER')
+        ->assertSee('دبي ← دمشق');
+});
+
+test('changing batch selection clears selection when navigating to all', function () {
+    $batch2 = Batch::create([
+        'route_id' => $this->route->id,
+        'status' => BatchStatus::Open,
+        'reference' => 'BATCH-ALT',
+    ]);
+
+    journeyUiShipment($this->batch, $this->customer);
+    journeyUiShipment($batch2, $this->customer);
+
+    $component = Livewire::actingAs($this->employee)
+        ->test(ListShipments::class);
+
+    $component->call('selectBatch', $this->batch->id);
+    expect($component->get('selectedBatchId'))->toBe($this->batch->id);
+
+    $component->call('selectBatch', $batch2->id);
+    expect($component->get('selectedBatchId'))->toBe($batch2->id);
+
+    $component->call('selectBatch', null);
+    expect($component->get('selectedBatchId'))->toBeNull();
+});
+
+test('custom shipment card select all toggles visible shipment selection', function () {
+    $s1 = journeyUiShipment($this->batch, $this->customer);
+    $s2 = journeyUiShipment($this->batch, $this->customer);
+
+    $component = Livewire::actingAs($this->employee)
+        ->test(ListShipments::class);
+
+    $component
+        ->call('toggleVisibleShipments', [$s1->id, $s2->id])
+        ->assertSee('شحنات محددة', escape: false)
+        ->assertSee('تحديث', escape: false);
+
+    expect($component->get('selectedShipmentIds'))->toEqualCanonicalizing([$s1->id, $s2->id]);
+
+    $component->call('toggleVisibleShipments', [$s1->id, $s2->id]);
+
+    expect($component->get('selectedShipmentIds'))->toBe([]);
+});
+
+test('custom shipment card single selection can be cancelled from the bulk bar', function () {
+    $shipment = journeyUiShipment($this->batch, $this->customer);
+
+    $component = Livewire::actingAs($this->employee)
+        ->test(ListShipments::class)
+        ->assertSee('تحديد الشحنة '.$shipment->reference, escape: false)
+        ->call('toggleShipmentSelection', $shipment->id)
+        ->assertSee('شحنات محددة', escape: false);
+
+    expect($component->get('selectedShipmentIds'))->toBe([$shipment->id]);
+
+    $component->call('clearShipmentSelection');
+
+    expect($component->get('selectedShipmentIds'))->toBe([]);
+});
+
+test('custom shipment bulk update advances selected shipments one journey step', function () {
+    $s1 = journeyUiShipment($this->batch, $this->customer);
+    $s2 = journeyUiShipment($this->batch, $this->customer);
+
+    $s1->packages()->update(['status' => PackageStatus::ReceivedOrigin]);
+    $s2->packages()->update(['status' => PackageStatus::ReceivedOrigin]);
+
+    $component = Livewire::actingAs($this->employee)
+        ->test(ListShipments::class)
+        ->call('toggleVisibleShipments', [$s1->id, $s2->id])
+        ->call('bulkAdvanceSelectedShipments')
+        ->assertNotified('تم تحديث الشحنات المحددة');
+
+    expect($component->get('selectedShipmentIds'))->toBe([])
+        ->and($s1->packages()->pluck('status')->all())->each->toBe(PackageStatus::ArrivedOriginAirport)
+        ->and($s2->packages()->pluck('status')->all())->each->toBe(PackageStatus::ArrivedOriginAirport);
+});
+
+test('administrator can choose a target status for selected shipment bulk update', function () {
+    $admin = User::create([
+        'name' => 'مدير المسار',
+        'email' => 'bulk-admin@hmcargo.test',
+        'password' => 'secret',
+        'role' => UserRole::Administrator,
+        'warehouse_id' => $this->origin->id,
+    ]);
+
+    $s1 = journeyUiShipment($this->batch, $this->customer);
+    $s2 = journeyUiShipment($this->batch, $this->customer);
+
+    $s1->packages()->update(['status' => PackageStatus::ReceivedOrigin]);
+    $s2->packages()->update(['status' => PackageStatus::ReceivedOrigin]);
+
+    $component = Livewire::actingAs($admin)
+        ->test(ListShipments::class)
+        ->call('toggleVisibleShipments', [$s1->id, $s2->id])
+        ->assertSee('الحالة الجديدة', escape: false)
+        ->assertSee('غادرت مطار دبي', escape: false)
+        ->set('bulkTargetStatus', PackageStatus::InTransit->value)
+        ->call('bulkAdvanceSelectedShipments')
+        ->assertNotified('تم تحديث الشحنات المحددة');
+
+    expect($component->get('selectedShipmentIds'))->toBe([])
+        ->and($component->get('bulkTargetStatus'))->toBeNull()
+        ->and(AuditLog::where('reason', 'تصحيح جماعي من شاشة الشحنات')->count())->toBe(4)
+        ->and($s1->packages()->pluck('status')->all())->each->toBe(PackageStatus::InTransit)
+        ->and($s2->packages()->pluck('status')->all())->each->toBe(PackageStatus::InTransit);
+});
+
+test('administrator can bulk correct selected shipments back to origin warehouse stage', function () {
+    $admin = User::create([
+        'name' => 'مدير تصحيح المنشأ',
+        'email' => 'bulk-origin-admin@hmcargo.test',
+        'password' => 'secret',
+        'role' => UserRole::Administrator,
+        'warehouse_id' => $this->origin->id,
+    ]);
+
+    $shipment = journeyUiShipment($this->batch, $this->customer);
+    $shipment->packages()->update(['status' => PackageStatus::InTransit]);
+
+    Livewire::actingAs($admin)
+        ->test(ListShipments::class)
+        ->call('toggleShipmentSelection', $shipment->id)
+        ->set('bulkTargetStatus', PackageStatus::ReceivedOrigin->value)
+        ->call('bulkAdvanceSelectedShipments')
+        ->assertNotified('تم تحديث الشحنات المحددة');
+
+    expect($shipment->packages()->pluck('status')->all())->each->toBe(PackageStatus::ReceivedOrigin);
 });

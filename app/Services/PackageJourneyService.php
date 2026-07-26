@@ -291,6 +291,7 @@ class PackageJourneyService
     private function authorizedWarehouseIdFor(Route $route, PackageStatus $target, User $actor): int
     {
         $warehouseId = match ($target) {
+            PackageStatus::ReceivedOrigin,
             PackageStatus::ArrivedOriginAirport,
             PackageStatus::InTransit => $route->origin_warehouse_id,
 

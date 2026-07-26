@@ -2,23 +2,210 @@
 
 namespace App\Filament\Resources\Shipments\Pages;
 
+use App\Enums\PackageStatus;
 use App\Filament\Resources\Batches\Actions\ManageBatchJourneyAction;
 use App\Filament\Resources\Shipments\ShipmentResource;
+use App\Filament\Resources\Shipments\Tables\ShipmentsTable;
 use App\Models\Batch;
+use App\Models\Package;
+use App\Models\Shipment;
+use App\Services\PackageJourneyService;
+use DomainException;
 use Filament\Actions\CreateAction;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
 
 class ListShipments extends ListRecords
 {
     public ?int $managingBatchId = null;
 
+    public ?int $selectedBatchId = null;
+
+    public string $shipmentSearch = '';
+
+    public ?string $shipmentStatusFilter = null;
+
+    public ?string $bulkTargetStatus = null;
+
+    public string $bulkCorrectionReason = '';
+
+    /** @var array<int, int> */
+    public array $selectedShipmentIds = [];
+
+    protected static string $resource = ShipmentResource::class;
+
+    protected string $view = 'filament.resources.shipments.pages.list-shipments';
+
+    public function selectBatch(?int $batchId): void
+    {
+        $this->selectedBatchId = $batchId;
+        $this->selectedShipmentIds = [];
+        $this->bulkTargetStatus = null;
+        $this->bulkCorrectionReason = '';
+        $this->resetTable();
+    }
+
+    /** @param array<int, int> $shipmentIds */
+    public function selectVisibleShipments(array $shipmentIds): void
+    {
+        $this->selectedShipmentIds = array_values(array_unique(array_map('intval', $shipmentIds)));
+    }
+
+    public function clearShipmentSelection(): void
+    {
+        $this->selectedShipmentIds = [];
+        $this->bulkTargetStatus = null;
+        $this->bulkCorrectionReason = '';
+    }
+
+    /** @param array<int, int> $shipmentIds */
+    public function toggleVisibleShipments(array $shipmentIds): void
+    {
+        $shipmentIds = array_values(array_unique(array_map('intval', $shipmentIds)));
+
+        if ($shipmentIds !== [] && empty(array_diff($shipmentIds, $this->selectedShipmentIds))) {
+            $this->selectedShipmentIds = array_values(array_diff($this->selectedShipmentIds, $shipmentIds));
+
+            return;
+        }
+
+        $this->selectedShipmentIds = array_values(array_unique(array_merge($this->selectedShipmentIds, $shipmentIds)));
+    }
+
+    public function toggleShipmentSelection(int $shipmentId): void
+    {
+        if (in_array($shipmentId, $this->selectedShipmentIds, true)) {
+            $this->selectedShipmentIds = array_values(array_diff($this->selectedShipmentIds, [$shipmentId]));
+
+            return;
+        }
+
+        $this->selectedShipmentIds[] = $shipmentId;
+    }
+
     public function startManageBatchJourney(int $batchId): void
     {
         $batch = Batch::findOrFail($batchId);
         $this->managingBatchId = $batch->id;
         $this->mountAction('manageBatchJourney');
+    }
+
+    public function bulkAdvanceSelectedShipments(PackageJourneyService $service): void
+    {
+        $actor = auth()->user();
+
+        if (! $actor) {
+            Notification::make()
+                ->title('تعذر تحديث الشحنات')
+                ->body('يجب تسجيل الدخول أولاً.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $shipmentIds = array_values(array_unique(array_map('intval', $this->selectedShipmentIds)));
+
+        if ($shipmentIds === []) {
+            Notification::make()
+                ->title('اختر شحنة واحدة على الأقل')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        $shipments = Shipment::query()
+            ->with('packages')
+            ->whereKey($shipmentIds)
+            ->orderBy('id')
+            ->get();
+
+        $targetStatus = null;
+        $correctionReason = 'تصحيح جماعي من شاشة الشحنات';
+        if (filled($this->bulkTargetStatus)) {
+            $targetStatus = PackageStatus::tryFrom((string) $this->bulkTargetStatus);
+
+            if (! $targetStatus || $targetStatus->journeyPosition() === null) {
+                Notification::make()
+                    ->title('اختر حالة مسار صحيحة')
+                    ->danger()
+                    ->send();
+
+                return;
+            }
+
+            if (! $actor->isAdministrator()) {
+                Notification::make()
+                    ->title('تصحيح الحالة يتطلب صلاحية المدير')
+                    ->danger()
+                    ->send();
+
+                return;
+            }
+
+            if (trim($this->bulkCorrectionReason) !== '') {
+                $correctionReason = trim($this->bulkCorrectionReason);
+            }
+        }
+
+        $updatedCount = 0;
+        $failedCount = 0;
+
+        foreach ($shipments as $shipment) {
+            $packageIds = $shipment->packages
+                ->filter(fn (Package $package): bool => $package->status->journeyPosition() !== null
+                    && $package->status !== PackageStatus::Collected
+                    && $package->status !== PackageStatus::Cancelled
+                    && ! $package->status->isException())
+                ->pluck('id')
+                ->all();
+
+            if ($packageIds === []) {
+                $failedCount++;
+
+                continue;
+            }
+
+            try {
+                if ($targetStatus instanceof PackageStatus) {
+                    $service->correct($shipment, $packageIds, $targetStatus, $actor, $correctionReason, false);
+                } else {
+                    $service->advance($shipment, $packageIds, $actor, 'selected_shipments_bulk_progress');
+                }
+
+                $updatedCount++;
+            } catch (DomainException) {
+                $failedCount++;
+            }
+        }
+
+        if ($updatedCount > 0) {
+            $this->selectedShipmentIds = [];
+            $this->bulkTargetStatus = null;
+            $this->bulkCorrectionReason = '';
+        }
+
+        Notification::make()
+            ->title($updatedCount > 0 ? 'تم تحديث الشحنات المحددة' : 'تعذر تحديث الشحنات المحددة')
+            ->body($failedCount > 0 ? "تم تحديث {$updatedCount} وتعذر تحديث {$failedCount}." : "تم تحديث {$updatedCount} شحنات.")
+            ->{$updatedCount > 0 ? 'success' : 'danger'}()
+            ->send();
+    }
+
+    public function table(Table $table): Table
+    {
+        $table = ShipmentsTable::configure($table);
+
+        if ($this->selectedBatchId !== null) {
+            $table->modifyQueryUsing(fn (Builder $query) => $query->where('batch_id', $this->selectedBatchId));
+        }
+
+        return $table;
     }
 
     public function getSubheading(): string|Htmlable|null
@@ -43,7 +230,7 @@ class ListShipments extends ListRecords
     background: transparent !important;
 }
 
-/* Style single unified dark header box panel containing batch cards, search toolbar, & active filters */
+/* Style single unified dark header box panel containing search toolbar & active filters */
 .fi-ta-header-ctn {
     background: #18181b !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
@@ -112,8 +299,6 @@ class ListShipments extends ListRecords
 }
 </style>');
     }
-
-    protected static string $resource = ShipmentResource::class;
 
     protected function getHeaderActions(): array
     {

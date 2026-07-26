@@ -48,13 +48,13 @@ test('the package journey projection uses dynamic Arabic route labels', function
     $projection = app(PackageJourneyProjection::class)->forShipment($shipment);
 
     expect(array_column($projection['steps'], 'label'))->toBe([
-        'وصل مستودع دبي',
-        'وصل مطار دبي',
-        'غادر مطار دبي',
-        'وصل مطار بيروت',
-        'غادر مطار بيروت',
-        'وصل مكتب دمشق',
-        'استلمه العميل',
+        'وصلت مستودع دبي',
+        'وصلت مطار دبي',
+        'غادرت مطار دبي',
+        'وصلت مطار بيروت',
+        'غادرت مطار بيروت',
+        'وصلت مكتب دمشق',
+        'استلمها العميل',
     ]);
 });
 
@@ -103,6 +103,6 @@ test('read only projections use a safe fallback for incomplete route labels', fu
 
     $projection = app(PackageJourneyProjection::class)->forShipment($shipment);
 
-    expect($projection['steps'][1]['label'])->toBe('وصل غير مضبوط')
-        ->and($projection['steps'][5]['label'])->toBe('وصل غير مضبوط');
+    expect($projection['steps'][1]['label'])->toBe('وصلت غير مضبوط')
+        ->and($projection['steps'][5]['label'])->toBe('وصلت غير مضبوط');
 });

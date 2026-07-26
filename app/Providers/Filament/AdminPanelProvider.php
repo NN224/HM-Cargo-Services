@@ -11,11 +11,13 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -31,6 +33,14 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogoHeight('48px')
             ->favicon(fn () => asset('images/logo.png'))
             ->brandName('HM Cargo Services')
+            ->sidebarCollapsibleOnDesktop()
+            ->renderHook(PanelsRenderHook::SCRIPTS_BEFORE, fn (): HtmlString => new HtmlString(<<<'HTML'
+                <script>
+                    if (localStorage.getItem('isOpenDesktop') === null) {
+                        localStorage.setItem('isOpenDesktop', 'false')
+                    }
+                </script>
+            HTML))
             ->colors([
                 'primary' => Color::Amber,
             ])

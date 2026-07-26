@@ -146,11 +146,6 @@ class ShipmentsTable
                 'xl' => 3,
             ])
             ->filters([
-                SelectFilter::make('batch_id')
-                    ->label('الرحلة')
-                    ->relationship('batch', 'reference')
-                    ->placeholder('جميع الرحلات'),
-
                 SelectFilter::make('status')
                     ->label('الحالة التشغيلية')
                     ->options(ShipmentStatus::options()),
@@ -298,8 +293,6 @@ class ShipmentsTable
                     ->label('إجراءات')
                     ->icon('heroicon-m-ellipsis-vertical')
                     ->button(),
-            ])
-            ->header(view('filament.tables.components.batch-selector-bar'))
-            ->toolbarActions([]);
+            ]);
     }
 }

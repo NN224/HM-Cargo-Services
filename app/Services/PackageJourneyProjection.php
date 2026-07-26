@@ -52,16 +52,16 @@ class PackageJourneyProjection
         ];
     }
 
-    private function labelFor(?Route $route, PackageStatus $status): string
+    public function labelFor(?Route $route, PackageStatus $status): string
     {
         return match ($status) {
-            PackageStatus::ReceivedOrigin => 'وصل مستودع '.$this->safeLabel($route?->originWarehouse?->name),
-            PackageStatus::ArrivedOriginAirport => 'وصل '.$this->safeLabel($route?->origin_airport_name),
-            PackageStatus::InTransit => 'غادر '.$this->safeLabel($route?->origin_airport_name),
-            PackageStatus::ArrivedTransit => 'وصل '.$this->safeLabel($route?->destination_airport_name),
-            PackageStatus::DepartedTransit => 'غادر '.$this->safeLabel($route?->destination_airport_name),
-            PackageStatus::ArrivedDestination => 'وصل '.$this->safeLabel($route?->delivery_office_name),
-            PackageStatus::Collected => 'استلمه العميل',
+            PackageStatus::ReceivedOrigin => 'وصلت مستودع '.$this->safeLabel($route?->originWarehouse?->name),
+            PackageStatus::ArrivedOriginAirport => 'وصلت '.$this->safeLabel($route?->origin_airport_name),
+            PackageStatus::InTransit => 'غادرت '.$this->safeLabel($route?->origin_airport_name),
+            PackageStatus::ArrivedTransit => 'وصلت '.$this->safeLabel($route?->destination_airport_name),
+            PackageStatus::DepartedTransit => 'غادرت '.$this->safeLabel($route?->destination_airport_name),
+            PackageStatus::ArrivedDestination => 'وصلت '.$this->safeLabel($route?->delivery_office_name),
+            PackageStatus::Collected => 'استلمها العميل',
             default => 'غير مضبوط',
         };
     }

@@ -97,7 +97,7 @@ class ShipmentsTable
                                 ShipmentStatus::Pending => 'warning',
                                 ShipmentStatus::InTransit, ShipmentStatus::PartialAtTransit, ShipmentStatus::AtTransit => 'info',
                                 ShipmentStatus::PartialAtDestination => 'info',
-                                ShipmentStatus::ReadyForCollection, ShipmentStatus::Arrived => 'primary',
+                                ShipmentStatus::ReadyForCollection, ShipmentStatus::ReadyForCollection => 'primary',
                                 ShipmentStatus::Collected, ShipmentStatus::PartiallyCollected => 'success',
                                 ShipmentStatus::Cancelled => 'danger',
                                 ShipmentStatus::Exception => 'danger',
@@ -218,12 +218,13 @@ class ShipmentsTable
                         ->openUrlInNewTab(),
 
                     Action::make('partialCollect')
-                        ->label('تسليم الطرود الواصلة')
-                        ->icon('heroicon-o-check-badge')
-                        ->color('warning')
+                        ->label(fn (Shipment $record): string => $record->status === ShipmentStatus::ReadyForCollection ? 'تسليم الشحنة للعميل' : 'تسليم الطرود الواصلة')
+                        ->icon(fn (Shipment $record): string => $record->status === ShipmentStatus::ReadyForCollection ? 'heroicon-o-check-circle' : 'heroicon-o-check-badge')
+                        ->color(fn (Shipment $record): string => $record->status === ShipmentStatus::ReadyForCollection ? 'success' : 'warning')
                         ->visible(fn (Shipment $record): bool => in_array(
                             $record->status,
                             [
+                                ShipmentStatus::ReadyForCollection,
                                 ShipmentStatus::PartialAtDestination,
                                 ShipmentStatus::PartiallyCollected,
                                 ShipmentStatus::InTransit,
@@ -232,22 +233,33 @@ class ShipmentsTable
                             true,
                         ))
                         ->requiresConfirmation()
-                        ->modalHeading('تسليم الطرود الواصلة')
-                        ->modalDescription('سيتم تسليم الطرود الواصلة فقط لمستودع الوجهة وتعديل حالة الشحنة إلى (تسليم جزئي)، ويبقى متبقي الطرود قيد المتابعة.')
+                        ->modalHeading(fn (Shipment $record): string => $record->status === ShipmentStatus::ReadyForCollection ? 'تسليم الشحنة للعميل' : 'تسليم الطرود الواصلة')
+                        ->modalDescription(fn (Shipment $record): string => $record->status === ShipmentStatus::ReadyForCollection 
+                            ? 'سيتم تسليم كافة طرود الشحنة للعميل وتعديل حالتها إلى (تم التسليم).' 
+                            : 'سيتم تسليم الطرود الواصلة فقط لمستودع الوجهة وتعديل حالة الشحنة إلى (تسليم جزئي)، ويبقى متبقي الطرود قيد المتابعة.')
                         ->action(function (Shipment $record, ShipmentCollectionService $service): void {
                             $actor = auth()->user();
-                            $warehouse = $actor->warehouse ?? $record->destinationWarehouse;
+                            $warehouse = $record->destinationWarehouse;
 
                             try {
-                                $service->collectPartially($record, $warehouse, $actor);
-                                Notification::make()
-                                    ->title('تم التسليم الجزئي بنجاح')
-                                    ->body('تم تسليم الطرود الواصلة وتحديث حالة الشحنة بنجاح.')
-                                    ->success()
-                                    ->send();
+                                if ($record->status === ShipmentStatus::ReadyForCollection) {
+                                    $service->collect($record, $warehouse, $actor);
+                                    Notification::make()
+                                        ->title('تم تسليم الشحنة بنجاح')
+                                        ->body('تم تسليم الشحنة بالكامل للعميل.')
+                                        ->success()
+                                        ->send();
+                                } else {
+                                    $service->collectPartially($record, $warehouse, $actor);
+                                    Notification::make()
+                                        ->title('تم التسليم الجزئي بنجاح')
+                                        ->body('تم تسليم الطرود الواصلة وتحديث حالة الشحنة بنجاح.')
+                                        ->success()
+                                        ->send();
+                                }
                             } catch (DomainException $e) {
                                 Notification::make()
-                                    ->title('تعذر التسليم الجزئي')
+                                    ->title('تعذر التسليم')
                                     ->body($e->getMessage())
                                     ->danger()
                                     ->send();

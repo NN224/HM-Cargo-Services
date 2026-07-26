@@ -173,8 +173,8 @@
                                             @if ($shipment->status === \App\Enums\ShipmentStatus::ReadyForCollection)
                                                 <button type="button" wire:click="mountTableAction('whatsappArrival', '{{ $shipment->id }}')">واتساب: إشعار الوصول</button>
                                             @endif
-                                            @if (in_array($shipment->status, [\App\Enums\ShipmentStatus::PartialAtDestination, \App\Enums\ShipmentStatus::PartiallyCollected, \App\Enums\ShipmentStatus::InTransit, \App\Enums\ShipmentStatus::AtTransit]))
-                                                <button type="button" wire:click="mountTableAction('partialCollect', '{{ $shipment->id }}')">تسليم الطرود الواصلة</button>
+                                            @if (in_array($shipment->status, [\App\Enums\ShipmentStatus::ReadyForCollection, \App\Enums\ShipmentStatus::PartialAtDestination, \App\Enums\ShipmentStatus::PartiallyCollected, \App\Enums\ShipmentStatus::InTransit, \App\Enums\ShipmentStatus::AtTransit]))
+                                                <button type="button" wire:click="mountTableAction('partialCollect', '{{ $shipment->id }}')">{{ $shipment->status === \App\Enums\ShipmentStatus::ReadyForCollection ? 'تسليم الشحنة للعميل' : 'تسليم الطرود الواصلة' }}</button>
                                             @endif
                                         </div>
                                     </details>
@@ -218,7 +218,7 @@
                                                 <strong class="hm-success-badge" style="width: max-content; font-size: 10px;">رسالة الاستلام: مرسلة ✓</strong>
                                             @endif
 
-                                            @if (in_array($shipment->status, [App\Enums\ShipmentStatus::PartialAtDestination, App\Enums\ShipmentStatus::ReadyForCollection, App\Enums\ShipmentStatus::Arrived, App\Enums\ShipmentStatus::PartiallyCollected, App\Enums\ShipmentStatus::Collected]) && is_null($shipment->arrival_notified_at))
+                                            @if (in_array($shipment->status, [App\Enums\ShipmentStatus::PartialAtDestination, App\Enums\ShipmentStatus::ReadyForCollection, App\Enums\ShipmentStatus::ReadyForCollection, App\Enums\ShipmentStatus::PartiallyCollected, App\Enums\ShipmentStatus::Collected]) && is_null($shipment->arrival_notified_at))
                                                 <button type="button" wire:click="mountTableAction('whatsappArrival', '{{ $shipment->id }}')" class="hm-money-badge" style="width: max-content; font-size: 10px; cursor: pointer;">رسالة الوصول: إرسال الآن 💬</button>
                                             @elseif (!is_null($shipment->arrival_notified_at))
                                                 <strong class="hm-success-badge" style="width: max-content; font-size: 10px;">رسالة الوصول: مرسلة ✓</strong>

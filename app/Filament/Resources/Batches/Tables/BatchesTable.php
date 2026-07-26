@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Batches\Tables;
 
 use App\Enums\BatchStatus;
 use App\Enums\Capability;
+use App\Filament\Resources\Batches\Actions\ManageBatchJourneyAction;
 use App\Filament\Resources\Batches\BatchResource;
 use App\Filament\Resources\Routes\RouteResource;
 use App\Models\Batch;
@@ -96,6 +97,8 @@ class BatchesTable
             ->recordActions([
                 ActionGroup::make([
                     ViewAction::make(),
+                    ManageBatchJourneyAction::make()
+                        ->visible(fn (Batch $record): bool => ! in_array($record->status, [BatchStatus::Completed, BatchStatus::Cancelled], true)),
                     // Hidden once the batch is no longer editable — a dispatched
                     // batch is locked (D-016), so a visible Edit button that only
                     // dead-ends at a 403 reads as broken. canEdit is the same rule

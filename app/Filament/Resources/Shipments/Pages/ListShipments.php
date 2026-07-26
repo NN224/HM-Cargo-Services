@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Shipments\Pages;
 
+use App\Filament\Resources\Batches\Actions\ManageBatchJourneyAction;
 use App\Filament\Resources\Shipments\ShipmentResource;
+use App\Models\Batch;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Contracts\Support\Htmlable;
@@ -10,6 +12,15 @@ use Illuminate\Support\HtmlString;
 
 class ListShipments extends ListRecords
 {
+    public ?int $managingBatchId = null;
+
+    public function startManageBatchJourney(int $batchId): void
+    {
+        $batch = Batch::findOrFail($batchId);
+        $this->managingBatchId = $batch->id;
+        $this->mountAction('manageBatchJourney');
+    }
+
     public function getSubheading(): string|Htmlable|null
     {
         return new HtmlString('<style>
@@ -108,6 +119,8 @@ class ListShipments extends ListRecords
     {
         return [
             CreateAction::make(),
+            ManageBatchJourneyAction::make()
+                ->visible(fn (): bool => $this->managingBatchId !== null),
         ];
     }
 }

@@ -28,6 +28,7 @@ beforeEach(function () {
     $this->batch = Batch::create([
         'route_id' => $this->route->id,
         'status' => BatchStatus::InTransit,
+        'reference' => 'BATCH-UI-001',
     ]);
     $this->customer = Customer::create(['name' => 'عميل الواجهة', 'phone' => '+971500000931']);
     $this->employee = User::create([
@@ -98,4 +99,66 @@ test('the journey action requires selecting at least one package', function () {
             'package_ids' => [],
         ])
         ->assertHasTableActionErrors(['package_ids' => 'required']);
+});
+
+test('batch selector bar shows only active batches', function () {
+    Batch::create([
+        'route_id' => $this->route->id,
+        'status' => BatchStatus::Completed,
+        'reference' => 'BATCH-DONE-001',
+    ]);
+
+    journeyUiShipment($this->batch, $this->customer);
+
+    Livewire::actingAs($this->employee)
+        ->test(ListShipments::class)
+        ->assertSee('BATCH-UI-001')
+        ->assertDontSee('الرحلة: BATCH-DONE-001');
+});
+
+test('non-administrator cannot see correct operation in batch journey action', function () {
+    $batch = Batch::create([
+        'route_id' => $this->route->id,
+        'status' => BatchStatus::Open,
+        'reference' => 'BATCH-CORR-001',
+    ]);
+    journeyUiShipment($batch, $this->customer);
+
+    Livewire::actingAs($this->employee)
+        ->test(ListShipments::class)
+        ->set('managingBatchId', $batch->id)
+        ->callAction('manageBatchJourney', data: [
+            'operation' => 'correct',
+            'target_status' => PackageStatus::ArrivedDestination->value,
+            'reason' => 'محاولة غير مسموحة',
+        ])
+        ->assertHasActionErrors(['operation']);
+});
+
+test('administrator can perform batch journey correction via page action', function () {
+    $admin = User::factory()->create([
+        'warehouse_id' => $this->origin->id,
+        'role' => 'administrator',
+    ]);
+
+    $batch = Batch::create([
+        'route_id' => $this->route->id,
+        'status' => BatchStatus::Open,
+        'reference' => 'BATCH-ADMIN-001',
+    ]);
+    $shipment = journeyUiShipment($batch, $this->customer);
+
+    Livewire::actingAs($admin)
+        ->test(ListShipments::class)
+        ->set('managingBatchId', $batch->id)
+        ->callAction('manageBatchJourney', data: [
+            'operation' => 'correct',
+            'target_status' => PackageStatus::ArrivedDestination->value,
+            'reason' => 'تصحيح إداري اختباري',
+            'publish_reason' => false,
+        ]);
+
+    $shipment->packages->each(function ($pkg) {
+        expect($pkg->fresh()->status)->toBe(PackageStatus::ArrivedDestination);
+    });
 });

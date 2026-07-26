@@ -1,10 +1,14 @@
 @php
+    use App\Enums\BatchStatus;
     use App\Models\Batch;
     use App\Models\Shipment;
     use App\Services\PackageJourneyProjection;
 
-    // Fetch active batches with routes and shipments
-    $batches = Batch::with(['route', 'shipments.packages'])->get();
+    // Fetch active batches only (exclude completed/cancelled)
+    $batches = Batch::with(['route', 'shipments.packages'])
+        ->whereNotIn('status', [BatchStatus::Completed->value, BatchStatus::Cancelled->value])
+        ->orderBy('created_at', 'desc')
+        ->get();
 
     // Currently selected batch ID from table filter
     $selectedBatchId = $this->tableFilters['batch_id']['value'] ?? null;
@@ -12,7 +16,7 @@
     $allShipmentsCount = Shipment::count();
     $allWeightSum = rtrim(rtrim(number_format((float) Shipment::sum('total_weight_kg'), 2), '0'), '.');
 
-    $shortTitles = [
+    $defaultShortTitles = [
         'مستودع المبدأ',
         'مطار المبدأ',
         'مغادرة المبدأ',
@@ -122,6 +126,22 @@
         background: rgba(59, 130, 246, 0.2);
         color: #60a5fa;
         border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+
+    .bsb-action-btn {
+        font-size: 0.675rem;
+        font-weight: 700;
+        padding: 0.15rem 0.55rem;
+        border-radius: 9999px;
+        background: rgba(245, 158, 11, 0.18);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.4);
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .bsb-action-btn:hover {
+        background: rgba(245, 158, 11, 0.35);
+        transform: scale(1.04);
     }
 
     /* Stepper track inside batch selector card */
@@ -236,8 +256,55 @@
             $bWeightSum = rtrim(rtrim(number_format((float) $b->shipments->sum('total_weight_kg'), 2), '0'), '.');
             $routeName = $b->route?->name ?? 'مسار افتراضي';
 
-            $sampleShipment = $b->shipments->first();
-            $journeyData = $sampleShipment ? app(PackageJourneyProjection::class)->forShipment($sampleShipment) : null;
+            $shortTitles = $b->route
+                ? [
+                    'مستودع ' . ($b->route->originWarehouse?->name ?? $defaultShortTitles[0]),
+                    'مطار ' . ($b->route->origin_airport_name ?? $defaultShortTitles[1]),
+                    'مغادرة ' . ($b->route->origin_airport_name ?? $defaultShortTitles[2]),
+                    'مطار ' . ($b->route->destination_airport_name ?? $defaultShortTitles[3]),
+                    'مغادرة ' . ($b->route->destination_airport_name ?? $defaultShortTitles[4]),
+                    $b->route->delivery_office_name ?? $defaultShortTitles[5],
+                    $defaultShortTitles[6],
+                ]
+                : $defaultShortTitles;
+
+            // Find the furthest-behind shipment: the batch progress only
+            // advances when every shipment has reached a stage.
+            $minProgressIdx = null;
+            $minJourneyData = null;
+            foreach ($b->shipments as $shipment) {
+                $jd = app(PackageJourneyProjection::class)->forShipment($shipment);
+                if (($jd['package_count'] ?? 0) === 0) {
+                    continue;
+                }
+
+                $sCurrentStepIdx = -1;
+                $sLastCompletedIdx = -1;
+                foreach (($jd['steps'] ?? []) as $idx => $step) {
+                    if ($step['completed_count'] > 0) {
+                        $sLastCompletedIdx = $idx;
+                    }
+                    if ($step['current_count'] > 0) {
+                        $sCurrentStepIdx = $idx;
+                        break;
+                    }
+                }
+
+                $sProgressIdx = $sCurrentStepIdx >= 0 ? $sCurrentStepIdx : ($sLastCompletedIdx >= 0 ? $sLastCompletedIdx : 0);
+
+                if ($minProgressIdx === null || $sProgressIdx < $minProgressIdx) {
+                    $minProgressIdx = $sProgressIdx;
+                    $minJourneyData = $jd;
+                }
+            }
+
+            // Fallback to the first shipment if no active packages were found.
+            if ($minJourneyData === null) {
+                $sampleShipment = $b->shipments->first();
+                $minJourneyData = $sampleShipment ? app(PackageJourneyProjection::class)->forShipment($sampleShipment) : null;
+            }
+
+            $journeyData = $minJourneyData;
             $steps = $journeyData['steps'] ?? [];
 
             $currentStepIdx = -1;
@@ -275,6 +342,14 @@
                     <span class="bsb-pill">📦 {{ $bShipmentsCount }}</span>
                     <span class="bsb-pill">⚖️ {{ $bWeightSum }} كغ</span>
                     <span class="bsb-status-badge">{{ $b->status->label() }}</span>
+                    <button
+                        type="button"
+                        class="bsb-action-btn"
+                        title="إجراء مسار جماعي للرحلة"
+                        x-on:click.stop="$wire.call('startManageBatchJourney', {{ $b->id }})"
+                    >
+                        ⚙️ إجراء جماعي
+                    </button>
                 </div>
             </div>
 

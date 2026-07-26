@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\PackageStatus;
 use App\Models\AuditLog;
+use App\Models\Batch;
 use App\Models\Package;
 use App\Models\Route;
 use App\Models\Shipment;
@@ -330,5 +331,115 @@ class PackageJourneyService
         }
 
         return $warehouseId;
+    }
+
+    public function advanceBatch(
+        Batch $batch,
+        User $actor,
+        string $source = 'batch_journey_progress',
+        ?string $note = null,
+    ): Batch {
+        return DB::transaction(function () use ($batch, $actor, $source, $note): Batch {
+            $lockedBatch = Batch::query()->lockForUpdate()->findOrFail($batch->id);
+            $shipments = $lockedBatch->shipments()->with('packages')->get();
+
+            if ($shipments->isEmpty()) {
+                throw new DomainException('لا توجد شحنات في هذه الرحلة.');
+            }
+
+            $maxJourneyPosition = count(PackageStatus::journeySteps()) - 1;
+
+            $advancedCount = 0;
+            foreach ($shipments as $shipment) {
+                $progressablePackageIds = $shipment->packages
+                    ->filter(fn (Package $p) => $p->status->journeyPosition() !== null && $p->status->journeyPosition() < $maxJourneyPosition)
+                    ->pluck('id')
+                    ->all();
+
+                if (! empty($progressablePackageIds)) {
+                    $this->advance($shipment, $progressablePackageIds, $actor, $source, $note);
+                    $advancedCount++;
+                }
+            }
+
+            if ($advancedCount === 0) {
+                throw new DomainException('لا توجد طرود قابلة للتقديم في هذه الرحلة.');
+            }
+
+            return $lockedBatch->fresh();
+        });
+    }
+
+    public function delayBatch(
+        Batch $batch,
+        User $actor,
+        string $reason,
+        bool $publishReason,
+    ): Batch {
+        return DB::transaction(function () use ($batch, $actor, $reason, $publishReason): Batch {
+            $lockedBatch = Batch::query()->lockForUpdate()->findOrFail($batch->id);
+            $shipments = $lockedBatch->shipments()->with('packages')->get();
+
+            if ($shipments->isEmpty()) {
+                throw new DomainException('لا توجد شحنات في هذه الرحلة.');
+            }
+
+            $delayedCount = 0;
+            foreach ($shipments as $shipment) {
+                $delayablePackageIds = $shipment->packages
+                    ->filter(fn (Package $p) => $p->status->journeyPosition() !== null
+                        && ! $p->status->isException()
+                        && ! in_array($p->status, [PackageStatus::Cancelled, PackageStatus::Collected], true))
+                    ->pluck('id')
+                    ->all();
+
+                if (! empty($delayablePackageIds)) {
+                    $this->delay($shipment, $delayablePackageIds, $actor, $reason, $publishReason);
+                    $delayedCount++;
+                }
+            }
+
+            if ($delayedCount === 0) {
+                throw new DomainException('لا توجد طرود قابلة لتسجيل التأخير في هذه الرحلة.');
+            }
+
+            return $lockedBatch->fresh();
+        });
+    }
+
+    public function correctBatch(
+        Batch $batch,
+        PackageStatus $target,
+        User $administrator,
+        string $reason,
+        bool $publishReason,
+    ): Batch {
+        return DB::transaction(function () use ($batch, $target, $administrator, $reason, $publishReason): Batch {
+            $lockedBatch = Batch::query()->lockForUpdate()->findOrFail($batch->id);
+            $shipments = $lockedBatch->shipments()->with('packages')->get();
+
+            if ($shipments->isEmpty()) {
+                throw new DomainException('لا توجد شحنات في هذه الرحلة.');
+            }
+
+            $correctedCount = 0;
+            foreach ($shipments as $shipment) {
+                $correctablePackageIds = $shipment->packages
+                    ->filter(fn (Package $p) => $p->status->journeyPosition() !== null)
+                    ->pluck('id')
+                    ->all();
+
+                if (! empty($correctablePackageIds)) {
+                    $this->correct($shipment, $correctablePackageIds, $target, $administrator, $reason, $publishReason);
+                    $correctedCount++;
+                }
+            }
+
+            if ($correctedCount === 0) {
+                throw new DomainException('لا توجد طرود قابلة للتصحيح في هذه الرحلة.');
+            }
+
+            return $lockedBatch->fresh();
+        });
     }
 }

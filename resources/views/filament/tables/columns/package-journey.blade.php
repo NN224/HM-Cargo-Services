@@ -45,7 +45,6 @@
     .pj-badge-delayed { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
     .pj-badge-pending { background: rgba(156, 163, 175, 0.12); color: #a1a1aa; border: 1px solid rgba(156, 163, 175, 0.2); }
 
-    /* Stepper track */
     .pj-stepper-track {
         position: relative;
         display: flex;
@@ -180,8 +179,11 @@
         }
     }
 
-    // Short titles for the 7 steps below the line
-    $shortTitles = [
+    // Short titles for the 7 steps below the line — derived from the route
+    $record = $getRecord();
+    $route = $record instanceof \App\Models\Shipment ? $record->batch?->route : null;
+
+    $defaultShortTitles = [
         'مستودع المبدأ',
         'مطار المبدأ',
         'مغادرة المبدأ',
@@ -190,6 +192,18 @@
         'مكتب التسليم',
         'استلام العميل'
     ];
+
+    $shortTitles = $route
+        ? [
+            'مستودع ' . ($route->originWarehouse?->name ?? $defaultShortTitles[0]),
+            'مطار ' . ($route->origin_airport_name ?? $defaultShortTitles[1]),
+            'مغادرة ' . ($route->origin_airport_name ?? $defaultShortTitles[2]),
+            'مطار ' . ($route->destination_airport_name ?? $defaultShortTitles[3]),
+            'مغادرة ' . ($route->destination_airport_name ?? $defaultShortTitles[4]),
+            $route->delivery_office_name ?? $defaultShortTitles[5],
+            $defaultShortTitles[6],
+        ]
+        : $defaultShortTitles;
 
     // Progress line width percentage (0 to 100)
     $progressIdx = $currentStepIndex >= 0 ? $currentStepIndex : ($lastCompletedIndex >= 0 ? $lastCompletedIndex : 0);
@@ -204,8 +218,10 @@
             <span class="text-xs text-gray-500 font-normal">({{ $packageCount }} طرد)</span>
         </div>
 
-        <div class="pj-status-badge pj-badge-{{ $statusType }}">
-            {{ $activeStepLabel }}
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div class="pj-status-badge pj-badge-{{ $statusType }}">
+                {{ $activeStepLabel }}
+            </div>
         </div>
     </div>
 

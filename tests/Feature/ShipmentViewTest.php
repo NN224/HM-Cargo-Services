@@ -2,6 +2,7 @@
 
 use App\Enums\PackageStatus;
 use App\Enums\UserRole;
+use App\Filament\Resources\Shipments\Pages\ListShipments;
 use App\Filament\Resources\Shipments\Pages\ViewShipment;
 use App\Models\Customer;
 use App\Models\Shipment;
@@ -114,6 +115,6 @@ test('the list offers a way into a shipment', function () {
     $this->shipment->packages()->create(['weight_kg' => 1.0]);
 
     Livewire::actingAs($this->admin)
-        ->test(\App\Filament\Resources\Shipments\Pages\ListShipments::class)
+        ->test(ListShipments::class)
         ->assertTableActionVisible('view', $this->shipment->id);
 });

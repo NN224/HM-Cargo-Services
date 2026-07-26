@@ -5,10 +5,12 @@ use App\Enums\UserRole;
 use App\Models\Batch;
 use App\Models\Customer;
 use App\Models\CustomerRate;
+use App\Models\Package;
 use App\Models\Route;
 use App\Models\Shipment;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Services\BatchAssignmentService;
 
 beforeEach(function () {
     $this->dubai = Warehouse::create(['name' => 'Dubai', 'location' => 'UAE']);
@@ -115,7 +117,7 @@ test('a shipment that was never priced can be deleted', function () {
     $shipment->deleteSafely();
 
     expect(Shipment::count())->toBe(0)
-        ->and(App\Models\Package::count())->toBe(0);
+        ->and(Package::count())->toBe(0);
 });
 
 test('a priced shipment inside a batch cannot be deleted', function () {
@@ -136,7 +138,7 @@ test('a priced shipment inside a batch cannot be deleted', function () {
     ]);
     $shipment->packages()->create(['weight_kg' => 5]);
 
-    app(App\Services\BatchAssignmentService::class)
+    app(BatchAssignmentService::class)
         ->assign($shipment->fresh(), Batch::create(['route_id' => $route->id]));
 
     expect($shipment->fresh()->canBeDeleted())->toBeFalse();

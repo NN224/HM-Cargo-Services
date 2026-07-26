@@ -3,7 +3,6 @@
 use App\Enums\PackageStatus;
 use App\Enums\ShipmentStatus;
 use App\Models\Customer;
-use App\Models\Package;
 use App\Models\Shipment;
 
 beforeEach(function () {
@@ -107,11 +106,11 @@ test('a package cannot weigh a negative amount', function () {
     makeShipment()->packages()->create(['weight_kg' => -1]);
 })->throws(InvalidArgumentException::class);
 
-test('a new package starts as received and belongs to its shipment', function () {
+test('a new package starts as created and belongs to its shipment', function () {
     $shipment = makeShipment();
     $package = $shipment->packages()->create(['weight_kg' => 3]);
 
-    expect($package->status)->toBe(PackageStatus::Received)
+    expect($package->status)->toBe(PackageStatus::Created)
         ->and($package->shipment->is($shipment))->toBeTrue();
 });
 

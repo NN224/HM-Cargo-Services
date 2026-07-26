@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 
 /**
@@ -21,10 +22,11 @@ use InvalidArgumentException;
  * @property int $customer_id
  * @property int $route_id
  * @property int $rate_per_kg_cents
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Customer $customer
- * @property-read \App\Models\Route $route
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Customer $customer
+ * @property-read Route $route
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerRate newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerRate newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerRate query()
@@ -34,6 +36,7 @@ use InvalidArgumentException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerRate whereRatePerKgCents($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerRate whereRouteId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerRate whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class CustomerRate extends Model

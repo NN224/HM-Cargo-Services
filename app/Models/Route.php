@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use App\Models\Concerns\GuardsDeletion;
-
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 
 /**
@@ -22,27 +23,35 @@ use InvalidArgumentException;
  * @property int $origin_warehouse_id
  * @property int $destination_warehouse_id
  * @property int|null $transit_warehouse_id
+ * @property string|null $origin_airport_name
+ * @property string|null $destination_airport_name
+ * @property string|null $delivery_office_name
  * @property bool $is_active
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Batch> $batches
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, Batch> $batches
  * @property-read int|null $batches_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CustomerRate> $customerRates
+ * @property-read Collection<int, CustomerRate> $customerRates
  * @property-read int|null $customer_rates_count
- * @property-read \App\Models\Warehouse $destinationWarehouse
- * @property-read \App\Models\Warehouse $originWarehouse
- * @property-read \App\Models\Warehouse|null $transitWarehouse
+ * @property-read Warehouse $destinationWarehouse
+ * @property-read Warehouse $originWarehouse
+ * @property-read Warehouse|null $transitWarehouse
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereDestinationWarehouseId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereDeliveryOfficeName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereIsActive($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereOriginAirportName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereOriginWarehouseId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereDestinationAirportName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereTransitWarehouseId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Route whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class Route extends Model
@@ -54,6 +63,9 @@ class Route extends Model
         'origin_warehouse_id',
         'destination_warehouse_id',
         'transit_warehouse_id',
+        'origin_airport_name',
+        'destination_airport_name',
+        'delivery_office_name',
         'is_active',
     ];
 

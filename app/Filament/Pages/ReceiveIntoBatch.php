@@ -3,11 +3,14 @@
 namespace App\Filament\Pages;
 
 use App\Enums\BatchStatus;
+use App\Enums\PackageStatus;
 use App\Enums\Capability;
+use App\Enums\ShipmentStatus;
 use App\Filament\Resources\Batches\BatchResource;
 use App\Models\Batch;
 use App\Models\Customer;
 use App\Models\Route;
+use App\Models\Shipment;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\BatchIntakeService;
@@ -15,7 +18,7 @@ use BackedEnum;
 use DomainException;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -38,7 +41,7 @@ use UnitEnum;
  * The money fields exist only for a user who may price. An employee
  * receiving boxes records a customer and some weights and never sees a
  *
- * @property \Filament\Schemas\Schema $form
+ * @property Schema $form
  */
 class ReceiveIntoBatch extends Page
 {
@@ -83,6 +86,15 @@ class ReceiveIntoBatch extends Page
                             ->label('الرحلة')
                             ->options(fn (): array => Batch::query()
                                 ->where('status', BatchStatus::Open)
+                                ->whereDoesntHave('shipments.packages', function (Builder $query) {
+                                    $query->whereIn('status', [
+                                        PackageStatus::InTransit,
+                                        PackageStatus::ArrivedTransit,
+                                        PackageStatus::DepartedTransit,
+                                        PackageStatus::ArrivedDestination,
+                                        PackageStatus::Collected,
+                                    ]);
+                                })
                                 // Same route scope BatchResource applies to
                                 // its own index (getEloquentQuery()) and to
                                 // BatchForm's route select — reused here
@@ -95,10 +107,10 @@ class ReceiveIntoBatch extends Page
                                 ->all())
                             ->searchable()
                             ->required()
-                            // The rate depends on this batch's route, so a
-                            // change here must refresh it same as customer_id.
+                            // A change in route no longer fetches fixed prices,
+                            // but still needed for batch creation.
                             ->live()
-                            ->afterStateUpdated(fn (Get $get, Set $set) => $set('rate_per_kg', self::agreedRatePerKg($get)))
+                            ->afterStateUpdated(fn (Get $get, Set $set) => self::loadExistingShipmentIfAny($get, $set))
                             ->createOptionForm([
                                 TextInput::make('reference')
                                     ->label('رقم/اسم الرحلة (اختياري)')
@@ -108,11 +120,7 @@ class ReceiveIntoBatch extends Page
 
                                 Select::make('route_id')
                                     ->label('المسار')
-                                    ->relationship(
-                                        'route',
-                                        'name',
-                                        modifyQueryUsing: fn (Builder $query): Builder => BatchResource::scopeRouteQuery($query),
-                                    )
+                                    ->options(fn (): array => BatchResource::scopeRouteQuery(Route::query())->pluck('name', 'id')->all())
                                     ->searchable()
                                     ->preload()
                                     ->required()
@@ -159,7 +167,7 @@ class ReceiveIntoBatch extends Page
                             ->searchable()
                             ->required()
                             ->live()
-                            ->afterStateUpdated(fn (Get $get, Set $set) => $set('rate_per_kg', self::agreedRatePerKg($get)))
+                            ->afterStateUpdated(fn (Get $get, Set $set) => self::loadExistingShipmentIfAny($get, $set))
                             // A walk-in customer should not send the operator to
                             // another screen mid-intake. The gate lives on the
                             // action itself via ->authorize(), the same pattern
@@ -175,7 +183,8 @@ class ReceiveIntoBatch extends Page
                                     ->required(),
                                 TextInput::make('phone')
                                     ->label('رقم الهاتف')
-                                    ->required(),
+                                    ->required()
+                                    ->extraInputAttributes(['dir' => 'ltr']),
                             ])
                             ->createOptionUsing(fn (array $data): int => Customer::create([
                                 'name' => $data['name'],
@@ -197,56 +206,28 @@ class ReceiveIntoBatch extends Page
                         TextInput::make('recipient_phone')
                             ->label('هاتف المستلم')
                             ->visible(fn (Get $get): bool => ! $get('recipient_is_customer'))
-                            ->required(fn (Get $get): bool => ! $get('recipient_is_customer')),
+                            ->required(fn (Get $get): bool => ! $get('recipient_is_customer'))
+                            ->extraInputAttributes(['dir' => 'ltr']),
 
-                        // Only a user who may price sees a price. For everyone
-                        // else the figure does not exist on this screen. It is
-                        // read-only display only — the rate itself is applied
-                        // server-side at intake (BatchIntakeService), never
-                        // taken from this field, so it cannot be tampered with.
-                        TextInput::make('rate_per_kg')
-                            ->label('سعر الكيلو (دولار)')
-                            ->numeric()
-                            ->disabled()
-                            ->dehydrated(false)
-                            ->visible(fn (): bool => auth()->user()?->hasCapability(Capability::PriceShipments) ?? false)
-                            ->helperText('سعر العميل المتفق عليه على مسار هذه الرحلة.'),
-
-                        // Shown only when this customer has no agreed rate for
-                        // this route yet, and only to someone entitled to
-                        // record the agreement. Everyone else is refused with
-                        // a message naming who can supply it.
-                        //
-                        // Every other money field in this system takes dollars
-                        // from the operator and converts to integer cents at
-                        // the boundary (see CustomerRateForm::configure()) —
-                        // this field mirrors that exactly. The key keeps its
-                        // "_cents" name: dehydrateStateUsing() already turns
-                        // the typed dollars into cents before the form state
-                        // ever reaches BatchIntakeService, so the value behind
-                        // this key is cents the same as everywhere else it is
-                        // read.
-                        TextInput::make('agreed_rate_per_kg_cents')
-                            ->label('سعر الكيلو المتفق عليه (دولار)')
-                            ->numeric()
-                            ->minValue(0.01)
-                            ->step(0.01)
-                            ->prefix('$')
-                            ->visible(fn (Get $get): bool => $this->needsAgreedRate($get))
-                            ->required(fn (Get $get): bool => $this->needsAgreedRate($get))
-                            ->dehydrateStateUsing(fn (?string $state): ?int => $state === null ? null : (int) round(((float) $state) * 100))
-                            ->helperText('لا يوجد سعر متفق عليه لهذا العميل على مسار هذه الرحلة.'),
+                        // Pricing is now fully manual per package, so the fixed
+                        // route rate fields (rate_per_kg, agreed_rate_per_kg_cents)
+                        // have been removed.
 
                         Repeater::make('packages')
                             ->label('الطرود')
                             ->schema([
+                                Hidden::make('id'),
                                 TextInput::make('weight_kg')
                                     ->label('الوزن (كغ)')
                                     ->numeric()
                                     ->step('0.0001')
                                     ->minValue(0.0001)
+                                    ->extraInputAttributes(['dir' => 'ltr'])
                                     ->required()
-                                    ->live(onBlur: true),
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(function (Get $get, Set $set) {
+                                        $set('../../final_charge_usd', self::calculateTotal($get('../../packages')));
+                                    }),
 
                                 TextInput::make('description')
                                     ->label('وصف اختياري'),
@@ -254,62 +235,58 @@ class ReceiveIntoBatch extends Page
                                 TextInput::make('source_barcode')
                                     ->label('باركود المورّد (اختياري)'),
 
+                                Select::make('pricing_method')
+                                    ->label('طريقة التسعير')
+                                    ->options([
+                                        'per_kg' => 'سعر الكيلو',
+                                        'fixed' => 'مقطوعية (سعر ثابت)',
+                                    ])
+                                    ->default('per_kg')
+                                    ->required(fn (): bool => auth()->user()?->hasCapability(Capability::PriceShipments) ?? false)
+                                    ->visible(fn (): bool => auth()->user()?->hasCapability(Capability::PriceShipments) ?? false)
+                                    ->live(),
+
                                 TextInput::make('custom_rate_per_kg')
-                                    ->label('سعر الكيلو الخاص بالطرد (دولار - اختياري)')
-                                    ->placeholder('تلقائي (سعر المسار)')
+                                    ->label('سعر الكيلو (دولار)')
                                     ->numeric()
                                     ->step('0.01')
                                     ->minValue(0.01)
                                     ->prefix('$')
+                                    ->extraInputAttributes(['dir' => 'ltr'])
+                                    ->required(fn (Get $get): bool => (auth()->user()?->hasCapability(Capability::PriceShipments) ?? false) && $get('pricing_method') === 'per_kg')
+                                    ->visible(fn (Get $get): bool => (auth()->user()?->hasCapability(Capability::PriceShipments) ?? false) && $get('pricing_method') === 'per_kg')
                                     ->live(onBlur: true)
-                                    ->helperText('اتركه فارغاً لاستخدام سعر المسار الافتراضي.'),
+                                    ->afterStateUpdated(function (Get $get, Set $set) {
+                                        $set('../../final_charge_usd', self::calculateTotal($get('../../packages')));
+                                    }),
+
+                                TextInput::make('fixed_charge_usd')
+                                    ->label('السعر المقطوع (دولار)')
+                                    ->numeric()
+                                    ->step('0.01')
+                                    ->minValue(0.01)
+                                    ->prefix('$')
+                                    ->extraInputAttributes(['dir' => 'ltr'])
+                                    ->required(fn (Get $get): bool => (auth()->user()?->hasCapability(Capability::PriceShipments) ?? false) && $get('pricing_method') === 'fixed')
+                                    ->visible(fn (Get $get): bool => (auth()->user()?->hasCapability(Capability::PriceShipments) ?? false) && $get('pricing_method') === 'fixed')
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(function (Get $get, Set $set) {
+                                        $set('../../final_charge_usd', self::calculateTotal($get('../../packages')));
+                                    }),
                             ])
                             ->minItems(1)
                             ->defaultItems(1)
                             ->addActionLabel('إضافة طرد'),
 
-                        Placeholder::make('estimated_summary')
-                            ->label('إجمالي الاستلام الحسابي المباشر')
-                            ->content(function (Get $get): string {
-                                $packages = $get('packages') ?? [];
-                                $totalWeight = 0;
-                                $estimatedTotal = 0;
-
-                                $defaultRateStr = self::agreedRatePerKg($get);
-                                if (! $defaultRateStr && $get('agreed_rate_per_kg_cents')) {
-                                    $defaultRateStr = number_format(((float) $get('agreed_rate_per_kg_cents')) / 100, 2);
-                                }
-
-                                $defaultRate = $defaultRateStr ? (float) $defaultRateStr : 0;
-                                $hasCustomRate = false;
-
-                                foreach ($packages as $pkg) {
-                                    $w = (float) ($pkg['weight_kg'] ?? 0);
-                                    $totalWeight += $w;
-
-                                    $pkgRate = (isset($pkg['custom_rate_per_kg']) && filled($pkg['custom_rate_per_kg']))
-                                        ? (float) $pkg['custom_rate_per_kg']
-                                        : $defaultRate;
-
-                                    if (isset($pkg['custom_rate_per_kg']) && filled($pkg['custom_rate_per_kg'])) {
-                                        $hasCustomRate = true;
-                                    }
-
-                                    $estimatedTotal += round($w * $pkgRate, 2);
-                                }
-
-                                if ($totalWeight <= 0) {
-                                    return 'أدخل أوزان الطرود لحساب الإجمالي المالي تلقائياً.';
-                                }
-
-                                if ($defaultRate > 0 || $hasCustomRate) {
-                                    $rateInfo = $hasCustomRate ? '(يتضمن طروداً بأسعار مخصصة)' : sprintf('(بسعر $%s / كغ)', number_format($defaultRate, 2));
-                                    return sprintf('⚖️ الوزن الكلي: %s كغ  |  💵 الإجمالي المقدر: $%s %s', number_format($totalWeight, 4), number_format($estimatedTotal, 2), $rateInfo);
-                                }
-
-                                return sprintf('⚖️ الوزن الكلي: %s كغ', number_format($totalWeight, 4));
-                            })
-                            ->visible(fn (): bool => auth()->user()?->hasCapability(Capability::PriceShipments) ?? false),
+                        TextInput::make('final_charge_usd')
+                            ->label('الإجمالي النهائي المطلوب (دولار)')
+                            ->numeric()
+                            ->step('0.01')
+                            ->prefix('$')
+                            ->extraInputAttributes(['dir' => 'ltr'])
+                            ->required(fn (): bool => auth()->user()?->hasCapability(Capability::PriceShipments) ?? false)
+                            ->visible(fn (): bool => auth()->user()?->hasCapability(Capability::PriceShipments) ?? false)
+                            ->helperText('سيتم حفظ هذا الرقم كالمبلغ النهائي للشحنة. يمكنك تعديله يدوياً (لجبر الكسور أو للخصم).'),
                     ]),
             ])
             ->statePath('data');
@@ -332,55 +309,117 @@ class ReceiveIntoBatch extends Page
         ]);
     }
 
-    /**
-     * The customer's agreed rate for the selected batch's route, formatted
-     * in dollars for display only — never fed back into arithmetic (D-007).
-     *
-     * Null whenever either select is empty or no rate exists for the pair,
-     * so the field renders blank rather than a stale or misleading figure.
-     */
-    private static function agreedRatePerKg(Get $get): ?string
+    private static function calculateTotal(?array $packages): ?string
     {
-        $batch = Batch::find($get('batch_id'));
-        $customer = Customer::find($get('customer_id'));
-
-        if (! $batch || ! $customer) {
+        if (! $packages) {
             return null;
         }
 
-        $rate = $customer->rateForRoute($batch->route);
-
-        return $rate === null ? null : number_format($rate->ratePerKgDollars(), 2, '.', '');
-    }
-
-    /**
-     * Whether the form must ask for a first agreed rate.
-     *
-     * Only for a user holding manage_customers. Without it the intake is
-     * refused by the service, and offering a field they may not use would be
-     * a worse experience than a clear message.
-     */
-    private function needsAgreedRate(Get $get): bool
-    {
-        if (! (auth()->user()?->hasCapability(Capability::ManageCustomers) ?? false)) {
-            return false;
+        $total = 0;
+        foreach ($packages as $pkg) {
+            $method = $pkg['pricing_method'] ?? 'per_kg';
+            if ($method === 'fixed') {
+                $total += round((float) ($pkg['fixed_charge_usd'] ?? 0), 2);
+            } else {
+                $w = (float) ($pkg['weight_kg'] ?? 0);
+                $r = (float) ($pkg['custom_rate_per_kg'] ?? 0);
+                $total += round($w * $r, 2);
+            }
         }
 
+        return $total > 0 ? number_format($total, 2, '.', '') : null;
+    }
+
+    public static function loadExistingShipmentIfAny(Get $get, Set $set): void
+    {
         $batchId = $get('batch_id');
         $customerId = $get('customer_id');
 
         if (! $batchId || ! $customerId) {
-            return false;
+            return;
         }
 
-        $batch = Batch::find($batchId);
+        $batch = Batch::with('route')->find($batchId);
         $customer = Customer::find($customerId);
 
-        if (! $batch || ! $customer) {
-            return false;
+        $customerRateCents = null;
+        if ($batch && $customer && $batch->route) {
+            $cRate = $customer->rateForRoute($batch->route);
+            if ($cRate && $cRate->rate_per_kg_cents > 0) {
+                $customerRateCents = $cRate->rate_per_kg_cents;
+            }
         }
 
-        return $customer->rateForRoute($batch->route) === null;
+        $existing = Shipment::query()
+            ->where('batch_id', $batchId)
+            ->where('customer_id', $customerId)
+            ->whereNotIn('status', [ShipmentStatus::Collected->value, ShipmentStatus::Cancelled->value])
+            ->with(['packages', 'customer'])
+            ->first();
+
+        if ($existing) {
+            $previousPackageRateCents = $existing->packages
+                ->pluck('custom_rate_per_kg_cents')
+                ->filter(fn (?int $rateCents): bool => ($rateCents ?? 0) > 0)
+                ->last();
+            $defaultRateCents = $previousPackageRateCents
+                ?? $existing->rate_per_kg_cents
+                ?? $customerRateCents;
+
+            $packagesState = [];
+            foreach ($existing->packages as $pkg) {
+                $rateCents = $pkg->fixed_charge_cents
+                    ? null
+                    : ($pkg->custom_rate_per_kg_cents ?? $defaultRateCents);
+                $rateFormatted = $rateCents ? number_format($rateCents / 100, 2, '.', '') : null;
+
+                $packagesState[] = [
+                    'id' => $pkg->id,
+                    'weight_kg' => (string) $pkg->weight_kg,
+                    'description' => $pkg->description,
+                    'source_barcode' => $pkg->source_barcode,
+                    'pricing_method' => $pkg->fixed_charge_cents ? 'fixed' : 'per_kg',
+                    'custom_rate_per_kg' => $rateFormatted,
+                    'fixed_charge_usd' => $pkg->fixed_charge_cents ? number_format($pkg->fixed_charge_cents / 100, 2, '.', '') : null,
+                ];
+            }
+
+            $set('packages', $packagesState);
+            $set('recipient_name', $existing->recipient_name);
+            $set('recipient_phone', $existing->recipient_phone);
+
+            $isCustomer = $existing->customer && $existing->recipient_name === $existing->customer->name && $existing->recipient_phone === $existing->customer->phone;
+            $set('recipient_is_customer', $isCustomer);
+
+            $calcTotal = self::calculateTotal($packagesState);
+            if ($existing->final_charge_cents) {
+                $set('final_charge_usd', number_format($existing->final_charge_cents / 100, 2, '.', ''));
+            } else {
+                $set('final_charge_usd', $calcTotal);
+            }
+
+            Notification::make()
+                ->title('تم التحرير على شحنة سابقة')
+                ->body("تم العثور على الشحنة ({$existing->reference}) لهذا العميل على نفس الرحلة، وتم تحميل طرودها وأسعارها السابقة. يمكنك إضافة الطرود الجديدة إليها الآن.")
+                ->info()
+                ->send();
+        } elseif ($customerRateCents) {
+            $defaultRateFormatted = number_format($customerRateCents / 100, 2, '.', '');
+            $packagesState = $get('packages') ?? [];
+            if (is_array($packagesState)) {
+                $updated = false;
+                foreach ($packagesState as &$pkgItem) {
+                    if (empty($pkgItem['custom_rate_per_kg']) && empty($pkgItem['fixed_charge_usd'])) {
+                        $pkgItem['custom_rate_per_kg'] = $defaultRateFormatted;
+                        $updated = true;
+                    }
+                }
+                if ($updated) {
+                    $set('packages', $packagesState);
+                    $set('final_charge_usd', self::calculateTotal($packagesState));
+                }
+            }
+        }
     }
 
     public function receive(): void

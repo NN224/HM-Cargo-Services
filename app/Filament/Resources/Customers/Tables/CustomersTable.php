@@ -9,6 +9,7 @@ use App\Models\Warehouse;
 use App\Services\PaymentService;
 use DomainException;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
@@ -37,7 +38,7 @@ class CustomersTable
                 TextColumn::make('phone')
                     ->label('رقم الهاتف')
                     ->searchable()
-                    ->extraAttributes(['dir' => 'ltr', 'style' => 'text-align: right;']),
+                    ->extraAttributes(['style' => 'unicode-bidi: isolate; direction: ltr; text-align: right;']),
 
                 TextColumn::make('outstanding_cents')
                     ->label('الرصيد المتبقي (ديون)')
@@ -79,108 +80,108 @@ class CustomersTable
             ])
             ->defaultSort('name')
             ->recordActions([
-                \Filament\Actions\ActionGroup::make([
+                ActionGroup::make([
                     ViewAction::make(),
                     Action::make('recordPayment')
-                    ->label('تسجيل دفعة')
-                    ->icon('heroicon-o-banknotes')
-                    ->color('success')
-                    ->visible(fn (): bool => auth()->user()?->hasCapability(Capability::RecordPayments) ?? false)
-                    ->form([
-                        TextInput::make('amount')
-                            ->label('مبلغ الدفعة (دولار)')
-                            ->numeric()
-                            ->prefix('$')
-                            ->required()
-                            ->minValue(0.01)
-                            ->helperText(fn (Customer $record): string => sprintf('الرصيد المتبقي المستحق على العميل حالياً: $%s', number_format($record->outstandingCents() / 100, 2))),
+                        ->label('تسجيل دفعة')
+                        ->icon('heroicon-o-banknotes')
+                        ->color('success')
+                        ->visible(fn (): bool => auth()->user()?->hasCapability(Capability::RecordPayments) ?? false)
+                        ->form([
+                            TextInput::make('amount')
+                                ->label('مبلغ الدفعة (دولار)')
+                                ->numeric()
+                                ->prefix('$')
+                                ->required()
+                                ->minValue(0.01)
+                                ->helperText(fn (Customer $record): string => sprintf('الرصيد المتبقي المستحق على العميل حالياً: $%s', number_format($record->outstandingCents() / 100, 2))),
 
-                        Select::make('method')
-                            ->label('طريقة الدفع')
-                            ->options([
-                                'cash' => 'كاش (نقدي)',
-                                'whish' => 'ويش (Whish Money)',
-                                'bank_transfer' => 'تحويل بنكي',
-                                'other' => 'طريقة أخرى',
-                            ])
-                            ->default('cash')
-                            ->required()
-                            ->live(),
+                            Select::make('method')
+                                ->label('طريقة الدفع')
+                                ->options([
+                                    'cash' => 'كاش (نقدي)',
+                                    'whish' => 'ويش (Whish Money)',
+                                    'bank_transfer' => 'تحويل بنكي',
+                                    'other' => 'طريقة أخرى',
+                                ])
+                                ->default('cash')
+                                ->required()
+                                ->live(),
 
-                        TextInput::make('custom_method_name')
-                            ->label('اسم طريقة الدفع')
-                            ->visible(fn (Get $get): bool => $get('method') === 'other')
-                            ->required(fn (Get $get): bool => $get('method') === 'other'),
+                            TextInput::make('custom_method_name')
+                                ->label('اسم طريقة الدفع')
+                                ->visible(fn (Get $get): bool => $get('method') === 'other')
+                                ->required(fn (Get $get): bool => $get('method') === 'other'),
 
-                        TextInput::make('notes')
-                            ->label('ملاحظات (اختياري)'),
-                    ])
-                    ->action(function (array $data, Customer $record, PaymentService $paymentService): void {
-                        $actor = auth()->user();
-                        $warehouseId = $actor->warehouse_id ?? Warehouse::first()?->id;
+                            TextInput::make('notes')
+                                ->label('ملاحظات (اختياري)'),
+                        ])
+                        ->action(function (array $data, Customer $record, PaymentService $paymentService): void {
+                            $actor = auth()->user();
+                            $warehouseId = $actor->warehouse_id ?? Warehouse::first()?->id;
 
-                        $paymentService->recordPayment([
-                            'customer_id' => $record->id,
-                            'amount_cents' => (int) round(((float) $data['amount']) * 100),
-                            'method' => $data['method'],
-                            'custom_method_name' => $data['custom_method_name'] ?? null,
-                            'collected_at' => now(),
-                            'collected_by' => $actor->id,
-                            'warehouse_id' => $warehouseId,
-                            'notes' => $data['notes'] ?? null,
-                        ]);
+                            $paymentService->recordPayment([
+                                'customer_id' => $record->id,
+                                'amount_cents' => (int) round(((float) $data['amount']) * 100),
+                                'method' => $data['method'],
+                                'custom_method_name' => $data['custom_method_name'] ?? null,
+                                'collected_at' => now(),
+                                'collected_by' => $actor->id,
+                                'warehouse_id' => $warehouseId,
+                                'notes' => $data['notes'] ?? null,
+                            ]);
 
-                        Notification::make()
-                            ->title('تم تسجيل الدفعة بنجاح')
-                            ->body(sprintf('تم تسجيل دفعة بقيمة $%s للعميل %s وتخصيصها لحسابه.', number_format((float) $data['amount'], 2), $record->name))
-                            ->success()
-                            ->send();
-                    }),
-
-                Action::make('statement')
-                    ->label('كشف حساب')
-                    ->icon('heroicon-o-document-text')
-                    ->color('info')
-                    ->url(fn (Customer $record): string => CustomerResource::getUrl('statement', ['record' => $record])),
-
-                EditAction::make(),
-                Action::make('toggleActive')
-                    ->label(fn ($record): string => $record->is_active ? 'تعطيل' : 'تفعيل')
-                    ->icon(fn ($record): string => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
-                    ->color(fn ($record): string => $record->is_active ? 'danger' : 'success')
-                    ->requiresConfirmation()
-                    ->modalHeading(fn ($record): string => $record->is_active ? 'تعطيل السجل' : 'تفعيل السجل')
-                    ->modalDescription('السجلات تُعطَّل ولا تُحذف نهائياً، حفاظاً على السجل التاريخي.')
-                    ->visible(fn (): bool => auth()->user()?->isAdministrator() ?? false)
-                    ->action(fn ($record) => $record->update(['is_active' => ! $record->is_active])),
-                Action::make('delete')
-                    ->label('حذف')
-                    ->icon('heroicon-o-trash')
-                    ->color('danger')
-                    ->visible(fn (): bool => auth()->user()?->hasCapability(Capability::DeleteRecords) ?? false)
-                    ->authorize(fn ($record): bool => auth()->user()?->hasCapability(Capability::DeleteRecords) ?? false)
-                    ->requiresConfirmation()
-                    ->modalHeading('حذف السجل')
-                    ->modalDescription('هل أنت متأكد من حذف هذا السجل نهائياً؟ لا يمكن التراجع عن هذا الإجراء.')
-                    ->action(function ($record): void {
-                        try {
-                            $record->deleteSafely();
                             Notification::make()
-                                ->title('تم الحذف')
+                                ->title('تم تسجيل الدفعة بنجاح')
+                                ->body(sprintf('تم تسجيل دفعة بقيمة $%s للعميل %s وتخصيصها لحسابه.', number_format((float) $data['amount'], 2), $record->name))
                                 ->success()
                                 ->send();
-                        } catch (DomainException $e) {
-                            Notification::make()
-                                ->title('لا يمكن الحذف')
-                                ->body($e->getMessage())
-                                ->danger()
-                                ->send();
-                        }
-                    }),
+                        }),
+
+                    Action::make('statement')
+                        ->label('كشف حساب')
+                        ->icon('heroicon-o-document-text')
+                        ->color('info')
+                        ->url(fn (Customer $record): string => CustomerResource::getUrl('statement', ['record' => $record])),
+
+                    EditAction::make(),
+                    Action::make('toggleActive')
+                        ->label(fn ($record): string => $record->is_active ? 'تعطيل' : 'تفعيل')
+                        ->icon(fn ($record): string => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
+                        ->color(fn ($record): string => $record->is_active ? 'danger' : 'success')
+                        ->requiresConfirmation()
+                        ->modalHeading(fn ($record): string => $record->is_active ? 'تعطيل السجل' : 'تفعيل السجل')
+                        ->modalDescription('السجلات تُعطَّل ولا تُحذف نهائياً، حفاظاً على السجل التاريخي.')
+                        ->visible(fn (): bool => auth()->user()?->isAdministrator() ?? false)
+                        ->action(fn ($record) => $record->update(['is_active' => ! $record->is_active])),
+                    Action::make('delete')
+                        ->label('حذف')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->visible(fn (): bool => auth()->user()?->hasCapability(Capability::DeleteRecords) ?? false)
+                        ->authorize(fn ($record): bool => auth()->user()?->hasCapability(Capability::DeleteRecords) ?? false)
+                        ->requiresConfirmation()
+                        ->modalHeading('حذف السجل')
+                        ->modalDescription('هل أنت متأكد من حذف هذا السجل نهائياً؟ لا يمكن التراجع عن هذا الإجراء.')
+                        ->action(function ($record): void {
+                            try {
+                                $record->deleteSafely();
+                                Notification::make()
+                                    ->title('تم الحذف')
+                                    ->success()
+                                    ->send();
+                            } catch (DomainException $e) {
+                                Notification::make()
+                                    ->title('لا يمكن الحذف')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        }),
                 ])
-                ->label('إجراءات')
-                ->icon('heroicon-m-ellipsis-vertical')
-                ->button(),
+                    ->label('إجراءات')
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->button(),
             ])
             ->toolbarActions([]);
     }

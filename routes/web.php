@@ -1,26 +1,28 @@
 <?php
 
+use App\Http\Controllers\CustomerStatementController;
+use App\Http\Controllers\LabelController;
 use App\Http\Controllers\TrackingController;
 use Illuminate\Support\Facades\Route;
-
-// HM Cargo Services is an administration application, so the root has no
-// public landing page of its own. Tracking is the deliberately small public
-// surface; its throttle limits token and barcode guessing before auth exists.
-Route::redirect('/', 'https://hmcargoservices.com');
 
 Route::get('/track/{token}', [TrackingController::class, 'show'])
     ->middleware('throttle:20,1')
     ->name('tracking.show');
 
-Route::redirect('/login', '/' . env('FILAMENT_PATH', 'portal') . '/login')->name('login');
+$filamentPath = env('FILAMENT_PATH', '');
+if ($filamentPath !== '') {
+    Route::redirect('/login', '/'.$filamentPath.'/login')->name('login');
+} else {
+    Route::get('/system-login', fn () => redirect()->route('filament.admin.auth.login'))->name('login');
+}
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/labels/packages/{package}', [\App\Http\Controllers\LabelController::class, 'printPackage'])
+    Route::get('/labels/packages/{package}', [LabelController::class, 'printPackage'])
         ->name('labels.package');
-        
-    Route::get('/labels/shipments/{shipment}', [\App\Http\Controllers\LabelController::class, 'printShipment'])
+
+    Route::get('/labels/shipments/{shipment}', [LabelController::class, 'printShipment'])
         ->name('labels.shipment');
 
-    Route::get('/customers/{customer}/statement/print', [\App\Http\Controllers\CustomerStatementController::class, 'printStatement'])
+    Route::get('/customers/{customer}/statement/print', [CustomerStatementController::class, 'printStatement'])
         ->name('customers.statement.print');
 });

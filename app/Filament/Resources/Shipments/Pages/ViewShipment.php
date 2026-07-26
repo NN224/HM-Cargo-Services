@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Shipments\Pages;
 use App\Enums\PackageStatus;
 use App\Enums\ShipmentStatus;
 use App\Filament\Resources\Shipments\ShipmentResource;
+use App\Models\Shipment;
 use App\Services\QrCode;
 use App\Services\WhatsAppMessageService;
 use Filament\Actions\Action;
@@ -23,7 +24,7 @@ use Filament\Schemas\Schema;
  * partial_at_destination is telling the operator that some box has not
  * arrived, and this is the only screen that says which one.
  *
- * @property \App\Models\Shipment $record
+ * @property Shipment $record
  */
 class ViewShipment extends ViewRecord
 {
@@ -108,7 +109,7 @@ class ViewShipment extends ViewRecord
                         TextEntry::make('reference')->label('رقم الشحنة'),
                         TextEntry::make('customer')->label('العميل'),
                         TextEntry::make('recipient')->label('المستلم'),
-                        TextEntry::make('recipient_phone')->label('هاتف المستلم')->extraAttributes(['dir' => 'ltr', 'style' => 'text-align: right;']),
+                        TextEntry::make('recipient_phone')->label('هاتف المستلم')->extraAttributes(['style' => 'unicode-bidi: isolate; direction: ltr; text-align: right;']),
                         TextEntry::make('destination')->label('مستودع الوجهة'),
                         TextEntry::make('status')->label('حالة الشحنة')->badge(),
                         TextEntry::make('total_weight')->label('الوزن الإجمالي'),

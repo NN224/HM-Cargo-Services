@@ -108,7 +108,8 @@ test('an administrator can still receive into any open batch', function () {
             'batch_id' => $this->batch->id,
             'customer_id' => $this->customer->id,
             'recipient_is_customer' => true,
-            'packages' => [['weight_kg' => 2.0, 'description' => null]],
+            'packages' => [['weight_kg' => 2.0, 'description' => null, 'pricing_method' => 'per_kg', 'custom_rate_per_kg' => '5.00']],
+            'final_charge_usd' => '10.00',
         ])
         ->call('receive')
         ->assertHasNoFormErrors();

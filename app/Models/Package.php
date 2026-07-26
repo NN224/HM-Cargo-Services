@@ -6,6 +6,7 @@ use App\Enums\PackageStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
@@ -23,9 +24,14 @@ use InvalidArgumentException;
  * @property string|null $description
  * @property numeric $weight_kg
  * @property PackageStatus $status
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Shipment $shipment
+ * @property bool $is_delayed
+ * @property string|null $delay_reason
+ * @property bool $delay_reason_is_public
+ * @property Carbon|null $delayed_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Shipment $shipment
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Package newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Package newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Package query()
@@ -38,6 +44,7 @@ use InvalidArgumentException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Package whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Package whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Package whereWeightKg($value)
+ *
  * @mixin \Eloquent
  */
 class Package extends Model
@@ -52,10 +59,16 @@ class Package extends Model
         'source_barcode',
         'description',
         'barcode',
+        'is_delayed',
+        'delay_reason',
+        'delay_reason_is_public',
+        'delayed_at',
     ];
 
     protected $attributes = [
-        'status' => PackageStatus::Received->value,
+        'status' => PackageStatus::Created->value,
+        'is_delayed' => false,
+        'delay_reason_is_public' => false,
     ];
 
     protected function casts(): array
@@ -64,6 +77,9 @@ class Package extends Model
             'status' => PackageStatus::class,
             'weight_kg' => 'decimal:4',
             'custom_rate_per_kg_cents' => 'integer',
+            'is_delayed' => 'boolean',
+            'delay_reason_is_public' => 'boolean',
+            'delayed_at' => 'datetime',
         ];
     }
 

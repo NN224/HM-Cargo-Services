@@ -4,15 +4,12 @@ use App\Enums\ShipmentStatus;
 use App\Enums\UserRole;
 use App\Models\Batch;
 use App\Models\Customer;
-use App\Models\Payment;
 use App\Models\Route;
 use App\Models\Shipment;
 use App\Models\User;
 use App\Models\Warehouse;
-use App\Services\BatchReportService;
 use App\Services\BatchDispatchService;
-use App\Services\PaymentService;
-use Illuminate\Support\Facades\DB;
+use App\Services\BatchReportService;
 
 beforeEach(function () {
     $this->dubai = Warehouse::create(['name' => 'دبي', 'location' => 'الإمارات']);

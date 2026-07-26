@@ -20,10 +20,11 @@ use Illuminate\Support\Facades\DB;
 class PaymentService
 {
     /**
-     * @param array $data Expected keys: customer_id, amount_cents, method,
-     *                    custom_method_name, collected_at, collected_by,
-     *                    warehouse_id, reference, notes
-     * @param Shipment|null $targetShipment Optional. If provided, payment prioritizes this shipment.
+     * @param  array  $data  Expected keys: customer_id, amount_cents, method,
+     *                       custom_method_name, collected_at, collected_by,
+     *                       warehouse_id, reference, notes
+     * @param  Shipment|null  $targetShipment  Optional. If provided, payment prioritizes this shipment.
+     *
      * @throws DomainException when the payment cannot be processed.
      */
     public function recordPayment(array $data, ?Shipment $targetShipment = null): Payment
@@ -31,9 +32,9 @@ class PaymentService
         return DB::transaction(function () use ($data, $targetShipment): Payment {
             // Lock the customer to serialize concurrent payment processing for the same account
             $customer = Customer::lockForUpdate()->findOrFail($data['customer_id']);
-            
+
             if ($data['amount_cents'] <= 0) {
-                throw new DomainException("يجب أن يكون مبلغ الدفعة أكبر من صفر.");
+                throw new DomainException('يجب أن يكون مبلغ الدفعة أكبر من صفر.');
             }
 
             if ($data['method'] === Payment::METHOD_OTHER && empty($data['custom_method_name'])) {
@@ -69,7 +70,7 @@ class PaymentService
             // Allocate to target shipment first if specified
             if ($targetShipment !== null && $remainingCents > 0) {
                 if ($targetShipment->customer_id !== $customer->id) {
-                    throw new DomainException("لا يمكن تخصيص الدفعة لشحنة لا تخص هذا العميل.");
+                    throw new DomainException('لا يمكن تخصيص الدفعة لشحنة لا تخص هذا العميل.');
                 }
 
                 $targetShipment = Shipment::lockForUpdate()->findOrFail($targetShipment->id);
@@ -113,15 +114,15 @@ class PaymentService
             $originalPayment = Payment::lockForUpdate()->findOrFail($originalPayment->id);
 
             if ($originalPayment->isReversal()) {
-                throw new DomainException("لا يمكن عكس دفعة هي بحد ذاتها عملية عكس.");
+                throw new DomainException('لا يمكن عكس دفعة هي بحد ذاتها عملية عكس.');
             }
 
             if (Payment::where('reverses_payment_id', $originalPayment->id)->exists()) {
-                throw new DomainException("تم عكس هذه الدفعة مسبقاً.");
+                throw new DomainException('تم عكس هذه الدفعة مسبقاً.');
             }
 
             if (empty(trim($reason))) {
-                throw new DomainException("سبب العكس إلزامي.");
+                throw new DomainException('سبب العكس إلزامي.');
             }
 
             $reversal = new Payment([
@@ -148,7 +149,7 @@ class PaymentService
 
             foreach ($allocations as $allocation) {
                 $shipment = Shipment::lockForUpdate()->findOrFail($allocation->shipment_id);
-                
+
                 $shipment->decrement('paid_amount_cents', $allocation->amount_cents);
 
                 PaymentAllocation::create([

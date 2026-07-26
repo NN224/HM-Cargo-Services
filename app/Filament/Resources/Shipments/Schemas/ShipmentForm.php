@@ -94,6 +94,7 @@ class ShipmentForm
                                     ->required()
                                     ->minValue(0.0001)
                                     ->step(0.0001)
+                                    ->extraInputAttributes(['dir' => 'ltr'])
                                     ->live(onBlur: true)
                                     ->suffix('kg')
                                     ->helperText('الوزن لا يُقرَّب.'),

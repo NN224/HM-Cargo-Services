@@ -54,6 +54,7 @@ Core data:
 - Origin warehouse.
 - Destination warehouse.
 - Optional transit warehouse.
+- Origin airport name, destination airport name, and delivery office name used by the fixed package journey.
 - Active status.
 
 Invariants:
@@ -130,6 +131,7 @@ Core data:
 - Exact decimal weight.
 - Optional description and external reference.
 - Current operational/exception status.
+- Current delay overlay: delayed flag, private delay reason, public-reason flag, and delayed timestamp.
 
 Invariants:
 
@@ -143,6 +145,7 @@ Invariants:
 Append-only event containing:
 
 - Package, status, warehouse, batch where relevant.
+- Previous status and event kind: progress, delay, or correction.
 - Public-safe note and private operational note kept separately.
 - User, timestamp, scan/manual source, and correction linkage.
 
@@ -151,6 +154,7 @@ Invariants:
 - Physical arrivals require a package-level event.
 - Batch actions cannot invent an arrival scan.
 - Corrections append events; they do not overwrite history.
+- The normal journey has seven fixed code-defined positions with route-specific labels, not a user-editable workflow.
 
 ## 10. ShipmentStatusEvent and BatchStatusEvent
 
@@ -240,8 +244,7 @@ The following operations must be atomic:
 
 - Assign shipment to batch, snapshot route/rate, and post initial charge.
 - Scan package arrival and update aggregate shipment state.
-- Collect complete shipment and write all package/shipment events.
+- Collect all arrived packages, derive complete or partial shipment status, and write all package/shipment events.
 - Create payment and allocations.
 - Reverse payment and release/reapply allocations.
 - Reprice dispatched shipment and post adjustment.
-

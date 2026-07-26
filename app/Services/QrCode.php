@@ -19,7 +19,7 @@ class QrCode
 {
     public function svg(string $data, int $size = 180): string
     {
-        $renderer = new ImageRenderer(new RendererStyle($size), new SvgImageBackEnd());
+        $renderer = new ImageRenderer(new RendererStyle($size), new SvgImageBackEnd);
         $svg = (new Writer($renderer))->writeString($data);
         $start = strpos($svg, '<svg');
 

@@ -56,7 +56,7 @@ class CustomersInDebtWidget extends TableWidget
                     ->searchable(),
                 TextColumn::make('phone')
                     ->label('رقم الهاتف')
-                    ->extraAttributes(['dir' => 'ltr', 'style' => 'text-align: right;'])
+                    ->extraAttributes(['style' => 'unicode-bidi: isolate; direction: ltr; text-align: right;'])
                     ->fontFamily('mono')
                     ->color('gray'),
                 TextColumn::make('outstanding_cents')

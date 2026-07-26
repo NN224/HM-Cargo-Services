@@ -3,6 +3,7 @@
 use App\Enums\ShipmentStatus;
 use App\Enums\UserRole;
 use App\Filament\Resources\Shipments\Pages\ListShipments;
+use App\Filament\Resources\Shipments\Pages\ViewShipment;
 use App\Models\Batch;
 use App\Models\Customer;
 use App\Models\Route;
@@ -161,7 +162,7 @@ test('the view shipment page offers whatsapp intake and arrival actions', functi
         ShipmentStatus::ReadyForCollection->value, 'tok-view-wa');
 
     Livewire::actingAs($this->admin)
-        ->test(\App\Filament\Resources\Shipments\Pages\ViewShipment::class, ['record' => $shipment->id])
+        ->test(ViewShipment::class, ['record' => $shipment->id])
         ->assertActionExists('whatsappIntake')
         ->assertActionExists('whatsappArrival');
 });

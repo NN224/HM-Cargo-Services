@@ -11,13 +11,12 @@ use App\Models\CustomerRate;
 use App\Models\Package;
 use App\Models\Payment;
 use App\Models\Route;
-use App\Models\Shipment;
 use App\Models\User;
 use App\Models\Warehouse;
-use App\Services\BatchAssignmentService;
 use App\Services\BatchDispatchService;
 use App\Services\BatchIntakeService;
 use App\Services\CustomerStatementService;
+use App\Services\PackageJourneyService;
 use App\Services\PackageScanService;
 use App\Services\PaymentService;
 use App\Services\ShipmentCollectionService;
@@ -33,6 +32,9 @@ test('e2e full operational daily routine verification test', function () {
         'origin_warehouse_id' => $originWh->id,
         'destination_warehouse_id' => $destWh->id,
         'transit_warehouse_id' => $transitWh->id,
+        'origin_airport_name' => 'مطار دبي',
+        'destination_airport_name' => 'مطار بيروت',
+        'delivery_office_name' => 'مكتب دمشق',
         'rate_per_kg_cents' => 500, // $5.00/kg default
         'is_active' => true,
     ]);
@@ -80,6 +82,7 @@ test('e2e full operational daily routine verification test', function () {
             ['weight_kg' => 5.45, 'description' => 'ملابس'],
             ['weight_kg' => 3.20, 'description' => 'أحذية'],
         ],
+        'final_charge_usd' => '38.93',
     ], $admin);
 
     $shipment->refresh();
@@ -100,20 +103,26 @@ test('e2e full operational daily routine verification test', function () {
     $dispatchService->dispatch($batch, 200);
 
     expect($batch->fresh()->status)->toBe(BatchStatus::Dispatched);
-    expect($shipment->fresh()->rate_per_kg_cents)->toBe(450);
+    expect($shipment->fresh()->rate_per_kg_cents)->toBeNull();
 
     // 5. WAREHOUSE SCANNING AT TRANSIT & DESTINATION
     $scanService = app(PackageScanService::class);
+    $journeyService = app(PackageJourneyService::class);
     $pkg1 = $shipment->packages->first();
     $pkg2 = $shipment->packages->last();
+
+    $pkg1->forceFill(['status' => PackageStatus::ReceivedOrigin])->save();
+    $pkg2->forceFill(['status' => PackageStatus::ReceivedOrigin])->save();
+
+    $journeyService->advance($shipment, [$pkg1->id, $pkg2->id], $admin);
+    $journeyService->advance($shipment, [$pkg1->id, $pkg2->id], $admin);
 
     // First scan at transit warehouse (Arrived Transit)
     $scanService->scan($pkg1->barcode, $transitWh, $admin);
     $scanService->scan($pkg2->barcode, $transitWh, $admin);
 
     // Depart from transit
-    $pkg1->update(['status' => PackageStatus::DepartedTransit]);
-    $pkg2->update(['status' => PackageStatus::DepartedTransit]);
+    $journeyService->advance($shipment, [$pkg1->id, $pkg2->id], $admin);
 
     // Now scan pkg1 at destination warehouse (Damascus)
     $scanService->scan($pkg1->barcode, $destWh, $admin);

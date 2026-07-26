@@ -43,7 +43,7 @@ Keep domain operations isolated behind focused application services:
 
 - Shipment creation and package/barcode issuance.
 - Batch assignment, route/rate snapshotting, and initial charge posting.
-- Package scanning and aggregate status transitions.
+- Package journey progress, scanning, delay overlays, corrections, and aggregate status transitions.
 - Shipment collection.
 - Payment recording, FIFO allocation, and reversal.
 - Post-dispatch repricing and adjustment.
@@ -71,11 +71,11 @@ The billing customer owns route rates, credit, payments, and statements. Shipmen
 
 ### Routes and rates
 
-Routes are configurable records with origin, destination, and optional transit warehouse. Customer rates are route-specific and effective-dated. *(Superseded by D-018 for version 1: one current rate per customer and route, with no effective-dating. The rate snapshot taken at batch assignment already preserves historical charges.)* Batch assignment snapshots the selected route and rate.
+Routes are configurable records with origin, destination, optional transit warehouse, and the three route-specific labels used by the fixed package journey: origin airport, destination airport, and delivery office. Customer rates are route-specific and effective-dated. *(Superseded by D-018 for version 1: one current rate per customer and route, with no effective-dating. The rate snapshot taken at batch assignment already preserves historical charges.)* Batch assignment snapshots the selected route and rate.
 
 ### Shipments and packages
 
-A shipment groups one or more physical packages. Each package receives a unique generated barcode and exact weight. Labels support normal A4 printing and phone display. Phone-camera scanning is a primary warehouse workflow.
+A shipment groups one or more physical packages. Each package receives a unique generated barcode, exact weight, and one of the fixed package journey statuses. Labels support normal A4 printing and phone display. Phone-camera scanning is a primary warehouse workflow.
 
 ### Shipment batches
 
@@ -100,8 +100,8 @@ Shipment charges, adjustments, payments, reversals, and allocations form an audi
 7. Derive partial/complete shipment status from package events.
 8. When all packages arrive, prepare WhatsApp arrival/amount/tracking message.
 9. Recipient opens tracking or arrives at warehouse.
-10. Record full, partial, or credit collection and generate receipt.
-11. Collect all packages in one controlled transaction.
+10. Record full, partial, or credit payment and generate receipt.
+11. Collect all arrived packages in one controlled transaction; keep the shipment partially collected while active packages remain.
 12. Customer statement and batch report update from ledger and events.
 13. Close the batch only after every shipment is collected, cancelled, or resolved.
 
@@ -110,7 +110,7 @@ Shipment charges, adjustments, payments, reversals, and allocations form an audi
 - Reject batch assignment when customer route rate is missing.
 - Reject route/destination mismatches.
 - Reject duplicate package barcodes and non-positive weights.
-- Reject collection while any active package is not at destination.
+- For complete collection, reject while any active package is not at destination; partial collection releases only packages already at destination.
 - Reject employee actions outside the assigned warehouse.
 - Reject post-dispatch protected edits by employees.
 - Use transactions for scan/aggregate updates, pricing/posting, payment/allocation, reversal, collection, and repricing.
@@ -146,7 +146,7 @@ Shipment charges, adjustments, payments, reversals, and allocations form an audi
 - Shipment creation and multi-package barcode issuance.
 - Batch assignment and validation.
 - Direct and transit scan workflows.
-- Complete-package collection gate.
+- Complete and partial package collection rules.
 - Full, partial, and credit payment flows.
 - Public tracking privacy and payment summary.
 
@@ -166,11 +166,10 @@ Shipment charges, adjustments, payments, reversals, and allocations form an audi
 
 ## 10. Scope controls
 
-Version 1 deliberately excludes delivery logistics, delivery fees, drivers/fleet, multiple currencies, online payments, fine-grained roles, SMTP, carrier APIs, configurable workflow engines, multi-tenant SaaS, and partial package pickup.
+Version 1 deliberately excludes delivery logistics, delivery fees, drivers/fleet, multiple currencies, online payments, fine-grained roles, SMTP, carrier APIs, configurable workflow engines, and multi-tenant SaaS.
 
 Any agent proposing these features must stop and obtain owner approval before changing canonical documents or code.
 
 ## 11. Success definition
 
 The product succeeds when Dubai can create and dispatch multi-package cargo, destination warehouses can scan and collect it, customers can track and understand their amount due without login, payments and credit reconcile, and management can see accurate batch profitability—without requiring paid database services or unrelated courier complexity.
-

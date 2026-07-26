@@ -3,15 +3,17 @@
 namespace App\Filament\Resources\Customers\Pages;
 
 use App\Filament\Resources\Customers\CustomerResource;
+use App\Models\Customer;
 use App\Services\CustomerStatementService;
+use Filament\Actions\Action;
 use Filament\Infolists\Components\RepeatableEntry;
-use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 /**
- * @property \App\Models\Customer $record
+ * @property Customer $record
  */
 class StatementCustomer extends ViewRecord
 {
@@ -22,11 +24,11 @@ class StatementCustomer extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            \Filament\Actions\Action::make('print')
+            Action::make('print')
                 ->label('طباعة كشف الحساب')
                 ->icon('heroicon-o-printer')
                 ->color('gray')
-                ->url(fn (\App\Models\Customer $record) => route('customers.statement.print', $record))
+                ->url(fn (Customer $record) => route('customers.statement.print', $record))
                 ->openUrlInNewTab(),
         ];
     }
@@ -54,9 +56,9 @@ class StatementCustomer extends ViewRecord
                 Section::make('معلومات الفاتورة والشركة')
                     ->schema([
                         TextEntry::make('company_name')->label('شركة الشحن')->default('HM Cargo Services'),
-                        TextEntry::make('company_phone')->label('هاتف الشركة')->default("🇦🇪 +971 52 153 0190\n🇱🇧 +961 81 059 063")->extraAttributes(['dir' => 'ltr', 'style' => 'text-align: right;']),
+                        TextEntry::make('company_phone')->label('هاتف الشركة')->default(['🇦🇪 +971 52 153 0190', '🇱🇧 +961 81 059 063'])->listWithLineBreaks()->extraAttributes(['style' => 'unicode-bidi: isolate; direction: ltr; text-align: right;']),
                         TextEntry::make('customer_name')->label('اسم العميل')->default($customer->name),
-                        TextEntry::make('customer_phone')->label('هاتف العميل')->default($customer->phone)->extraAttributes(['dir' => 'ltr', 'style' => 'text-align: right;']),
+                        TextEntry::make('customer_phone')->label('هاتف العميل')->default($customer->phone)->extraAttributes(['style' => 'unicode-bidi: isolate; direction: ltr; text-align: right;']),
                     ])
                     ->columns(4),
 

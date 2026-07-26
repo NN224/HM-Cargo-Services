@@ -51,10 +51,11 @@ Routes are data, not hard-coded branches. Future routes can be added by an admin
 
 - `created` - barcode generated; package record exists.
 - `received_origin` - physically accepted at the Dubai warehouse.
-- `in_transit` - travelling in a dispatched batch.
-- `arrived_transit` - scanned at a configured transit warehouse.
-- `departed_transit` - left the transit warehouse for the final destination.
-- `arrived_destination` - scanned at the final warehouse.
+- `arrived_origin_airport` - arrived at the route's configured origin airport.
+- `in_transit` - departed the origin airport.
+- `arrived_transit` - arrived at the route's configured destination airport.
+- `departed_transit` - departed the destination airport toward the delivery office.
+- `arrived_destination` - arrived at the route's configured delivery office.
 - `collected` - released to the recipient after the shipment is eligible for collection.
 - `cancelled` - removed before completion with an audited reason.
 - `missing` - expected but not present at a checkpoint.
@@ -70,6 +71,7 @@ Routes are data, not hard-coded branches. Future routes can be added by an admin
 - `at_transit` - all active packages scanned at transit.
 - `partial_at_destination` - only some packages scanned at destination.
 - `ready_for_collection` - all active packages arrived at destination.
+- `partially_collected` - some arrived packages were released while other active packages remain uncollected.
 - `collected` - all active packages released to the recipient.
 - `cancelled` - shipment cancelled under an approved exception flow.
 - `exception` - at least one active package is missing or damaged and requires resolution.
@@ -90,12 +92,23 @@ Routes are data, not hard-coded branches. Future routes can be added by an admin
 - Package scans are the source of truth for physical arrival.
 - A shipment becomes `partial_at_destination` when at least one but not all active packages have arrived.
 - A shipment becomes `ready_for_collection` only when every active, non-cancelled package is `arrived_destination`.
-- Version 1 does not allow releasing only some packages. The collect action is disabled until the shipment is ready.
+- A destination warehouse employee may release packages in `arrived_destination` before the remaining active packages arrive (D-029).
+- After a partial collection, released packages become `collected`, unarrived packages keep their existing status, and the shipment becomes `partially_collected`.
 - A shipment becomes `collected` only when all active packages are marked collected in one controlled transaction.
 - A batch is not closed merely because one shipment is collected.
 - A batch becomes eligible for closure only when all shipments are collected, cancelled, or have an explicitly resolved exception.
 
 ## 6. Transit behavior
+
+For every active route, packages use the fixed seven-step journey approved in D-030:
+
+1. Arrived at the origin warehouse.
+2. Arrived at the origin airport.
+3. Departed the origin airport.
+4. Arrived at the destination airport.
+5. Departed the destination airport.
+6. Arrived at the delivery office.
+7. Collected by the recipient.
 
 For Dubai to Beirut to Syria:
 
@@ -107,7 +120,7 @@ For Dubai to Beirut to Syria:
 6. Packages are scanned at the Syria destination warehouse.
 7. Complete shipments become ready for collection.
 
-For direct routes, transit statuses are skipped; they are not created with fake timestamps.
+Direct routes do not skip journey positions. They still use all seven route-labelled package progress steps so public and staff progress remains consistent.
 
 ## 7. Destination warehouse workflow
 
@@ -118,7 +131,8 @@ For direct routes, transit statuses are skipped; they are not created with fake 
 5. When all packages arrive, the system prepares an Arabic WhatsApp arrival message with the secure tracking link and amount due.
 6. When the recipient arrives, the employee opens the shipment by barcode.
 7. Payment is recorded as full, partial, or credit according to `pricing-payments.md`.
-8. The employee confirms collection; the system records user, warehouse, date/time, and package collection events.
+8. The employee may release all arrived packages even when other packages remain in transit.
+9. The system records user, warehouse, date/time, and package collection events for every released package.
 
 Local delivery coordination is outside the system. Reaching `ready_for_collection` means HM Cargo Services has made the shipment available at the warehouse; it does not represent last-mile delivery.
 
@@ -139,6 +153,7 @@ After batch dispatch:
 - Warehouse employees cannot change route, package weight, billing customer, or rate snapshot.
 - Administrators may correct them only with a reason.
 - A correction writes an audit event and, when financial amounts change, a financial adjustment rather than rewriting history.
+- Administrator package journey corrections require a reason, append package events, and write append-only audit log rows.
 - Moving a shipment to another route triggers explicit repricing confirmation.
 - If payments already exist, the system preserves allocations and records the resulting credit or outstanding difference.
 
@@ -168,4 +183,3 @@ After batch dispatch:
 - Mark the package damaged with notes.
 - Set the shipment to `exception` until an administrator records the resolution.
 - Do not automatically change the charge; financial handling is an explicit adjustment.
-

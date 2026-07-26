@@ -6,7 +6,6 @@ use App\Models\Batch;
 use App\Models\Customer;
 use App\Models\CustomerRate;
 use App\Models\Route;
-use App\Models\Shipment;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\BatchIntakeService;
@@ -54,13 +53,13 @@ test('intake creates a priced shipment attached to the batch', function () {
             ['weight_kg' => 2.5, 'description' => 'ملابس'],
             ['weight_kg' => 1.5, 'description' => null],
         ],
+        'final_charge_usd' => '12.00',
     ], $this->actor);
 
     expect($shipment->batch_id)->toBe($this->batch->id)
         ->and($shipment->packages)->toHaveCount(2)
         ->and((string) $shipment->total_weight_kg)->toBe('4.0000')
-        ->and($shipment->rate_per_kg_cents)->toBe(300)
-        // 4.0 kg × 300 cents
+        ->and($shipment->rate_per_kg_cents)->toBeNull()
         ->and($shipment->final_charge_cents)->toBe(1200);
 });
 
@@ -123,22 +122,6 @@ test('at least one package is required', function () {
     ], $this->actor))->toThrow(DomainException::class);
 });
 
-test('a customer with no rate for this route is refused and nothing is written', function () {
-    $stranger = Customer::create(['name' => 'غريب', 'phone' => '+971500000099']);
-
-    $before = Shipment::count();
-
-    expect(fn () => $this->service->receive($this->batch, [
-        'customer_id' => $stranger->id,
-        'recipient_is_customer' => true,
-        'packages' => [['weight_kg' => 1.0, 'description' => null]],
-    ], $this->actor))->toThrow(DomainException::class);
-
-    // The whole intake is one transaction: a refusal leaves no orphan
-    // shipment or package behind.
-    expect(Shipment::count())->toBe($before);
-});
-
 test('a supplier barcode given at intake reaches the package', function () {
     // The same box must capture the same facts through either door.
     $shipment = $this->service->receive($this->batch, [
@@ -160,4 +143,27 @@ test('a package with no supplier barcode is still accepted', function () {
     ], $this->actor);
 
     expect($shipment->packages->first()->source_barcode)->toBeNull();
+});
+
+test('subsequent intake for the same customer on the same batch appends packages to existing shipment', function () {
+    $shipment1 = $this->service->receive($this->batch, [
+        'customer_id' => $this->customer->id,
+        'recipient_is_customer' => true,
+        'packages' => [['weight_kg' => 2.0, 'description' => 'طرد 1']],
+    ], $this->actor);
+
+    $pkg1Id = $shipment1->packages->first()->id;
+
+    $shipment2 = $this->service->receive($this->batch, [
+        'customer_id' => $this->customer->id,
+        'recipient_is_customer' => true,
+        'packages' => [
+            ['id' => $pkg1Id, 'weight_kg' => 2.0, 'description' => 'طرد 1'],
+            ['weight_kg' => 3.0, 'description' => 'طرد 2'],
+        ],
+    ], $this->actor);
+
+    expect($shipment2->id)->toBe($shipment1->id)
+        ->and($shipment2->packages)->toHaveCount(2)
+        ->and((string) $shipment2->total_weight_kg)->toBe('5.0000');
 });

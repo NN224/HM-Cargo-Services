@@ -29,8 +29,7 @@ test('an employee holding manage_customers is offered customer creation', functi
     // action is what actually reflects whether creation is offered.
     Livewire::actingAs($this->clerk->fresh())
         ->test(ReceiveIntoBatch::class)
-        ->assertFormFieldExists('customer_id', checkFieldUsing: fn ($field): bool =>
-            $field->getCreateOptionAction()?->isVisible() ?? false);
+        ->assertFormFieldExists('customer_id', checkFieldUsing: fn ($field): bool => $field->getCreateOptionAction()?->isVisible() ?? false);
 });
 
 test('an employee without it is not', function () {
@@ -38,6 +37,5 @@ test('an employee without it is not', function () {
 
     Livewire::actingAs($this->clerk)
         ->test(ReceiveIntoBatch::class)
-        ->assertFormFieldExists('customer_id', checkFieldUsing: fn ($field): bool =>
-            ! ($field->getCreateOptionAction()?->isVisible() ?? false));
+        ->assertFormFieldExists('customer_id', checkFieldUsing: fn ($field): bool => ! ($field->getCreateOptionAction()?->isVisible() ?? false));
 });

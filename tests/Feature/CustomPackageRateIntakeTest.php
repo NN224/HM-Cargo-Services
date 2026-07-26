@@ -1,13 +1,15 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Filament\Pages\ReceiveIntoBatch;
 use App\Models\Batch;
 use App\Models\Customer;
 use App\Models\CustomerRate;
 use App\Models\Route;
+use App\Models\Shipment;
 use App\Models\User;
 use App\Models\Warehouse;
-use App\Services\BatchIntakeService;
+use Livewire\Livewire;
 
 beforeEach(function () {
     $this->admin = User::factory()->create([
@@ -39,26 +41,63 @@ beforeEach(function () {
     ]);
 });
 
-test('intake calculates final charge with custom per package rates', function () {
-    $service = app(BatchIntakeService::class);
+test('intake ui calculates final charge with custom per package rates', function () {
+    Livewire::actingAs($this->admin)
+        ->test(ReceiveIntoBatch::class)
+        ->fillForm([
+            'batch_id' => $this->batch->id,
+            'customer_id' => $this->customer->id,
+            'recipient_is_customer' => true,
+            'packages' => [
+                [
+                    'weight_kg' => '2.0000',
+                    'description' => 'Shein Clothes',
+                    'pricing_method' => 'per_kg',
+                    'custom_rate_per_kg' => '10.00',
+                ],
+                [
+                    'weight_kg' => '1.0000',
+                    'description' => 'Cosmetics',
+                    'pricing_method' => 'per_kg',
+                    'custom_rate_per_kg' => '18.00', // Custom: $18.00 * 1 = $18.00 (1800 cents)
+                ],
+            ],
+        ])
+        ->assertFormSet(['final_charge_usd' => '38.00']);
+});
 
-    $shipment = $service->receive($this->batch, [
+test('existing package rate fills every unpriced package in the same shipment', function () {
+    CustomerRate::query()->delete();
+
+    $shipment = Shipment::create([
         'customer_id' => $this->customer->id,
-        'recipient_is_customer' => true,
-        'packages' => [
-            [
-                'weight_kg' => '2.0000',
-                'description' => 'Shein Clothes',
-                'custom_rate_per_kg' => null, // Default: $9.25 * 2 = $18.50 (1850 cents)
-            ],
-            [
-                'weight_kg' => '1.0000',
-                'description' => 'Cosmetics',
-                'custom_rate_per_kg' => '18.00', // Custom: $18.00 * 1 = $18.00 (1800 cents)
-            ],
-        ],
-    ], $this->admin);
+        'recipient_name' => $this->customer->name,
+        'recipient_phone' => $this->customer->phone,
+        'destination_warehouse_id' => $this->syria->id,
+    ]);
+    $shipment->forceFill(['batch_id' => $this->batch->id])->save();
 
-    // Total expected = 1850 + 1800 = 3650 cents ($36.50)
-    expect($shipment->final_charge_cents)->toBe(3650);
+    $shipment->packages()->create([
+        'weight_kg' => '24.0000',
+        'description' => 'Shein',
+        'custom_rate_per_kg_cents' => 5600,
+    ]);
+    $shipment->packages()->create([
+        'weight_kg' => '5.0000',
+        'description' => 'Second package',
+        'custom_rate_per_kg_cents' => null,
+    ]);
+
+    Livewire::actingAs($this->admin)
+        ->test(ReceiveIntoBatch::class)
+        ->fillForm(['batch_id' => $this->batch->id])
+        ->fillForm(['customer_id' => $this->customer->id])
+        ->assertFormSet(function (array $state): array {
+            $packages = array_values($state['packages']);
+
+            expect($packages[0]['custom_rate_per_kg'])->toBe('56.00')
+                ->and($packages[1]['custom_rate_per_kg'])->toBe('56.00');
+
+            return ['final_charge_usd' => '1624.00'];
+        });
 });

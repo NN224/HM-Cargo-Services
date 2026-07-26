@@ -3,12 +3,13 @@
 namespace App\Filament\Resources\CustomerRates\Pages;
 
 use App\Filament\Resources\CustomerRates\CustomerRateResource;
+use App\Models\CustomerRate;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
 /**
- * @property \App\Models\CustomerRate $record
+ * @property CustomerRate $record
  */
 class EditCustomerRate extends EditRecord
 {

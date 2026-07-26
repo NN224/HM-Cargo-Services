@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\GuardsDeletion;
-
 use App\Enums\BatchStatus;
+use App\Models\Concerns\GuardsDeletion;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * A shipment batch: one route, one total cost per kilogram, many shipments.
@@ -22,13 +23,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $route_id
  * @property BatchStatus $status
  * @property int|null $cost_per_kg_cents
- * @property \Illuminate\Support\Carbon|null $dispatched_on
- * @property \Illuminate\Support\Carbon|null $arrived_on
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Route $route
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Shipment> $shipments
+ * @property Carbon|null $dispatched_on
+ * @property Carbon|null $arrived_on
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Route $route
+ * @property-read Collection<int, Shipment> $shipments
  * @property-read int|null $shipments_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch query()
@@ -41,6 +43,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch whereRouteId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Batch whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class Batch extends Model

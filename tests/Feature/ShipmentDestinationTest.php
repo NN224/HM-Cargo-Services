@@ -3,17 +3,17 @@
 use App\Models\Batch;
 use App\Models\Customer;
 use App\Models\CustomerRate;
+use App\Models\Package;
 use App\Models\Route;
 use App\Models\Shipment;
 use App\Models\Warehouse;
-use App\Models\Package;
 use App\Services\BatchAssignmentService;
 
 beforeEach(function () {
     $this->origin = Warehouse::create(['name' => 'Dubai', 'location' => 'UAE']);
     $this->destinationSyria = Warehouse::create(['name' => 'Damascus', 'location' => 'Syria']);
     $this->destinationLebanon = Warehouse::create(['name' => 'Beirut', 'location' => 'Lebanon']);
-    
+
     $this->customer = Customer::create([
         'name' => 'John Doe',
         'phone' => '123456789',
@@ -57,18 +57,18 @@ it('rejects batch assignment if shipment destination differs from batch route de
         'recipient_phone' => '0000',
         'destination_warehouse_id' => $this->destinationLebanon->id,
     ]);
-    
+
     Package::create([
         'shipment_id' => $shipment->id,
         'weight_kg' => '10',
     ]);
 
-    $service = new BatchAssignmentService();
+    $service = new BatchAssignmentService;
 
-    expect(fn() => $service->assign($shipment, $this->batchSyria))
+    expect(fn () => $service->assign($shipment, $this->batchSyria))
         ->toThrow(
-            DomainException::class, 
-            "الشحنة متجهة إلى Beirut، بينما مسار الرحلة ينتهي في Damascus. لا يمكن إسنادها."
+            DomainException::class,
+            'الشحنة متجهة إلى Beirut، بينما مسار الرحلة ينتهي في Damascus. لا يمكن إسنادها.'
         );
 });
 
@@ -85,7 +85,7 @@ it('accepts batch assignment if shipment destination matches batch route destina
         'weight_kg' => '10',
     ]);
 
-    $service = new BatchAssignmentService();
+    $service = new BatchAssignmentService;
     $service->assign($shipment, $this->batchSyria);
 
     expect($shipment->fresh()->batch_id)->toBe($this->batchSyria->id);
@@ -104,7 +104,7 @@ it('accepts batch assignment for legacy shipments with no destination', function
         'weight_kg' => '10',
     ]);
 
-    $service = new BatchAssignmentService();
+    $service = new BatchAssignmentService;
     $service->assign($shipment, $this->batchSyria);
 
     expect($shipment->fresh()->batch_id)->toBe($this->batchSyria->id);

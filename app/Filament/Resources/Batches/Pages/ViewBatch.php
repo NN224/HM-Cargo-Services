@@ -8,7 +8,6 @@ use App\Models\Batch;
 use App\Services\BatchDispatchService;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 
@@ -29,19 +28,14 @@ class ViewBatch extends ViewRecord
                 ->icon('heroicon-o-paper-airplane')
                 ->color('success')
                 ->visible(fn (Batch $record): bool => BatchResource::canDispatch($record))
-                ->schema([
-                    TextInput::make('cost_per_kg_cents')
-                        ->label('تكلفة الكيلو (بالسنت)')
-                        ->helperText('تُحفظ هذه التكلفة على الرحلة ولا تتغير بعد الإرسال.')
-                        ->integer()
-                        ->minValue(0)
-                        ->required(),
-                ])
-                ->action(function (array $data, Batch $record, BatchDispatchService $service): void {
-                    $service->dispatch($record, (int) $data['cost_per_kg_cents']);
+                ->requiresConfirmation()
+                ->modalHeading('تأكيد إرسال الرحلة')
+                ->modalDescription('بمجرد إرسال الرحلة، سيتوقف قبول شحنات جديدة عليها.')
+                ->action(function (Batch $record, BatchDispatchService $service): void {
+                    $service->dispatch($record, 0);
 
                     Notification::make()
-                        ->title('تم إرسال الرحلة وتثبيت تكلفتها.')
+                        ->title('تم إرسال الرحلة.')
                         ->success()
                         ->send();
 

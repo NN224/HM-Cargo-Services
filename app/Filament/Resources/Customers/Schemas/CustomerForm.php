@@ -25,6 +25,7 @@ class CustomerForm
                 TextInput::make('phone')
                     ->label('رقم الهاتف')
                     ->required()
+                    ->extraInputAttributes(['dir' => 'ltr'])
                     ->maxLength(32)
                     ->unique(ignoreRecord: true)
                     // A phone number is always left-to-right, even in an RTL

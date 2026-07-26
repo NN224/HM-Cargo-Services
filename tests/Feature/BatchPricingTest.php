@@ -200,10 +200,10 @@ test('awkward weights still price to an exact cent', function (float $kg, int $r
 
     expect($shipment->fresh()->computed_charge_cents)->toBe($expected);
 })->with([
-    'a third of a kilo'   => [0.3333, 450, 150],   // 0.3333 × 450 = 149.985 -> 150
-    'one tenth'           => [0.1, 450, 45],
-    'the float trap'      => [0.7, 300, 210],      // 0.7 × 3 is 2.0999... in binary float
-    'a heavy shipment'    => [1000.0, 375, 375000],
+    'a third of a kilo' => [0.3333, 450, 150],   // 0.3333 × 450 = 149.985 -> 150
+    'one tenth' => [0.1, 450, 45],
+    'the float trap' => [0.7, 300, 210],      // 0.7 × 3 is 2.0999... in binary float
+    'a heavy shipment' => [1000.0, 375, 375000],
 ]);
 
 test('a batch keeps its cost in cents, untouched by customer rounding', function () {

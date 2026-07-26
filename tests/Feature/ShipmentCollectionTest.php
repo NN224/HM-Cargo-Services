@@ -3,6 +3,7 @@
 use App\Enums\PackageStatus;
 use App\Enums\ShipmentStatus;
 use App\Enums\UserRole;
+use App\Filament\Resources\Shipments\Pages\ListShipments;
 use App\Models\Batch;
 use App\Models\Customer;
 use App\Models\Route;
@@ -12,6 +13,7 @@ use App\Models\Warehouse;
 use App\Services\ShipmentCollectionService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
+use Livewire\Livewire;
 
 beforeEach(function () {
     $this->origin = Warehouse::create(['name' => 'دبي', 'location' => 'الإمارات']);
@@ -20,6 +22,9 @@ beforeEach(function () {
         'name' => 'دبي ← دمشق',
         'origin_warehouse_id' => $this->origin->id,
         'destination_warehouse_id' => $this->destination->id,
+        'origin_airport_name' => 'مطار دبي',
+        'destination_airport_name' => 'مطار دمشق',
+        'delivery_office_name' => 'مكتب دمشق',
     ]);
     $this->batch = Batch::create(['route_id' => $this->route->id]);
     $this->customer = Customer::create(['name' => 'عميل التسليم', 'phone' => '+971500000302']);
@@ -82,7 +87,8 @@ test('all active packages and the shipment are collected in one controlled trans
 
     expect($collected->status)->toBe(ShipmentStatus::Collected)
         ->and($shipment->packages()->where('status', PackageStatus::Collected->value)->count())->toBe(2)
-        ->and(DB::table('package_status_events')->where('source', 'collection')->count())->toBe(2);
+        ->and(DB::table('package_status_events')->where('source', 'collection')->count())->toBe(2)
+        ->and(DB::table('package_status_events')->where('previous_status', PackageStatus::ArrivedDestination->value)->count())->toBe(2);
 });
 
 test('cancelled packages do not create a partial pickup', function () {
@@ -132,17 +138,34 @@ test('warehouse policy refuses collection outside the assigned warehouse', funct
     expect($shipment->fresh()->status)->not->toBe(ShipmentStatus::Collected);
 });
 
-test('d029 partial collection is refused for non-administrator employees', function () {
+test('d029 partial collection is available to destination warehouse employees', function () {
     $shipment = collectionTestShipment($this->batch, $this->customer, [
         PackageStatus::ArrivedDestination,
         PackageStatus::InTransit,
     ]);
 
-    expect(fn () => app(ShipmentCollectionService::class)->collectPartially(
+    $partiallyCollected = app(ShipmentCollectionService::class)->collectPartially(
         $shipment,
         $this->destination,
         $this->employee,
-    ))->toThrow(DomainException::class, 'التسليم الجزئي يحتاج إلى موافقة وبطاقة مدير النظام');
+    );
+
+    expect($partiallyCollected->status)->toBe(ShipmentStatus::PartiallyCollected)
+        ->and($shipment->packages()->where('status', PackageStatus::Collected->value)->count())->toBe(1)
+        ->and($shipment->packages()->where('status', PackageStatus::InTransit->value)->count())->toBe(1)
+        ->and(DB::table('package_status_events')->where('source', 'partial_collection')->count())->toBe(1)
+        ->and(DB::table('package_status_events')->where('previous_status', PackageStatus::ArrivedDestination->value)->count())->toBe(1);
+});
+
+test('destination warehouse employees see the partial collection action', function () {
+    $shipment = collectionTestShipment($this->batch, $this->customer, [
+        PackageStatus::ArrivedDestination,
+        PackageStatus::InTransit,
+    ]);
+
+    Livewire::actingAs($this->employee)
+        ->test(ListShipments::class)
+        ->assertTableActionVisible('partialCollect', $shipment->id);
 });
 
 test('d029 partial collection succeeds with administrator approval', function () {

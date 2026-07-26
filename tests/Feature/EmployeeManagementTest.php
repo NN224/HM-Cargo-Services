@@ -4,10 +4,10 @@ namespace Tests\Feature;
 
 use App\Enums\Capability;
 use App\Enums\UserRole;
-use App\Filament\Resources\Users\UserResource;
-use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
+use App\Filament\Resources\Users\Pages\ListUsers;
+use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,7 +21,7 @@ class EmployeeManagementTest extends TestCase
     public function test_only_administrator_can_access_users_screen(): void
     {
         $admin = User::factory()->create(['role' => UserRole::Administrator]);
-        
+
         $warehouse = Warehouse::create(['name' => 'Dubai', 'location' => 'UAE']);
         $employee = User::factory()->create([
             'role' => UserRole::WarehouseEmployee,
@@ -41,7 +41,7 @@ class EmployeeManagementTest extends TestCase
     {
         $admin = User::factory()->create(['role' => UserRole::Administrator]);
         $user1 = User::factory()->create(['name' => 'Ahmad', 'role' => UserRole::Administrator]);
-        
+
         $warehouse = Warehouse::create(['name' => 'Dubai', 'location' => 'UAE']);
         $user2 = User::factory()->create([
             'name' => 'Sara',
@@ -69,8 +69,8 @@ class EmployeeManagementTest extends TestCase
                 'password' => 'secret',
                 'role' => UserRole::WarehouseEmployee->value,
                 'warehouse_id' => $warehouse->id,
-                'capability_' . Capability::RecordPayments->value => true,
-                'capability_' . Capability::EditAfterDispatch->value => true,
+                'capability_'.Capability::RecordPayments->value => true,
+                'capability_'.Capability::EditAfterDispatch->value => true,
             ])
             ->call('create')
             ->assertHasNoFormErrors();
@@ -100,12 +100,12 @@ class EmployeeManagementTest extends TestCase
         Livewire::actingAs($admin)
             ->test(EditUser::class, ['record' => $employee->id])
             ->assertFormSet([
-                'capability_' . Capability::RecordPayments->value => true,
-                'capability_' . Capability::PriceShipments->value => false,
+                'capability_'.Capability::RecordPayments->value => true,
+                'capability_'.Capability::PriceShipments->value => false,
             ])
             ->fillForm([
-                'capability_' . Capability::RecordPayments->value => false,
-                'capability_' . Capability::PriceShipments->value => true,
+                'capability_'.Capability::RecordPayments->value => false,
+                'capability_'.Capability::PriceShipments->value => true,
             ])
             ->call('save')
             ->assertHasNoFormErrors();

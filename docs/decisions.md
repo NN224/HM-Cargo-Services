@@ -100,10 +100,10 @@ Accept cash, Whish, bank transfer, and other named methods. Allow full and parti
 
 Recipients track without logging in. The secure public view shows route/status timeline, package progress, total charge, paid, remaining, and payment state while hiding account-wide and internal information.
 
-## D-015: Complete-package collection only
+## D-015: Complete-package collection only — SUPERSEDED
 
 **Date:** 2026-07-18  
-**Status:** Approved
+**Status:** SUPERSEDED on 2026-07-25 by [D-029](#d-029-partial-package-collection-is-allowed). Retained as a record of the original rule.
 
 Track every package separately. A shipment cannot be collected until all active packages arrive. Partial pickup is outside version 1.
 
@@ -144,7 +144,7 @@ Version 1 targets a small operations team, not a regulated financial institution
 - Customer rounding — later replaced by manual entry in D-020. Weight is still never rounded and batch cost still keeps its cents.
 - Exact decimal weight with no rounding and no minimum billable weight.
 - Route-specific pricing and the price-per-kilogram snapshot taken at batch assignment.
-- Complete-package collection gate before a shipment may be collected.
+- Complete-package collection gate before a shipment may be marked fully collected. Partial collection is governed by D-029.
 - Customer credit accounts with oldest-outstanding-first allocation.
 - Money stored as integer cents.
 - Database constraints and migrations enforcing invariants.
@@ -327,14 +327,29 @@ link carries the secret `public_token`; the list deliberately never prints it
 (D-025/ShipmentUiTest), so the intake WhatsApp button lives on the labels page,
 and only the token-free arrival message is offered as a row action.
 
-## D-029: Admin-approved partial package collection
+## D-029: Partial package collection is allowed
 
-**Date:** 2026-07-25  
+**Date:** 2026-07-25
 **Status:** Approved by owner confirmation.
 
-Extends D-015: Standard warehouse employees are blocked from collecting a shipment if any active package has not arrived at the destination warehouse. However, an Administrator (or an employee authorized with explicit Admin approval) may collect the packages that have arrived at destination (`PackageStatus::ArrivedDestination`).
+Supersedes the all-or-nothing collection rule in D-015. A warehouse employee may collect the packages that have arrived at the destination (`PackageStatus::ArrivedDestination`) while other packages in the shipment are still in transit. Administrator approval is not required; normal warehouse authorization still applies.
 
 - Only packages that have arrived at destination transition to `PackageStatus::Collected`.
 - Unarrived packages remain in their current status (`InTransit` / `ArrivedTransit`).
 - The shipment operational status transitions to `ShipmentStatus::PartiallyCollected`.
 - Payments may be recorded for the partially delivered shipment and allocated normally.
+- Every partial collection records package status events with the acting user, warehouse, and timestamp.
+
+## D-030: Fixed package journey with dynamic route locations
+
+**Date:** 2026-07-25
+
+**Status:** Approved by owner-approved package journey design.
+
+Every normal package now follows one fixed seven-step journey: origin warehouse, origin airport, origin-airport departure, destination airport, destination-airport departure, delivery office, and collection. The workflow order is fixed in code and is not user-editable.
+
+Each route stores the dynamic names for origin airport, destination airport, and delivery office. Direct routes still remain distinct route records for pricing, but they no longer skip transit-shaped journey steps; the seven customer-visible progress positions are always present and labelled from the route.
+
+Package rows and append-only package status events are the operational source of truth. Delay and administrator-correction metadata is recorded as package events, correction reasons are required, and privileged corrections also write append-only audit log rows.
+
+Batch, shipment, and package state machines remain separate. Advancing package journey progress never silently advances or closes a batch.

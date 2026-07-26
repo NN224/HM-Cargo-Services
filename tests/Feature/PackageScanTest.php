@@ -27,6 +27,9 @@ beforeEach(function () {
         'origin_warehouse_id' => $this->dubai->id,
         'transit_warehouse_id' => $this->beirut->id,
         'destination_warehouse_id' => $this->damascus->id,
+        'origin_airport_name' => 'مطار دبي',
+        'destination_airport_name' => 'مطار بيروت',
+        'delivery_office_name' => 'مكتب دمشق',
     ]);
     $this->batch = Batch::create([
         'route_id' => $this->route->id,
@@ -62,7 +65,7 @@ function scanTestShipment(Batch $batch, Customer $customer, array $statuses = []
     return $shipment->fresh();
 }
 
-test('scanning one destination package derives a partial shipment state and records the event', function () {
+test('scanning one destination package advances only one ordered step and records the event', function () {
     $shipment = scanTestShipment($this->batch, $this->customer);
     $package = $shipment->packages->first();
 
@@ -81,7 +84,9 @@ test('scanning one destination package derives a partial shipment state and reco
 
     $this->assertDatabaseHas('package_status_events', [
         'package_id' => $package->id,
+        'previous_status' => PackageStatus::DepartedTransit->value,
         'status' => PackageStatus::ArrivedDestination->value,
+        'event_kind' => 'progress',
         'warehouse_id' => $this->damascus->id,
         'user_id' => $this->employee->id,
         'source' => 'camera',
@@ -160,6 +165,9 @@ test('a direct-route destination scan cannot record the same physical arrival tw
         'name' => 'دبي ← دمشق مباشر',
         'origin_warehouse_id' => $this->dubai->id,
         'destination_warehouse_id' => $this->damascus->id,
+        'origin_airport_name' => 'مطار دبي',
+        'destination_airport_name' => 'مطار دمشق',
+        'delivery_office_name' => 'مكتب دمشق',
     ]);
     $directBatch = Batch::create([
         'route_id' => $directRoute->id,
@@ -171,14 +179,39 @@ test('a direct-route destination scan cannot record the same physical arrival tw
 
     $service->scan($package->barcode, $this->damascus, $this->employee);
 
+    expect($package->fresh()->status)->toBe(PackageStatus::ArrivedTransit);
+
     expect(fn () => $service->scan(
         $package->barcode,
         $this->damascus,
         $this->employee,
-    ))->toThrow(DomainException::class, 'حالة الطرد الحالية لا تسمح');
+    ))->not->toThrow(DomainException::class);
 
     expect(DB::table('package_status_events')->where('package_id', $package->id)->count())
-        ->toBe(1);
+        ->toBe(2)
+        ->and($package->fresh()->status)->toBe(PackageStatus::DepartedTransit);
+});
+
+test('a direct-route destination scan cannot skip origin airport stages', function () {
+    $directRoute = Route::create([
+        'name' => 'دبي ← دمشق مباشر ٢',
+        'origin_warehouse_id' => $this->dubai->id,
+        'destination_warehouse_id' => $this->damascus->id,
+        'origin_airport_name' => 'مطار دبي',
+        'destination_airport_name' => 'مطار دمشق',
+        'delivery_office_name' => 'مكتب دمشق',
+    ]);
+    $directBatch = Batch::create([
+        'route_id' => $directRoute->id,
+        'status' => BatchStatus::InTransit,
+    ]);
+    $shipment = scanTestShipment($directBatch, $this->customer, [PackageStatus::ReceivedOrigin]);
+
+    expect(fn () => app(PackageScanService::class)->scan(
+        $shipment->packages->first()->barcode,
+        $this->damascus,
+        $this->employee,
+    ))->toThrow(DomainException::class, 'غير مخوّل');
 });
 
 test('warehouse policy refuses a scan outside the employee warehouse', function () {
@@ -248,18 +281,18 @@ test('a damaged package cannot be cleared by an ordinary arrival scan', function
         ->and($shipment->fresh()->status)->toBe(ShipmentStatus::Exception);
 });
 
-test('a physical arrival scan resolves a missing package at the checkpoint where it appears', function () {
+test('a physical arrival scan does not silently resolve a missing package', function () {
     $shipment = scanTestShipment($this->batch, $this->customer, [PackageStatus::Missing]);
     $shipment->forceFill(['status' => ShipmentStatus::Exception])->save();
 
-    app(PackageScanService::class)->scan(
+    expect(fn () => app(PackageScanService::class)->scan(
         $shipment->packages->first()->barcode,
         $this->damascus,
         $this->employee,
-    );
+    ))->toThrow(DomainException::class);
 
-    expect($shipment->packages->first()->fresh()->status)->toBe(PackageStatus::ArrivedDestination)
-        ->and($shipment->fresh()->status)->toBe(ShipmentStatus::ReadyForCollection);
+    expect($shipment->packages->first()->fresh()->status)->toBe(PackageStatus::Missing)
+        ->and($shipment->fresh()->status)->toBe(ShipmentStatus::Exception);
 });
 
 test('an open undispatched batch cannot manufacture package arrival', function () {

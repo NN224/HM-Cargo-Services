@@ -23,9 +23,9 @@ class BatchAssignmentService
     /**
      * @throws DomainException when the shipment cannot be priced
      */
-    public function assign(Shipment $shipment, Batch $batch): Shipment
+    public function assign(Shipment $shipment, Batch $batch, bool $skipRateCheck = false): Shipment
     {
-        return DB::transaction(function () use ($shipment, $batch): Shipment {
+        return DB::transaction(function () use ($shipment, $batch, $skipRateCheck): Shipment {
             // Re-read inside the transaction so two operators assigning the
             // same shipment at once cannot both pass the checks below.
             $shipment = Shipment::lockForUpdate()->findOrFail($shipment->id);
@@ -36,9 +36,9 @@ class BatchAssignmentService
             $this->guardShipmentHasWeight($shipment);
             $this->guardDestinationMatches($shipment, $batch);
 
-            $rate = $this->resolveRate($shipment, $batch);
+            $rate = $skipRateCheck ? null : $this->resolveRate($shipment, $batch);
 
-            $computed = $this->computeCharge($shipment, $rate);
+            $computed = $rate !== null ? $this->computeCharge($shipment, $rate) : 0;
 
             $shipment->forceFill([
                 'batch_id' => $batch->id,

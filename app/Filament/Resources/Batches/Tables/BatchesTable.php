@@ -4,12 +4,14 @@ namespace App\Filament\Resources\Batches\Tables;
 
 use App\Enums\BatchStatus;
 use App\Enums\Capability;
+use App\Filament\Resources\Batches\Actions\ManageBatchJourneyAction;
 use App\Filament\Resources\Batches\BatchResource;
 use App\Filament\Resources\Routes\RouteResource;
 use App\Models\Batch;
 use App\Models\Route;
 use DomainException;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Notifications\Notification;
@@ -93,45 +95,47 @@ class BatchesTable
             ])
             ->defaultSort('created_at', 'desc')
             ->recordActions([
-                \Filament\Actions\ActionGroup::make([
+                ActionGroup::make([
                     ViewAction::make(),
+                    ManageBatchJourneyAction::make()
+                        ->visible(fn (Batch $record): bool => ! in_array($record->status, [BatchStatus::Completed, BatchStatus::Cancelled], true)),
                     // Hidden once the batch is no longer editable — a dispatched
-                // batch is locked (D-016), so a visible Edit button that only
-                // dead-ends at a 403 reads as broken. canEdit is the same rule
-                // the edit page enforces.
-                EditAction::make()
-                    ->visible(fn (Batch $record): bool => BatchResource::canEdit($record)),
+                    // batch is locked (D-016), so a visible Edit button that only
+                    // dead-ends at a 403 reads as broken. canEdit is the same rule
+                    // the edit page enforces.
+                    EditAction::make()
+                        ->visible(fn (Batch $record): bool => BatchResource::canEdit($record)),
 
-                // Only an empty batch may go. One holding shipments carries
-                // their pricing history, so deleteSafely() refuses.
-                Action::make('delete')
-                    ->label('حذف')
-                    ->icon('heroicon-o-trash')
-                    ->color('danger')
-                    ->visible(fn (): bool => auth()->user()?->hasCapability(Capability::DeleteRecords) ?? false)
-                    ->authorize(fn ($record): bool => auth()->user()?->hasCapability(Capability::DeleteRecords) ?? false)
-                    ->requiresConfirmation()
-                    ->modalHeading('حذف الرحلة')
-                    ->modalDescription('هل أنت متأكد من حذف هذه الرحلة نهائياً؟ لا يمكن التراجع عن هذا الإجراء.')
-                    ->action(function ($record): void {
-                        try {
-                            $record->deleteSafely();
-                            Notification::make()
-                                ->title('تم الحذف')
-                                ->success()
-                                ->send();
-                        } catch (DomainException $e) {
-                            Notification::make()
-                                ->title('لا يمكن الحذف')
-                                ->body($e->getMessage())
-                                ->danger()
-                                ->send();
-                        }
-                    }),
+                    // Only an empty batch may go. One holding shipments carries
+                    // their pricing history, so deleteSafely() refuses.
+                    Action::make('delete')
+                        ->label('حذف')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->visible(fn (): bool => auth()->user()?->hasCapability(Capability::DeleteRecords) ?? false)
+                        ->authorize(fn ($record): bool => auth()->user()?->hasCapability(Capability::DeleteRecords) ?? false)
+                        ->requiresConfirmation()
+                        ->modalHeading('حذف الرحلة')
+                        ->modalDescription('هل أنت متأكد من حذف هذه الرحلة نهائياً؟ لا يمكن التراجع عن هذا الإجراء.')
+                        ->action(function ($record): void {
+                            try {
+                                $record->deleteSafely();
+                                Notification::make()
+                                    ->title('تم الحذف')
+                                    ->success()
+                                    ->send();
+                            } catch (DomainException $e) {
+                                Notification::make()
+                                    ->title('لا يمكن الحذف')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        }),
                 ])
-                ->label('إجراءات')
-                ->icon('heroicon-m-ellipsis-vertical')
-                ->button(),
+                    ->label('إجراءات')
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->button(),
             ])
             ->toolbarActions([]);
     }

@@ -2,11 +2,11 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\URL;
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Number;
-use Filament\Tables\Table;
 use Filament\Schemas\Schema;
+use Filament\Tables\Table;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Number;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {

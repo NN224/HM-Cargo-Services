@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\PackageStatus;
-use App\Enums\ShipmentStatus;
 use App\Models\Shipment;
 use App\Models\User;
 use App\Models\Warehouse;
@@ -41,39 +40,22 @@ class ShipmentCollectionService
                 );
             }
 
-            foreach ($packages as $package) {
-                $package->forceFill(['status' => PackageStatus::Collected])->save();
-
-                DB::table('package_status_events')->insert([
-                    'package_id' => $package->id,
-                    'status' => PackageStatus::Collected->value,
-                    'warehouse_id' => $warehouse->id,
-                    'user_id' => $user->id,
-                    'scanned_at' => now(),
-                    'source' => 'collection',
-                    'note' => null,
-                ]);
-            }
-
-            $shipment->forceFill(['status' => ShipmentStatus::Collected])->save();
-
-            return $shipment;
+            return app(PackageJourneyService::class)->advance(
+                $shipment,
+                $packages->modelKeys(),
+                $user,
+                'collection',
+            );
         });
     }
 
     /**
-     * D-029: Admin-approved partial package collection.
-     *
-     * Allows an Administrator to release packages that have arrived at destination
-     * even if other packages in the shipment are still in transit/missing.
+     * Release packages that reached the destination while the remaining
+     * packages continue through their normal operational lifecycle (D-029).
      */
     public function collectPartially(Shipment $shipment, Warehouse $warehouse, User $user): Shipment
     {
         Gate::forUser($user)->authorize('view', $warehouse);
-
-        if (! $user->isAdministrator()) {
-            throw new DomainException('التسليم الجزئي يحتاج إلى موافقة وبطاقة مدير النظام (Administrator).');
-        }
 
         return DB::transaction(function () use ($shipment, $warehouse, $user): Shipment {
             $shipment = Shipment::query()->lockForUpdate()->findOrFail($shipment->id);
@@ -92,23 +74,13 @@ class ShipmentCollectionService
                 throw new DomainException('لا توجد أي طرود واصلة لمستودع الوجهة لتسليمها جزئياً.');
             }
 
-            foreach ($arrivedPackages as $package) {
-                $package->forceFill(['status' => PackageStatus::Collected])->save();
-
-                DB::table('package_status_events')->insert([
-                    'package_id' => $package->id,
-                    'status' => PackageStatus::Collected->value,
-                    'warehouse_id' => $warehouse->id,
-                    'user_id' => $user->id,
-                    'scanned_at' => now(),
-                    'source' => 'partial_collection',
-                    'note' => 'تسليم جزئي بموافقة الإدارة',
-                ]);
-            }
-
-            $shipment->recalculateOperationalStatus();
-
-            return $shipment;
+            return app(PackageJourneyService::class)->advance(
+                $shipment,
+                $arrivedPackages->modelKeys(),
+                $user,
+                'partial_collection',
+                'تسليم جزئي للطرود الواصلة',
+            );
         });
     }
 }

@@ -51,8 +51,7 @@ class CustomerStatementService
             ];
         }
 
-        $allocations = PaymentAllocation::whereHas('payment', fn ($q) =>
-            $q->where('customer_id', $customer->id)
+        $allocations = PaymentAllocation::whereHas('payment', fn ($q) => $q->where('customer_id', $customer->id)
         )
             ->with('payment')
             ->get()
@@ -69,8 +68,7 @@ class CustomerStatementService
             ];
         }
 
-        usort($lines, fn ($a, $b) =>
-            $a['date'] <=> $b['date'] ?: ($a['type'] <=> $b['type'])
+        usort($lines, fn ($a, $b) => $a['date'] <=> $b['date'] ?: ($a['type'] <=> $b['type'])
         );
 
         $balance = 0;
@@ -97,8 +95,7 @@ class CustomerStatementService
     {
         $charged = (int) $customer->shipments()->sum('final_charge_cents');
         $paid = (int) Payment::where('customer_id', $customer->id)->sum('amount_cents');
-        $allocated = (int) PaymentAllocation::whereHas('payment', fn ($q) =>
-            $q->where('customer_id', $customer->id)
+        $allocated = (int) PaymentAllocation::whereHas('payment', fn ($q) => $q->where('customer_id', $customer->id)
         )->sum('amount_cents');
 
         return [

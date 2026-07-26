@@ -25,7 +25,7 @@ use Illuminate\Support\HtmlString;
 use UnitEnum;
 
 /**
- * @property \Filament\Schemas\Schema $form
+ * @property Schema $form
  */
 class ScanPackages extends Page
 {

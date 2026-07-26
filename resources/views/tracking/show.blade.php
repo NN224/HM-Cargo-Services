@@ -381,6 +381,86 @@
         .cta-button:active {
             transform: scale(0.98);
         }
+
+        /* Journey Timeline */
+        .journey-timeline {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            width: 100%;
+            padding: 1.25rem 0;
+            gap: 0;
+            position: relative;
+            direction: rtl;
+        }
+        .timeline-step {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            min-width: 0; /* Allow shrinking */
+        }
+        .timeline-step:not(:first-child)::before {
+            content: '';
+            position: absolute;
+            top: 11px; /* Center of the 22px node */
+            right: -50%;
+            width: 100%;
+            height: 3px;
+            background-color: var(--line-color, #374151);
+            z-index: 0;
+            transition: all 0.3s ease;
+        }
+        /* Animated line for the active path */
+        @keyframes flowRTL {
+            0% { background-position: 200% 0; }
+            100% { background-position: 0 0; }
+        }
+        .timeline-step.is-active-path:not(:first-child)::before {
+            background: linear-gradient(90deg, #10b981 0%, #6ee7b7 50%, #10b981 100%);
+            background-size: 200% 100%;
+            animation: flowRTL 1.5s infinite linear;
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+        }
+        .timeline-node-circle {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background-color: #111827;
+            border: 4px solid var(--node-color, #4b5563);
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        /* Glowing node for current step */
+        .timeline-step.is-current .timeline-node-circle {
+            box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+            transform: scale(1.15);
+        }
+        .timeline-step-label {
+            font-size: 0.65rem; /* Smaller font to fit 7 steps */
+            font-weight: 800;
+            text-align: center;
+            color: var(--label-color, #9ca3af);
+            line-height: 1.3;
+            word-wrap: break-word;
+            padding: 0 0.1rem;
+        }
+        .timeline-step-status {
+            font-size: 0.6rem;
+            text-align: center;
+            margin-top: 0.25rem;
+            color: var(--text-muted);
+        }
+        /* Media query for slightly larger screens to increase font size */
+        @media (min-width: 400px) {
+            .timeline-step-label { font-size: 0.7rem; }
+            .timeline-step-status { font-size: 0.65rem; }
+        }
     </style>
 </head>
 <body>
@@ -399,24 +479,70 @@
 
     <!-- Visual Stepper Progress -->
     <div class="stepper-container">
-        <div class="stepper">
-            <div class="step completed">
-                <div class="step-icon">✓</div>
-                <div class="step-title">استلام</div>
-            </div>
-            <div class="step {{ in_array($tracking['stage'], ['طرد في الطريق', 'وصل بعضها إلى الوجهة', 'وصلت لمستودع الوصول', 'جاهزة للاستلام', 'تم التسليم']) ? 'completed' : 'active' }}">
-                <div class="step-icon">2</div>
-                <div class="step-title">في الطريق</div>
-            </div>
-            <div class="step {{ in_array($tracking['stage'], ['وصل بعضها إلى الوجهة', 'وصلت لمستودع الوصول', 'جاهزة للاستلام', 'تم التسليم']) ? 'active' : '' }}">
-                <div class="step-icon">3</div>
-                <div class="step-title">وصلت للمستودع</div>
-            </div>
-            <div class="step {{ $tracking['stage'] === 'تم التسليم' ? 'completed' : '' }}">
-                <div class="step-icon">4</div>
-                <div class="step-title">تسليم</div>
-            </div>
+        <div class="section-title" style="margin-bottom: 0.75rem;">رحلة الطرود</div>
+        <div class="journey-timeline">
+            @foreach ($tracking['journey']['steps'] as $idx => $step)
+                @php
+                    $countText = fn (int $count): string => strtr((string) $count, ['0' => '٠', '1' => '١', '2' => '٢', '3' => '٣', '4' => '٤', '5' => '٥', '6' => '٦', '7' => '٧', '8' => '٨', '9' => '٩']);
+                    
+                    $isCompleted = $step['completed_count'] >= $tracking['journey']['package_count'] && $tracking['journey']['package_count'] > 0;
+                    $isCurrent = $step['current_count'] > 0;
+                    $isDelayed = $step['delayed_count'] > 0;
+
+                    $nodeColor = '#4b5563'; // Upcoming
+                    $lineColor = '#374151'; // Upcoming
+                    $labelColor = '#6b7280'; // Upcoming
+                    $isActivePath = false;
+
+                    if ($isCompleted) {
+                        $nodeColor = '#10b981';
+                        $lineColor = '#10b981';
+                        $labelColor = '#34d399';
+                    } elseif ($isCurrent) {
+                        $nodeColor = '#60a5fa';
+                        $lineColor = '#10b981'; // The line TO the current step is completed
+                        $labelColor = '#60a5fa';
+                        $isActivePath = true; // Animate the line leading to this current step
+                    }
+
+                    if ($isDelayed) {
+                        $nodeColor = '#f59e0b';
+                        $labelColor = '#f59e0b';
+                    }
+                    
+                    $stepClasses = 'timeline-step';
+                    if ($isActivePath) $stepClasses .= ' is-active-path';
+                    if ($isCurrent) $stepClasses .= ' is-current';
+                @endphp
+                <div class="{{ $stepClasses }}" style="--node-color: {{ $nodeColor }}; --line-color: {{ $lineColor }}; --label-color: {{ $labelColor }};">
+                    <div class="timeline-node-circle"></div>
+                    <div class="timeline-step-label">{{ $step['label'] }}</div>
+                    <div class="timeline-step-status">
+                        @if ($isCurrent)
+                            {{ $countText($step['current_count']) }} حالياً
+                        @elseif ($isCompleted)
+                            {{ $countText($step['completed_count']) }} أنجزت
+                        @else
+                            قادم
+                        @endif
+
+                        @if ($isDelayed)
+                            <span style="display:block; color:#fbbf24; font-weight:800; margin-top:0.25rem;">{{ $countText($step['delayed_count']) }} متأخر</span>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
         </div>
+
+        @if ($tracking['journey']['published_events'] !== [])
+            <div style="margin-top: 1rem; display: grid; gap: 0.5rem;">
+                @foreach ($tracking['journey']['published_events'] as $event)
+                    <div style="border-radius: 0.85rem; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); padding: 0.75rem; color: #fde68a; font-weight: 700;">
+                        {{ $event['reason'] }}
+                    </div>
+                @endforeach
+            </div>
+        @endif
     </div>
 
     <!-- Details Cards Grid -->

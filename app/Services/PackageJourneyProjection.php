@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\PackageStatus;
+use App\Enums\ShipmentStatus;
 use App\Models\Route;
 use App\Models\Shipment;
 
@@ -57,24 +58,24 @@ class PackageJourneyProjection
         return match ($status) {
             PackageStatus::ReceivedOrigin => 'وصلت مستودع '.$this->safeLabel($route?->originWarehouse?->name),
             PackageStatus::ArrivedOriginAirport => 'وصلت '.$this->safeLabel($route?->origin_airport_name),
-            PackageStatus::InTransit => 'غادرت '.$this->safeLabel($route?->origin_airport_name),
             PackageStatus::ArrivedTransit => 'وصلت '.$this->safeLabel($route?->destination_airport_name),
-            PackageStatus::DepartedTransit => 'غادرت '.$this->safeLabel($route?->destination_airport_name),
             PackageStatus::ArrivedDestination => 'وصلت '.$this->safeLabel($route?->delivery_office_name),
             PackageStatus::Collected => 'استلمها العميل',
+            PackageStatus::InTransit => 'وصلت '.$this->safeLabel($route?->origin_airport_name),
+            PackageStatus::DepartedTransit => 'وصلت '.$this->safeLabel($route?->destination_airport_name),
             default => 'غير مضبوط',
         };
     }
 
-    public function labelForShipment(?Route $route, \App\Enums\ShipmentStatus $status): string
+    public function labelForShipment(?Route $route, ShipmentStatus $status): string
     {
         return match ($status) {
-            \App\Enums\ShipmentStatus::Pending => 'وصلت مستودع '.$this->safeLabel($route?->originWarehouse?->name),
-            \App\Enums\ShipmentStatus::InTransit => 'غادرت '.$this->safeLabel($route?->origin_airport_name),
-            \App\Enums\ShipmentStatus::PartialAtTransit => 'وصل بعضها إلى '.$this->safeLabel($route?->destination_airport_name),
-            \App\Enums\ShipmentStatus::AtTransit => 'وصلت '.$this->safeLabel($route?->destination_airport_name),
-            \App\Enums\ShipmentStatus::PartialAtDestination => 'وصل بعضها إلى '.$this->safeLabel($route?->delivery_office_name),
-            \App\Enums\ShipmentStatus::Arrived => 'وصلت '.$this->safeLabel($route?->delivery_office_name),
+            ShipmentStatus::Pending => 'وصلت مستودع '.$this->safeLabel($route?->originWarehouse?->name),
+            ShipmentStatus::InTransit => 'وصلت '.$this->safeLabel($route?->origin_airport_name),
+            ShipmentStatus::PartialAtTransit => 'وصل بعضها إلى '.$this->safeLabel($route?->destination_airport_name),
+            ShipmentStatus::AtTransit => 'وصلت '.$this->safeLabel($route?->destination_airport_name),
+            ShipmentStatus::PartialAtDestination => 'وصل بعضها إلى '.$this->safeLabel($route?->delivery_office_name),
+            ShipmentStatus::Arrived => 'وصلت '.$this->safeLabel($route?->delivery_office_name),
             default => $status->label(),
         };
     }

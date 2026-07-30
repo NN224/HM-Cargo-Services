@@ -59,7 +59,7 @@ beforeEach(function () {
     $this->packages = collect([
         publicTrackingPackage($this->shipment, '0.1000', PackageStatus::ArrivedDestination),
         publicTrackingPackage($this->shipment, '0.2000', PackageStatus::Collected),
-        publicTrackingPackage($this->shipment, '0.3000', PackageStatus::InTransit),
+        publicTrackingPackage($this->shipment, '0.3000', PackageStatus::ArrivedTransit),
         publicTrackingPackage($this->shipment, '9.9999', PackageStatus::Cancelled),
     ]);
 

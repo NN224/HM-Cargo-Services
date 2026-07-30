@@ -60,7 +60,7 @@ function collectionTestShipment(Batch $batch, Customer $customer, array $statuse
 test('collection is refused while any active package has not arrived', function () {
     $shipment = collectionTestShipment($this->batch, $this->customer, [
         PackageStatus::ArrivedDestination,
-        PackageStatus::InTransit,
+        PackageStatus::ArrivedTransit,
     ]);
 
     expect(fn () => app(ShipmentCollectionService::class)->collect(
@@ -141,7 +141,7 @@ test('warehouse policy refuses collection outside the assigned warehouse', funct
 test('d029 partial collection is available to destination warehouse employees', function () {
     $shipment = collectionTestShipment($this->batch, $this->customer, [
         PackageStatus::ArrivedDestination,
-        PackageStatus::InTransit,
+        PackageStatus::ArrivedTransit,
     ]);
 
     $partiallyCollected = app(ShipmentCollectionService::class)->collectPartially(
@@ -152,7 +152,7 @@ test('d029 partial collection is available to destination warehouse employees', 
 
     expect($partiallyCollected->status)->toBe(ShipmentStatus::PartiallyCollected)
         ->and($shipment->packages()->where('status', PackageStatus::Collected->value)->count())->toBe(1)
-        ->and($shipment->packages()->where('status', PackageStatus::InTransit->value)->count())->toBe(1)
+        ->and($shipment->packages()->where('status', PackageStatus::ArrivedTransit->value)->count())->toBe(1)
         ->and(DB::table('package_status_events')->where('source', 'partial_collection')->count())->toBe(1)
         ->and(DB::table('package_status_events')->where('previous_status', PackageStatus::ArrivedDestination->value)->count())->toBe(1);
 });
@@ -160,7 +160,7 @@ test('d029 partial collection is available to destination warehouse employees', 
 test('destination warehouse employees see the partial collection action', function () {
     $shipment = collectionTestShipment($this->batch, $this->customer, [
         PackageStatus::ArrivedDestination,
-        PackageStatus::InTransit,
+        PackageStatus::ArrivedTransit,
     ]);
 
     Livewire::actingAs($this->employee)
@@ -179,7 +179,7 @@ test('d029 partial collection succeeds with administrator approval', function ()
 
     $shipment = collectionTestShipment($this->batch, $this->customer, [
         PackageStatus::ArrivedDestination,
-        PackageStatus::InTransit,
+        PackageStatus::ArrivedTransit,
     ]);
 
     $partiallyCollected = app(ShipmentCollectionService::class)->collectPartially(
@@ -190,5 +190,5 @@ test('d029 partial collection succeeds with administrator approval', function ()
 
     expect($partiallyCollected->status)->toBe(ShipmentStatus::PartiallyCollected)
         ->and($shipment->packages()->where('status', PackageStatus::Collected->value)->count())->toBe(1)
-        ->and($shipment->packages()->where('status', PackageStatus::InTransit->value)->count())->toBe(1);
+        ->and($shipment->packages()->where('status', PackageStatus::ArrivedTransit->value)->count())->toBe(1);
 });

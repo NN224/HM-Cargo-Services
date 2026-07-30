@@ -39,7 +39,7 @@ The system must remain simpler than the reference dashboard. Do not add generic 
 - A shipment may belong to only one active batch at a time.
 - Package status, shipment status, and batch status are separate state machines.
 - A shipment is completed only after all active packages are collected. A destination warehouse employee may partially collect packages that have arrived while the remaining packages continue in transit per D-029.
-- Normal package journey progress uses seven fixed route-labelled steps per D-030; direct routes do not skip progress positions, and administrators cannot configure a custom workflow engine.
+- Normal package journey progress uses five fixed route-labelled steps per D-031; direct routes do not skip progress positions, and administrators cannot configure a custom workflow engine.
 - Customer credit payments are allocated to the oldest outstanding shipments first unless a payment is explicitly recorded against a particular shipment.
 - Payments may be full or partial and may use cash, Whish, bank transfer, or a manually named other method.
 - Payment reversals must preserve an audit trail. Never hard-delete financial records.

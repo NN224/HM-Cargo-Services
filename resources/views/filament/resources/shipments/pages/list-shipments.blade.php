@@ -44,7 +44,7 @@
     $bulkLabelRoute = $bulkLabelShipment?->batch?->route ?? $selectedBatch?->route;
     $journeyProjection = app(PackageJourneyProjection::class);
 
-    $stepIcons = ['▣', '✈', '↗', '✈', '↗', '⌂', '✓'];
+    $stepIcons = ['▣', '✈', '↗', '⌂', '✓'];
 @endphp
 
 <x-filament-panels::page>

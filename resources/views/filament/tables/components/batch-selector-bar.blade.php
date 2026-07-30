@@ -19,9 +19,7 @@
     $defaultShortTitles = [
         'مستودع المبدأ',
         'مطار المبدأ',
-        'مغادرة المبدأ',
         'مطار الوصول',
-        'مغادرة الوصول',
         'مكتب التسليم',
         'استلام العميل'
     ];
@@ -260,11 +258,9 @@
                 ? [
                     'مستودع ' . ($b->route->originWarehouse?->name ?? $defaultShortTitles[0]),
                     'مطار ' . ($b->route->origin_airport_name ?? $defaultShortTitles[1]),
-                    'مغادرة ' . ($b->route->origin_airport_name ?? $defaultShortTitles[2]),
-                    'مطار ' . ($b->route->destination_airport_name ?? $defaultShortTitles[3]),
-                    'مغادرة ' . ($b->route->destination_airport_name ?? $defaultShortTitles[4]),
-                    $b->route->delivery_office_name ?? $defaultShortTitles[5],
-                    $defaultShortTitles[6],
+                    'مطار ' . ($b->route->destination_airport_name ?? $defaultShortTitles[2]),
+                    $b->route->delivery_office_name ?? $defaultShortTitles[3],
+                    $defaultShortTitles[4],
                 ]
                 : $defaultShortTitles;
 
@@ -322,7 +318,8 @@
             }
 
             $progressIdx = $currentStepIdx >= 0 ? $currentStepIdx : ($lastCompletedIdx >= 0 ? $lastCompletedIdx : 0);
-            $progressPercent = min(100, max(0, ($progressIdx / 6) * 100));
+            $progressDenominator = max(count($steps) - 1, 1);
+            $progressPercent = min(100, max(0, ($progressIdx / $progressDenominator) * 100));
         @endphp
 
         <div 

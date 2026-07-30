@@ -115,14 +115,10 @@ test('e2e full operational daily routine verification test', function () {
     $pkg2->forceFill(['status' => PackageStatus::ReceivedOrigin])->save();
 
     $journeyService->advance($shipment, [$pkg1->id, $pkg2->id], $admin);
-    $journeyService->advance($shipment, [$pkg1->id, $pkg2->id], $admin);
 
     // First scan at transit warehouse (Arrived Transit)
     $scanService->scan($pkg1->barcode, $transitWh, $admin);
     $scanService->scan($pkg2->barcode, $transitWh, $admin);
-
-    // Depart from transit
-    $journeyService->advance($shipment, [$pkg1->id, $pkg2->id], $admin);
 
     // Now scan pkg1 at destination warehouse (Damascus)
     $scanService->scan($pkg1->barcode, $destWh, $admin);

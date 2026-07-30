@@ -33,6 +33,13 @@ beforeEach(function () {
         'role' => UserRole::WarehouseEmployee,
         'warehouse_id' => $this->origin->id,
     ]);
+    $this->destinationEmployee = User::create([
+        'name' => 'موظف دمشق',
+        'email' => 'delay-destination@hmcargo.test',
+        'password' => 'secret',
+        'role' => UserRole::WarehouseEmployee,
+        'warehouse_id' => $this->destination->id,
+    ]);
 });
 
 function journeyDelayShipment(Batch $batch, Customer $customer, array $statuses): Shipment
@@ -114,7 +121,7 @@ test('forward progress clears the current delay but retains its event', function
         'تأخر التحميل',
         true,
     );
-    $service->advance($shipment, [$package->id], $this->originEmployee);
+    $service->advance($shipment, [$package->id], $this->destinationEmployee);
 
     expect($package->fresh()->is_delayed)->toBeFalse()
         ->and($package->fresh()->delay_reason)->toBeNull()

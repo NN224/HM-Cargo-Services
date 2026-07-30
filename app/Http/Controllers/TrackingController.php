@@ -107,6 +107,10 @@ class TrackingController extends Controller
             ->join('shipments', 'shipments.id', '=', 'packages.shipment_id')
             ->join('warehouses', 'warehouses.id', '=', 'events.warehouse_id')
             ->where('shipments.public_token', $token)
+            ->whereNotIn('events.status', [
+                PackageStatus::InTransit->value,
+                PackageStatus::DepartedTransit->value,
+            ])
             ->orderBy('events.scanned_at')
             ->select([
                 'events.status',
@@ -175,10 +179,10 @@ class TrackingController extends Controller
             PackageStatus::Created => 'تم إنشاء طرد',
             PackageStatus::ReceivedOrigin => 'تم استلام طرد في مستودع المنشأ',
             PackageStatus::ArrivedOriginAirport => 'وصل طرد إلى مطار الانطلاق',
-            PackageStatus::InTransit => 'طرد في الطريق',
+            PackageStatus::InTransit => 'وصل طرد إلى مطار الانطلاق',
             PackageStatus::ArrivedTransit,
             PackageStatus::ArrivedDestination => "وصل طرد إلى مستودع {$warehouse}",
-            PackageStatus::DepartedTransit => 'غادر طرد مستودع العبور',
+            PackageStatus::DepartedTransit => "وصل طرد إلى مستودع {$warehouse}",
             PackageStatus::Collected => 'تم تسليم طرد',
             PackageStatus::Cancelled => 'أُلغي طرد من الشحنة',
             PackageStatus::Missing => 'يوجد طرد يحتاج متابعة',
@@ -233,11 +237,11 @@ class TrackingController extends Controller
         return match ($status) {
             PackageStatus::ReceivedOrigin => 'وصل مستودع '.$this->safeJourneyLabel($shipment->origin_warehouse_name ?? null),
             PackageStatus::ArrivedOriginAirport => 'وصل '.$this->safeJourneyLabel($shipment->origin_airport_name ?? null),
-            PackageStatus::InTransit => 'غادر '.$this->safeJourneyLabel($shipment->origin_airport_name ?? null),
             PackageStatus::ArrivedTransit => 'وصل '.$this->safeJourneyLabel($shipment->destination_airport_name ?? null),
-            PackageStatus::DepartedTransit => 'غادر '.$this->safeJourneyLabel($shipment->destination_airport_name ?? null),
             PackageStatus::ArrivedDestination => 'وصل '.$this->safeJourneyLabel($shipment->delivery_office_name ?? null),
             PackageStatus::Collected => 'استلمه العميل',
+            PackageStatus::InTransit => 'وصل '.$this->safeJourneyLabel($shipment->origin_airport_name ?? null),
+            PackageStatus::DepartedTransit => 'وصل '.$this->safeJourneyLabel($shipment->destination_airport_name ?? null),
             default => 'غير مضبوط',
         };
     }

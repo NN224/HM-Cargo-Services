@@ -62,7 +62,8 @@
             }
         }
         $progressIdx = $currentStepIdx >= 0 ? $currentStepIdx : ($lastCompletedIdx >= 0 ? $lastCompletedIdx : 0);
-        $progressPercent = empty($steps) ? null : min(100, max(0, round(($progressIdx / 6) * 100)));
+        $progressDenominator = max(count($steps) - 1, 1);
+        $progressPercent = empty($steps) ? null : min(100, max(0, round(($progressIdx / $progressDenominator) * 100)));
         $stageLabel = $steps[$currentStepIdx]['label'] ?? ($steps[$lastCompletedIdx]['label'] ?? null);
 
         return (object) [

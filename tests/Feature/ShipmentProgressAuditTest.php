@@ -92,17 +92,17 @@ test('the removed Received and Arrived statuses no longer exist in PackageStatus
         ->and($statusValues)->not->toContain('arrived');
 });
 
-test('all seven journey steps are intact after cleanup', function () {
+test('the five active journey steps exclude retired departure states', function () {
     $steps = PackageStatus::journeySteps();
 
-    expect($steps)->toHaveCount(7)
+    expect($steps)->toHaveCount(5)
         ->and($steps[0])->toBe(PackageStatus::ReceivedOrigin)
         ->and($steps[1])->toBe(PackageStatus::ArrivedOriginAirport)
-        ->and($steps[2])->toBe(PackageStatus::InTransit)
-        ->and($steps[3])->toBe(PackageStatus::ArrivedTransit)
-        ->and($steps[4])->toBe(PackageStatus::DepartedTransit)
-        ->and($steps[5])->toBe(PackageStatus::ArrivedDestination)
-        ->and($steps[6])->toBe(PackageStatus::Collected);
+        ->and($steps[2])->toBe(PackageStatus::ArrivedTransit)
+        ->and($steps[3])->toBe(PackageStatus::ArrivedDestination)
+        ->and($steps[4])->toBe(PackageStatus::Collected)
+        ->and($steps)->not->toContain(PackageStatus::InTransit)
+        ->and($steps)->not->toContain(PackageStatus::DepartedTransit);
 });
 
 // === Fix 2: A Created package can be advanced to ReceivedOrigin ===
@@ -187,7 +187,7 @@ test('journey projection completed_count requires all packages past the step', f
 
 // === Full journey walk: Created → Collected ===
 
-test('a package walks through all 7 steps from Created to Collected', function () {
+test('a package walks through all 5 active steps from Created to Collected', function () {
     $shipment = auditShipment($this->batch, $this->customer, [PackageStatus::Created]);
     $package = $shipment->packages->first();
     $service = app(PackageJourneyService::class);

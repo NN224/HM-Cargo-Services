@@ -154,7 +154,7 @@ Invariants:
 - Physical arrivals require a package-level event.
 - Batch actions cannot invent an arrival scan.
 - Corrections append events; they do not overwrite history.
-- The normal journey has seven fixed code-defined positions with route-specific labels, not a user-editable workflow.
+- The normal journey has five fixed code-defined positions with route-specific labels, not a user-editable workflow. Retired departure status codes may remain only in append-only historical events.
 
 ## 10. ShipmentStatusEvent and BatchStatusEvent
 

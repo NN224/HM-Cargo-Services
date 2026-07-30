@@ -1,7 +1,7 @@
 # Current State — Handoff
 
-**Last updated:** 2026-07-25
-**Tests:** 325 passing, 1073 assertions
+**Last updated:** 2026-07-30
+**Tests:** 363 passing, 1211 assertions
 
 Read this first if you are picking the project up. It says what exists, what
 does not, and what to do next. The binding rules live in [`../AGENTS.md`](../AGENTS.md)
@@ -19,7 +19,7 @@ destination warehouses, with shipment status derived from the package rows
 rather than declared. Collect a shipment only once every active package has
 arrived. Record full, partial and account-level payments with oldest-first
 allocation and reversals. Follow a shipment from the public tracking page
-    without logging in. Package progress now uses the fixed seven-step journey
+    without logging in. Package progress now uses the fixed five-step journey
     with route-specific labels, selected-package advancement, delay overlays,
     administrator corrections, and a privacy-safe public journey bar.
 
@@ -65,7 +65,7 @@ has tried the scan flow on a real phone in a real warehouse.
 | Complete and partial collection — release arrived packages and retain the rest in transit (D-029) | done |
 | Payments, oldest-first allocation, reversals | done, with screen |
 | Public tracking on `/track/{token}`, rate limited | done |
-| Seven-step package journey, selected progress, delays, corrections, safe public bar (D-030) | done, needs real warehouse/airport operational trial |
+| Five-step package journey, selected progress, delays, corrections, safe public bar (D-031) | done, needs real warehouse/airport operational trial |
 | A4 labels with a scannable tracking QR + link, no price printed | done, wired into the shipment UI and after intake |
 | Two WhatsApp handoffs — tracking at intake, amount at arrival (D-028) | done |
 | Customer statement, reconciled against the ledger | done |

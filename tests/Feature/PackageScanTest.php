@@ -55,7 +55,7 @@ function scanTestShipment(Batch $batch, Customer $customer, array $statuses = []
     ]);
     $shipment->forceFill(['batch_id' => $batch->id])->save();
 
-    foreach ($statuses ?: [PackageStatus::DepartedTransit, PackageStatus::DepartedTransit] as $index => $status) {
+    foreach ($statuses ?: [PackageStatus::ArrivedTransit, PackageStatus::ArrivedTransit] as $index => $status) {
         $shipment->packages()->create([
             'weight_kg' => $index === 0 ? '0.1000' : '0.2000',
             'status' => $status,
@@ -79,12 +79,12 @@ test('scanning one destination package advances only one ordered step and record
 
     expect($scanned->status)->toBe(PackageStatus::ArrivedDestination)
         ->and($shipment->fresh()->status)->toBe(ShipmentStatus::PartialAtDestination)
-        ->and($shipment->packages->last()->fresh()->status)->toBe(PackageStatus::DepartedTransit)
+        ->and($shipment->packages->last()->fresh()->status)->toBe(PackageStatus::ArrivedTransit)
         ->and((string) $shipment->fresh()->total_weight_kg)->toBe('0.3000');
 
     $this->assertDatabaseHas('package_status_events', [
         'package_id' => $package->id,
-        'previous_status' => PackageStatus::DepartedTransit->value,
+        'previous_status' => PackageStatus::ArrivedTransit->value,
         'status' => PackageStatus::ArrivedDestination->value,
         'event_kind' => 'progress',
         'warehouse_id' => $this->damascus->id,
@@ -124,12 +124,12 @@ test('the shipment becomes ready only after every active package reaches destina
 
 test('a cancelled package is excluded from the destination aggregate', function () {
     $shipment = scanTestShipment($this->batch, $this->customer, [
-        PackageStatus::DepartedTransit,
+        PackageStatus::ArrivedTransit,
         PackageStatus::Cancelled,
     ]);
 
     app(PackageScanService::class)->scan(
-        $shipment->packages()->where('status', PackageStatus::DepartedTransit->value)->firstOrFail()->barcode,
+        $shipment->packages()->where('status', PackageStatus::ArrivedTransit->value)->firstOrFail()->barcode,
         $this->damascus,
         $this->employee,
     );
@@ -146,8 +146,8 @@ test('a transit scan records transit arrival without inventing destination arriv
         'warehouse_id' => $this->beirut->id,
     ]);
     $shipment = scanTestShipment($this->batch, $this->customer, [
-        PackageStatus::InTransit,
-        PackageStatus::InTransit,
+        PackageStatus::ArrivedOriginAirport,
+        PackageStatus::ArrivedOriginAirport,
     ]);
 
     app(PackageScanService::class)->scan(
@@ -173,7 +173,7 @@ test('a direct-route destination scan cannot record the same physical arrival tw
         'route_id' => $directRoute->id,
         'status' => BatchStatus::InTransit,
     ]);
-    $shipment = scanTestShipment($directBatch, $this->customer, [PackageStatus::InTransit]);
+    $shipment = scanTestShipment($directBatch, $this->customer, [PackageStatus::ArrivedOriginAirport]);
     $package = $shipment->packages->first();
     $service = app(PackageScanService::class);
 
@@ -189,7 +189,7 @@ test('a direct-route destination scan cannot record the same physical arrival tw
 
     expect(DB::table('package_status_events')->where('package_id', $package->id)->count())
         ->toBe(2)
-        ->and($package->fresh()->status)->toBe(PackageStatus::DepartedTransit);
+        ->and($package->fresh()->status)->toBe(PackageStatus::ArrivedDestination);
 });
 
 test('a direct-route destination scan cannot skip origin airport stages', function () {
@@ -224,7 +224,7 @@ test('warehouse policy refuses a scan outside the employee warehouse', function 
         $this->employee,
     ))->toThrow(AuthorizationException::class);
 
-    expect($package->fresh()->status)->toBe(PackageStatus::DepartedTransit)
+    expect($package->fresh()->status)->toBe(PackageStatus::ArrivedTransit)
         ->and(DB::table('package_status_events')->count())->toBe(0);
 });
 
@@ -297,7 +297,7 @@ test('a physical arrival scan does not silently resolve a missing package', func
 
 test('an open undispatched batch cannot manufacture package arrival', function () {
     $this->batch->forceFill(['status' => BatchStatus::Open])->save();
-    $shipment = scanTestShipment($this->batch, $this->customer, [PackageStatus::InTransit]);
+    $shipment = scanTestShipment($this->batch, $this->customer, [PackageStatus::ArrivedTransit]);
 
     app(PackageScanService::class)->scan(
         $shipment->packages->first()->barcode,
@@ -306,9 +306,9 @@ test('an open undispatched batch cannot manufacture package arrival', function (
     );
 })->throws(DomainException::class, 'لم تُرسل');
 
-test('a transit route cannot reach destination before the package departs transit', function () {
+test('a transit route cannot reach destination before the package reaches transit', function () {
     $this->batch->forceFill(['status' => BatchStatus::InTransit])->save();
-    $shipment = scanTestShipment($this->batch, $this->customer, [PackageStatus::InTransit]);
+    $shipment = scanTestShipment($this->batch, $this->customer, [PackageStatus::ArrivedOriginAirport]);
 
     app(PackageScanService::class)->scan(
         $shipment->packages->first()->barcode,
@@ -331,7 +331,7 @@ test('recalculation never regresses a collected shipment to ready', function () 
 
 test('a package status event cannot be erased by deleting its package', function () {
     $this->batch->forceFill(['status' => BatchStatus::InTransit])->save();
-    $shipment = scanTestShipment($this->batch, $this->customer, [PackageStatus::DepartedTransit]);
+    $shipment = scanTestShipment($this->batch, $this->customer, [PackageStatus::ArrivedTransit]);
     $package = $shipment->packages->first();
 
     app(PackageScanService::class)->scan(

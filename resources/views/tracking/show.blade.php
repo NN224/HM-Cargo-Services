@@ -442,7 +442,7 @@
             transform: scale(1.15);
         }
         .timeline-step-label {
-            font-size: 0.65rem; /* Smaller font to fit 7 steps */
+            font-size: 0.65rem; /* Compact label for the journey steps */
             font-weight: 800;
             text-align: center;
             color: var(--label-color, #9ca3af);

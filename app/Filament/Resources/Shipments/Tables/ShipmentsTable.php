@@ -5,8 +5,11 @@ namespace App\Filament\Resources\Shipments\Tables;
 use App\Enums\Capability;
 use App\Enums\ShipmentStatus;
 use App\Filament\Resources\Shipments\Actions\ManageJourneyAction;
+use App\Models\Payment;
 use App\Models\Shipment;
+use App\Models\Warehouse;
 use App\Services\PackageJourneyProjection;
+use App\Services\PaymentService;
 use App\Services\ShipmentCollectionService;
 use App\Services\WhatsAppMessageService;
 use DomainException;
@@ -14,7 +17,12 @@ use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Tables\Columns\Layout\Grid;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\TextColumn;
@@ -285,6 +293,82 @@ class ShipmentsTable
                             $record->markArrivalNotified();
                             $url = (new WhatsAppMessageService)->arrivalUrl($record);
                             $livewire->js('window.open('.json_encode($url).', "_blank")');
+                        }),
+
+                    Action::make('recordPayment')
+                        ->label('تسجيل دفعة')
+                        ->icon('heroicon-o-banknotes')
+                        ->color('danger')
+                        ->visible(fn (Shipment $record): bool => $record->final_charge_cents !== null
+                            && $record->paid_amount_cents < $record->final_charge_cents
+                        )
+                        ->schema([
+                            TextInput::make('amount')
+                                ->label('المبلغ (دولار)')
+                                ->numeric()
+                                ->required()
+                                ->minValue(0.01)
+                                ->step(0.01)
+                                ->default(fn (Shipment $record) => max(0.01, ($record->final_charge_cents - $record->paid_amount_cents) / 100))
+                                ->extraInputAttributes(['dir' => 'ltr']),
+
+                            Select::make('method')
+                                ->label('طريقة الدفع')
+                                ->options([
+                                    Payment::METHOD_CASH => 'نقد',
+                                    Payment::METHOD_WHISH => 'Whish',
+                                    Payment::METHOD_BANK => 'حوالة بنكية',
+                                    Payment::METHOD_OTHER => 'أخرى',
+                                ])
+                                ->required()
+                                ->live()
+                                ->default(Payment::METHOD_CASH),
+
+                            TextInput::make('custom_method_name')
+                                ->label('اسم طريقة الدفع')
+                                ->required(fn (Get $get) => $get('method') === Payment::METHOD_OTHER)
+                                ->visible(fn (Get $get) => $get('method') === Payment::METHOD_OTHER),
+
+                            DateTimePicker::make('collected_at')
+                                ->label('تاريخ ووقت التحصيل')
+                                ->required()
+                                ->default(now()),
+
+                            TextInput::make('reference')
+                                ->label('مرجع اختياري')
+                                ->nullable()
+                                ->maxLength(255),
+
+                            Textarea::make('notes')
+                                ->label('ملاحظات')
+                                ->nullable(),
+                        ])
+                        ->action(function (Shipment $record, array $data, PaymentService $service): void {
+                            try {
+                                $service->recordPayment([
+                                    'customer_id' => $record->customer_id,
+                                    'amount_cents' => (int) round($data['amount'] * 100),
+                                    'method' => $data['method'],
+                                    'custom_method_name' => $data['custom_method_name'] ?? null,
+                                    'collected_at' => $data['collected_at'],
+                                    'collected_by' => auth()->id(),
+                                    'warehouse_id' => auth()->user()->warehouse_id ?? $record->destination_warehouse_id,
+                                    'reference' => $data['reference'] ?? null,
+                                    'notes' => $data['notes'] ?? null,
+                                ], $record);
+
+                                Notification::make()
+                                    ->title('تم تسجيل الدفعة بنجاح')
+                                    ->body('تم تسجيل دفعة بقيمة $'.number_format((float) $data['amount'], 2).' للشحنة '.$record->reference)
+                                    ->success()
+                                    ->send();
+                            } catch (DomainException $e) {
+                                Notification::make()
+                                    ->title('تعذر تسجيل الدفعة')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
                         }),
 
                     Action::make('delete')

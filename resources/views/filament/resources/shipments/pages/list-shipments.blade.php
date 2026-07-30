@@ -258,6 +258,13 @@
                                         <div class="amount">${{ number_format((float) ($shipment->final_charge_cents / 100), 2) }}</div>
                                         @if ($unpaidCents > 0)
                                             <div class="unpaid">غير مدفوع (${{ number_format($unpaidCents / 100, 2) }})</div>
+                                            <button
+                                                type="button"
+                                                class="pay-btn"
+                                                wire:click="mountTableAction('recordPayment', '{{ $shipment->id }}')"
+                                            >
+                                                💰 تسجيل دفعة
+                                            </button>
                                         @else
                                             <div class="paid">مدفوع بالكامل ✓</div>
                                         @endif
@@ -1011,6 +1018,26 @@
 
         .action-wrap {
             position: relative;
+        }
+
+        .pay-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 6px;
+            padding: 5px 14px;
+            border: 1px solid var(--danger);
+            border-radius: 8px;
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pay-btn:hover {
+            background: var(--danger);
+            color: #fff;
         }
 
         .action-toggle {

@@ -117,7 +117,7 @@ class CustomerStatementService
         };
 
         if ($payment->isReversal()) {
-            return "عكس دفعة {$receipt}";
+            return "تصحيح دفعة {$receipt}: {$payment->reversal_reason}";
         }
 
         return "دفعة {$receipt} ({$method})";

@@ -60,6 +60,11 @@ class PaymentsTable
                     })
                     ->sortable(),
 
+                TextColumn::make('reversal_reason')
+                    ->label('سبب التصحيح')
+                    ->placeholder('—')
+                    ->wrap(),
+
                 TextColumn::make('collected_at')
                     ->label('تاريخ التحصيل')
                     ->dateTime()

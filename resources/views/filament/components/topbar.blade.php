@@ -16,12 +16,15 @@
 
 <header class="hm-global-topbar" dir="rtl" x-data="{ mobileOpen: false, menuOpen: false }">
     <div class="hm-topbar-inner">
-        <!-- Brand & Mobile Toggle -->
+        <!-- Brand & Mobile Toggle & Notifications -->
         <div class="hm-brand-group">
             <button type="button" class="hm-mobile-toggle" @click="mobileOpen = !mobileOpen" aria-label="قائمة التصفح">
                 ☰
             </button>
             <a href="{{ filament()->getHomeUrl() }}" class="hm-brand-logo">HM</a>
+            @if ($user)
+                <livewire:notification-dropdown />
+            @endif
         </div>
 
         <!-- Main Navbar Links -->
@@ -35,13 +38,8 @@
             <a href="{{ PaymentResource::getUrl('index') }}" class="{{ str_contains($currentUrl, '/payments') ? 'active' : '' }}">المدفوعات</a>
         </nav>
 
-        <!-- Actions Group (Database Notifications, Theme Toggle & Settings) -->
+        <!-- Actions Group (Theme Toggle & Settings) -->
         <div class="hm-actions-group">
-            <!-- Database Notifications Bell Trigger -->
-            @if ($user)
-                <livewire:notification-dropdown />
-            @endif
-
             <!-- Theme Toggle Button (Light/Dark Mode) -->
             <button type="button" 
                     class="hm-theme-btn" 
@@ -245,7 +243,7 @@
     }
     .hm-notif-menu {
         position: absolute;
-        left: 0;
+        right: 0;
         top: 48px;
         width: 360px;
         max-width: 90vw;

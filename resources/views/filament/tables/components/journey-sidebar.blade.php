@@ -123,7 +123,7 @@
     }
 
     .js-sidebar-wrap {
-        padding: 24px;
+        padding: 16px;
     }
     .js-list {
         display: flex;
@@ -135,12 +135,12 @@
         width: 100%;
         padding: 16px;
         border: 1px solid var(--hm-border);
-        border-radius: 16px;
+        border-radius: 14px;
         background: var(--hm-bg-page);
         color: inherit;
         text-align: right;
         cursor: pointer;
-        transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: var(--hm-shadow-sm);
         user-select: none;
     }
@@ -157,7 +157,7 @@
     .js-card-row {
         display: flex;
         justify-content: space-between;
-        gap: 12px;
+        gap: 10px;
         align-items: start;
     }
     .js-name {
@@ -165,7 +165,8 @@
         font-size: 14px;
         font-weight: 800;
         color: var(--hm-text-main);
-        letter-spacing: 0.5px;
+        letter-spacing: 0.3px;
+        line-height: 1.4;
     }
     .js-route {
         display: block;
@@ -178,14 +179,14 @@
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
-        margin-top: 12px;
+        margin-top: 14px;
     }
     .js-badge {
         display: inline-flex;
-        gap: 6px;
+        gap: 5px;
         align-items: center;
         min-width: max-content;
-        padding: 4px 12px;
+        padding: 5px 12px;
         border-radius: 9999px;
         font-size: 11px;
         font-weight: 700;

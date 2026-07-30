@@ -1065,7 +1065,7 @@
         }
 
         .trips-panel {
-            padding: 20px;
+            padding: 14px;
             background: var(--surface);
             border: 1px solid var(--line);
             border-radius: 16px;

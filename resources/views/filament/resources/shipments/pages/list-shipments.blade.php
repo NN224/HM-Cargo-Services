@@ -179,16 +179,21 @@
                                         </div>
                                     </details>
                                     <div class="hm-shipment-id">
-                                        <button
-                                            type="button"
-                                            class="hm-card-check"
-                                            wire:click="toggleShipmentSelection({{ $shipment->id }})"
-                                            aria-label="تحديد الشحنة {{ $shipment->reference }}"
-                                            aria-pressed="{{ $isSelected ? 'true' : 'false' }}"
-                                        >
-                                            <span class="hm-check-box {{ $isSelected ? 'is-checked' : '' }}"></span>
-                                        </button>
-                                        <strong>{{ $shipment->reference }}</strong>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <button
+                                                type="button"
+                                                class="hm-card-check"
+                                                wire:click="toggleShipmentSelection({{ $shipment->id }})"
+                                                aria-label="تحديد الشحنة {{ $shipment->reference }}"
+                                                aria-pressed="{{ $isSelected ? 'true' : 'false' }}"
+                                            >
+                                                <span class="hm-check-box {{ $isSelected ? 'is-checked' : '' }}"></span>
+                                            </button>
+                                            <strong>{{ $shipment->reference }}</strong>
+                                        </div>
+                                        <div style="direction: rtl; text-align: left;">
+                                            <span class="hm-customer-name">{{ $shipment->customer?->name }}</span>
+                                        </div>
                                         <span>{{ $shipment->created_at?->format('Y-m-d') }}</span>
                                     </div>
                                 </div>
@@ -225,8 +230,7 @@
                                             @endif
                                         </div>
                                     </div>
-                                    <div><span>العميل</span><strong>{{ $shipment->customer?->name }}</strong></div>
-                                    <div><span>المستلم</span><strong>{{ $shipment->recipient_name }}</strong></div>
+                                    <div><span>المستلم</span><strong style="font-size: 15px; color: var(--hm-text-main);">{{ $shipment->recipient_name }}</strong></div>
                                     <div><span>الطرود</span><strong>▣ {{ $shipment->packages_count }}</strong></div>
                                     <div><span>الوزن</span><strong>⚖ {{ rtrim(rtrim(number_format((float) $shipment->total_weight_kg, 2), '0'), '.') }} كغ</strong></div>
                                 </div>
@@ -234,9 +238,6 @@
                                 <div class="hm-card-footer">
                                     <span class="hm-money-badge">${{ number_format($unpaidCents / 100, 2) }} غير مدفوع</span>
                                     <div class="hm-card-actions">
-                                        <a class="hm-mini-btn" href="{{ ShipmentResource::getUrl('edit', ['record' => $shipment]) }}">تعديل</a>
-                                        <a class="hm-mini-btn" href="{{ ShipmentResource::getUrl('view', ['record' => $shipment]) }}">عرض</a>
-                                        <a class="hm-mini-btn" href="{{ route('labels.shipment', $shipment) }}" target="_blank">طباعة</a>
                                         <a class="hm-icon-btn" href="#" wire:click.prevent="mountTableAction('manageJourney', '{{ $shipment->id }}')" title="تحديث طرود الشحنة">•••</a>
                                     </div>
                                 </div>
@@ -253,14 +254,139 @@
     </div>
 
     <style>
-        .hm-frame{overflow:hidden;border:1px solid #292f39;border-radius:20px;background:rgba(13,16,21,.96);box-shadow:0 18px 48px rgba(0,0,0,.24)}
-        .hm-select-all,.hm-card-check{font:inherit;text-align:inherit;cursor:pointer}.hm-card-check{display:inline-flex;padding:0;border:0;background:transparent;color:inherit}.hm-select-all input[type=checkbox],.hm-card-check input[type=checkbox]{display:none}.hm-check-box{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border:1px solid #4b5565;border-radius:3px;background:#0d1014;box-shadow:inset 0 0 0 2px #0d1014}.hm-check-box.is-checked{border-color:#f28a12;background:#f28a12}.hm-check-box.is-checked::after{content:"";width:5px;height:8px;border:solid #16100a;border-width:0 2px 2px 0;transform:rotate(45deg) translateY(-1px)}.hm-bulk-field{display:flex;flex:1 1 210px;min-width:0;gap:6px;align-items:center;color:#929aa8;font-size:11px;font-weight:800}.hm-bulk-reason{flex-basis:240px}.hm-bulk-field select,.hm-bulk-field input{width:100%;height:40px;min-width:0;max-width:100%;box-sizing:border-box;padding:0 10px;border:1px solid #384152;border-radius:9px;background:#0d1014;color:#f7f8fa;outline:0}.hm-bulk-field select:focus,.hm-bulk-field input:focus{border-color:#4f8cff;box-shadow:0 0 0 3px rgba(79,140,255,.12)}
-        .hm-screen-bar{display:flex;justify-content:space-between;gap:20px;align-items:center;min-height:62px;padding:12px 18px;border-bottom:1px solid #292f39;background:#0d1015}.hm-brand{display:flex;gap:9px;align-items:center;font-size:13px;font-weight:800}.hm-brand span{color:#f28a12;font-size:19px;font-weight:950}.hm-context{display:flex;gap:16px;align-items:center;color:#929aa8;font-size:12px}.hm-online{display:flex;gap:8px;align-items:center}.hm-online i{width:7px;height:7px;border-radius:99px;background:#59cf91;box-shadow:0 0 0 4px rgba(89,207,145,.12)}
-        .hm-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,.37fr);min-height:625px}.hm-workspace{min-width:0;padding:20px}.hm-sidebar{border-right:1px solid #292f39;background:#0c0f14}.hm-section-title{display:flex;justify-content:space-between;gap:18px;align-items:start;margin-bottom:14px}.hm-section-title h2{margin:0;font-size:18px;line-height:1.35}.hm-section-title p{margin:4px 0 0;color:#929aa8;font-size:12px}.hm-count-badge,.hm-neutral-badge{display:inline-flex;gap:5px;align-items:center;min-width:max-content;padding:4px 8px;border:1px solid #292f39;border-radius:999px;background:#1c2129;color:#929aa8;font-size:11px;font-weight:750}.hm-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;padding:13px;border:1px solid #292f39;border-radius:12px;background:#111419}.hm-search-wrap{position:relative;flex:1}.hm-search{width:100%;height:40px;padding:0 42px 0 12px;border:1px solid #292f39;outline:0;border-radius:10px;background:#0d1014;color:#f7f8fa}.hm-search:focus{border-color:#4f8cff;box-shadow:0 0 0 3px rgba(79,140,255,.12)}.hm-ghost-btn,.hm-mini-btn,.hm-icon-btn{border:1px solid #292f39;border-radius:9px;background:#171b21;color:#929aa8;cursor:pointer;transition:.16s;text-decoration:none}.hm-ghost-btn{height:40px;padding:0 13px;display:inline-flex;align-items:center}.hm-primary-btn{height:40px;padding:0 15px;border:1px solid #f28a12;border-radius:9px;background:#f28a12;color:#16100a;font-weight:900;display:inline-flex;align-items:center;cursor:pointer}.hm-filter-menu,.hm-actions-menu{position:relative}.hm-filter-menu summary,.hm-actions-menu summary{list-style:none}.hm-filter-menu summary::-webkit-details-marker,.hm-actions-menu summary::-webkit-details-marker{display:none}.hm-filter-panel,.hm-actions-panel{position:absolute;z-index:30;top:calc(100% + 8px);left:0;min-width:190px;padding:10px;border:1px solid #292f39;border-radius:10px;background:#111419;box-shadow:0 18px 48px rgba(0,0,0,.28)}.hm-actions-panel{right:0;left:auto;display:grid;gap:6px}.hm-actions-panel a, .hm-actions-panel button{padding:8px 10px;border-radius:8px;color:#d8dde6;text-decoration:none;font-size:12px; background:none; border:none; text-align:right; font-family:inherit; cursor:pointer; width:100%;}.hm-actions-panel a:hover, .hm-actions-panel button:hover{background:#1c2129}.hm-filter-panel label{display:grid;gap:6px;color:#929aa8;font-size:11px}.hm-filter-panel select{height:36px;border:1px solid #292f39;border-radius:8px;background:#0d1014;color:#f7f8fa}.hm-select-all{display:flex;gap:8px;align-items:center;color:#929aa8;font-size:11px;margin:2px 2px 11px;width:max-content;cursor:pointer}.hm-bulk-bar{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:12px;padding:11px 13px;border:1px solid rgba(79,140,255,.35);border-radius:11px;background:rgba(79,140,255,.12)}.hm-bulk-copy{display:flex;gap:9px;align-items:center;font-size:12px}.hm-bulk-copy small{color:#929aa8}.hm-bulk-count{display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#4f8cff;color:white;font-weight:900}.hm-bulk-actions{display:flex;gap:8px;align-items:center}.hm-shipment-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.hm-shipment-card{position:relative;padding:15px;border:1px solid #292f39;border-radius:13px;background:#111419;transition:.16s}.hm-shipment-card.is-selected{border-color:#4f8cff;box-shadow:0 0 0 3px rgba(79,140,255,.12)}.hm-shipment-top{display:flex;justify-content:space-between;gap:12px;align-items:start}.hm-shipment-id{display:grid;gap:2px;text-align:left;direction:ltr}.hm-shipment-id strong{font-weight:900}.hm-shipment-id span{color:#929aa8;font-size:11px}.hm-stepper{margin:14px 0;padding:11px;border:1px solid #292f39;border-radius:11px;background:#0d1014}.hm-stepper-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px;color:#929aa8;font-size:11px}.hm-stage-badge{display:inline-flex;padding:4px 8px;border:1px solid rgba(233,200,83,.25);border-radius:999px;background:rgba(233,200,83,.1);color:#e9c853;font-size:11px;font-weight:750}.hm-steps{display:grid;grid-template-columns:repeat(7,1fr);direction:rtl}.hm-step{position:relative;text-align:center;color:#666f7d;font-size:9px;line-height:1.2}.hm-step span{position:relative;z-index:1;display:grid;place-items:center;width:19px;height:19px;margin:0 auto 5px;border:1px solid #3a424f;border-radius:50%;background:#15191f;font-size:9px}.hm-step.is-current{color:#9fc0ff}.hm-step.is-current span{border-color:#4f8cff;background:#4f8cff;color:white;box-shadow:0 0 0 3px rgba(79,140,255,.12)}.hm-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px 18px;margin-top:13px}.hm-detail-grid span{display:block;color:#929aa8;font-size:10px}.hm-detail-grid strong{display:block;margin-top:2px;overflow:hidden;font-size:12px;font-weight:730;text-overflow:ellipsis;white-space:nowrap}.hm-card-footer{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid #292f39}.hm-money-badge{display:inline-flex;padding:4px 8px;border:1px solid rgba(255,119,119,.25);border-radius:999px;background:rgba(255,119,119,.12);color:#ffb0b0;font-size:11px;font-weight:750}.hm-success-badge{display:inline-flex;padding:4px 8px;border:1px solid rgba(16,185,129,.3);border-radius:999px;background:rgba(16,185,129,.15);color:#6ee7b7;font-size:11px;font-weight:750}.hm-card-actions{display:flex;gap:7px;align-items:center}.hm-mini-btn{min-height:32px;padding:5px 10px;font-size:12px}.hm-icon-btn{display:grid;place-items:center;width:34px;height:34px}.hm-empty{display:grid;place-items:center;min-height:260px;padding:35px;border:1px dashed #3a424f;border-radius:13px;color:#929aa8;text-align:center}.hm-empty strong{color:#f7f8fa}.hm-empty span{display:block;margin-top:5px;font-size:12px}
+        :root {
+            --hm-bg-page: #ffffff;
+            --hm-bg-sub: #f8fafc;
+            --hm-bg-hover: #f1f5f9;
+            --hm-border: #e2e8f0;
+            --hm-border-hover: #cbd5e1;
+            --hm-text-main: #0f172a;
+            --hm-text-sub: #475569;
+            --hm-text-muted: #64748b;
+            --hm-shadow-sm: 0 2px 8px rgba(0,0,0,0.03);
+            --hm-shadow-md: 0 10px 30px rgba(0,0,0,.05);
+            --hm-shadow-lg: 0 10px 40px rgba(0,0,0,.1);
+            --hm-blue-bg: rgba(59,130,246,.05);
+            --hm-blue-border: rgba(59,130,246,.2);
+            --hm-step-line: #e2e8f0;
+            --hm-step-border: #cbd5e1;
+            --hm-badge-red-bg: rgba(239,68,68,.1);
+            --hm-badge-red-border: rgba(239,68,68,.2);
+            --hm-badge-red-text: #dc2626;
+            --hm-badge-green-bg: rgba(16,185,129,.1);
+            --hm-badge-green-border: rgba(16,185,129,.3);
+            --hm-badge-green-text: #059669;
+            --hm-badge-orange-bg: rgba(245,158,11,.1);
+            --hm-badge-orange-border: rgba(245,158,11,.2);
+            --hm-badge-orange-text: #d97706;
+        }
+        
+        .dark {
+            --hm-bg-page: #09090b;
+            --hm-bg-sub: #18181b;
+            --hm-bg-hover: #27272a;
+            --hm-border: #27272a;
+            --hm-border-hover: #3f3f46;
+            --hm-text-main: #f4f4f5;
+            --hm-text-sub: #d4d4d8;
+            --hm-text-muted: #a1a1aa;
+            --hm-shadow-sm: 0 4px 15px rgba(0,0,0,0.2);
+            --hm-shadow-md: 0 10px 30px rgba(0,0,0,.4);
+            --hm-shadow-lg: 0 10px 40px rgba(0,0,0,.5);
+            --hm-blue-bg: rgba(59,130,246,.15);
+            --hm-blue-border: rgba(59,130,246,.3);
+            --hm-step-line: #3f3f46;
+            --hm-step-border: #52525b;
+            --hm-badge-red-bg: rgba(239,68,68,.15);
+            --hm-badge-red-border: rgba(239,68,68,.3);
+            --hm-badge-red-text: #fca5a5;
+            --hm-badge-green-bg: rgba(16,185,129,.15);
+            --hm-badge-green-border: rgba(16,185,129,.3);
+            --hm-badge-green-text: #6ee7b7;
+            --hm-badge-orange-bg: rgba(245,158,11,.15);
+            --hm-badge-orange-border: rgba(245,158,11,.3);
+            --hm-badge-orange-text: #fcd34d;
+        }
+
+        .hm-frame{overflow:hidden;border:1px solid var(--hm-border);border-radius:24px;background:var(--hm-bg-page);box-shadow:var(--hm-shadow-md);color:var(--hm-text-main)}
+        .hm-select-all,.hm-card-check{font:inherit;text-align:inherit;cursor:pointer}.hm-card-check{display:inline-flex;padding:0;border:0;background:transparent;color:inherit}.hm-select-all input[type=checkbox],.hm-card-check input[type=checkbox]{display:none}
+        .hm-check-box{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border:1px solid var(--hm-border-hover);border-radius:5px;background:var(--hm-bg-sub);transition: 0.2s;}
+        .hm-check-box.is-checked{border-color:#f59e0b;background:#f59e0b}
+        .hm-check-box.is-checked::after{content:"";width:5px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) translateY(-1px)}
+        .hm-bulk-field{display:flex;flex:1 1 210px;min-width:0;gap:6px;align-items:center;color:var(--hm-text-muted);font-size:12px;font-weight:600}.hm-bulk-reason{flex-basis:240px}
+        .hm-bulk-field select,.hm-bulk-field input{width:100%;height:40px;min-width:0;max-width:100%;box-sizing:border-box;padding:0 12px;border:1px solid var(--hm-border);border-radius:10px;background:var(--hm-bg-page);color:var(--hm-text-main);outline:0;transition:0.2s}
+        .hm-bulk-field select:focus,.hm-bulk-field input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+        .hm-screen-bar{display:flex;justify-content:space-between;gap:20px;align-items:center;min-height:68px;padding:12px 24px;border-bottom:1px solid var(--hm-border);background:var(--hm-bg-sub)}
+        .hm-brand{display:flex;gap:10px;align-items:center;font-size:14px;font-weight:800;letter-spacing:0.5px;color:var(--hm-text-main);}
+        .hm-brand span{color:#f59e0b;font-size:20px;font-weight:900}
+        .hm-context{display:flex;gap:18px;align-items:center;color:var(--hm-text-muted);font-size:13px}
+        .hm-online{display:flex;gap:8px;align-items:center;font-weight:500;padding:4px 12px;background:rgba(16,185,129,0.1);border-radius:99px;color:#10b981}
+        .hm-online i{width:8px;height:8px;border-radius:99px;background:#10b981;box-shadow:0 0 8px rgba(16,185,129,0.4)}
+        .hm-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.37fr);min-height:625px}
+        .hm-workspace{min-width:0;padding:24px;background:var(--hm-bg-page);}
+        .hm-sidebar{border-right:1px solid var(--hm-border);background:var(--hm-bg-sub);}
+        .hm-section-title{display:flex;justify-content:space-between;gap:18px;align-items:start;margin-bottom:20px}
+        .hm-section-title h2{margin:0;font-size:22px;font-weight:700;line-height:1.35;color:var(--hm-text-main)}
+        .hm-section-title p{margin:6px 0 0;color:var(--hm-text-muted);font-size:13px}
+        .hm-count-badge,.hm-neutral-badge{display:inline-flex;gap:6px;align-items:center;min-width:max-content;padding:6px 14px;border:1px solid var(--hm-border);border-radius:999px;background:var(--hm-bg-hover);color:var(--hm-text-sub);font-size:12px;font-weight:600;}
+        .hm-toolbar{display:flex;gap:12px;align-items:center;margin-bottom:24px;padding:14px;border:1px solid var(--hm-border);border-radius:16px;background:var(--hm-bg-sub);}
+        .hm-search-wrap{position:relative;flex:1}
+        .hm-search{width:100%;height:44px;padding:0 42px 0 16px;border:1px solid var(--hm-border);outline:0;border-radius:12px;background:var(--hm-bg-page);color:var(--hm-text-main);font-size:14px;transition:0.2s}
+        .hm-search:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+        .hm-ghost-btn,.hm-mini-btn,.hm-icon-btn{border:1px solid var(--hm-border);border-radius:12px;background:var(--hm-bg-page);color:var(--hm-text-sub);cursor:pointer;transition:.2s;text-decoration:none;font-weight:500}
+        .hm-ghost-btn:hover,.hm-mini-btn:hover,.hm-icon-btn:hover{background:var(--hm-bg-hover);color:var(--hm-text-main)}
+        .hm-ghost-btn{height:44px;padding:0 18px;display:inline-flex;align-items:center}
+        .hm-primary-btn{height:44px;padding:0 24px;border:none;border-radius:999px;background:linear-gradient(135deg, #f59e0b, #d97706);color:#fff;font-weight:700;display:inline-flex;align-items:center;cursor:pointer;box-shadow:0 4px 12px rgba(245, 158, 11, 0.2);transition:0.2s}
+        .hm-primary-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(245, 158, 11, 0.3)}
+        .hm-filter-menu,.hm-actions-menu{position:relative}
+        .hm-filter-menu summary,.hm-actions-menu summary{list-style:none}
+        .hm-filter-menu summary::-webkit-details-marker,.hm-actions-menu summary::-webkit-details-marker{display:none}
+        .hm-filter-panel,.hm-actions-panel{position:absolute;z-index:30;top:calc(100% + 10px);left:0;min-width:200px;padding:12px;border:1px solid var(--hm-border);border-radius:16px;background:var(--hm-bg-page);box-shadow:var(--hm-shadow-lg)}.hm-actions-panel{right:0;left:auto;display:grid;gap:4px}
+        .hm-actions-panel a, .hm-actions-panel button{padding:10px 14px;border-radius:10px;color:var(--hm-text-sub);text-decoration:none;font-size:13px; background:none; border:none; text-align:right; font-family:inherit; cursor:pointer; width:100%;transition:0.15s;font-weight:500}
+        .hm-actions-panel a:hover, .hm-actions-panel button:hover{background:var(--hm-bg-hover);color:var(--hm-text-main)}
+        .hm-filter-panel label{display:grid;gap:8px;color:var(--hm-text-muted);font-size:12px;font-weight:500}
+        .hm-filter-panel select{height:40px;border:1px solid var(--hm-border);border-radius:10px;background:var(--hm-bg-page);color:var(--hm-text-main)}
+        .hm-select-all{display:flex;gap:10px;align-items:center;color:var(--hm-text-muted);font-size:13px;margin:4px 4px 16px;width:max-content;cursor:pointer;font-weight:500;transition:0.2s}
+        .hm-select-all:hover{color:var(--hm-text-main)}
+        .hm-bulk-bar{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:20px;padding:14px 20px;border:1px solid var(--hm-blue-border);border-radius:16px;background:var(--hm-blue-bg);}
+        .hm-bulk-copy{display:flex;gap:12px;align-items:center;font-size:13px;font-weight:500;color:var(--hm-text-main);}
+        .hm-bulk-copy small{color:var(--hm-text-muted);font-weight:400}
+        .hm-bulk-count{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg, #3b82f6, #2563eb);color:white;font-weight:800;box-shadow:0 4px 12px rgba(59,130,246,0.3)}
+        .hm-bulk-actions{display:flex;gap:10px;align-items:center}
+        .hm-shipment-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+        .hm-shipment-card{position:relative;padding:24px;border:1px solid var(--hm-border);border-radius:24px;background:var(--hm-bg-page);transition:all .25s cubic-bezier(0.4, 0, 0.2, 1);box-shadow:var(--hm-shadow-sm)}
+        .hm-shipment-card:hover{border-color:var(--hm-border-hover);box-shadow:var(--hm-shadow-md);transform:translateY(-2px)}
+        .hm-shipment-card.is-selected{border-color:#3b82f6;background:var(--hm-blue-bg);box-shadow:0 0 0 1px #3b82f6, var(--hm-shadow-md)}
+        .hm-shipment-top{display:flex;justify-content:space-between;gap:16px;align-items:start}
+        .hm-shipment-id{display:grid;gap:6px;text-align:left;direction:ltr}
+        .hm-shipment-id strong{font-weight:800;font-size:20px;color:var(--hm-text-main);letter-spacing:0.5px}
+        .hm-shipment-id span{color:var(--hm-text-muted);font-size:13px;font-weight:500}
+        .hm-customer-name{font-size:18px;color:var(--hm-text-main);font-weight:800;}
+        .hm-stepper{margin:24px 0;padding:20px;border:1px solid var(--hm-border);border-radius:16px;background:var(--hm-bg-sub)}
+        .hm-stepper-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:20px;color:var(--hm-text-sub);font-size:13px;font-weight:600}
+        .hm-stage-badge{display:inline-flex;padding:6px 14px;border:1px solid var(--hm-badge-orange-border);border-radius:999px;background:var(--hm-badge-orange-bg);color:var(--hm-badge-orange-text);font-size:12px;font-weight:700}
+        .hm-steps{position:relative;display:grid;grid-template-columns:repeat(7,1fr);direction:rtl}
+        .hm-steps::before{content:"";position:absolute;top:12px;left:7%;right:7%;height:2px;background:var(--hm-step-line);z-index:0}
+        .hm-step{position:relative;text-align:center;color:var(--hm-text-muted);font-size:11px;line-height:1.4;font-weight:500}
+        .hm-step span{position:relative;z-index:1;display:grid;place-items:center;width:26px;height:26px;margin:0 auto 10px;border:2px solid var(--hm-step-border);border-radius:50%;background:var(--hm-bg-page);font-size:11px;font-weight:700;transition:0.3s;color:var(--hm-text-sub);}
+        .hm-step.is-current{color:#3b82f6}
+        .hm-step.is-current span{border-color:#3b82f6;background:#3b82f6;color:white;box-shadow:0 0 14px rgba(59,130,246,.4)}
+        .hm-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px;margin-top:20px}
+        .hm-detail-grid span{display:block;color:var(--hm-text-muted);font-size:12px;font-weight:500;margin-bottom:6px}
+        .hm-detail-grid strong{display:block;overflow:hidden;font-size:14px;font-weight:700;color:var(--hm-text-main);text-overflow:ellipsis;white-space:nowrap}
+        .hm-card-footer{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--hm-border)}
+        .hm-money-badge{display:inline-flex;padding:6px 14px;border:1px solid var(--hm-badge-red-border);border-radius:999px;background:var(--hm-badge-red-bg);color:var(--hm-badge-red-text);font-size:12px;font-weight:700}
+        .hm-success-badge{display:inline-flex;padding:6px 14px;border:1px solid var(--hm-badge-green-border);border-radius:999px;background:var(--hm-badge-green-bg);color:var(--hm-badge-green-text);font-size:12px;font-weight:700}
+        .hm-card-actions{display:flex;gap:10px;align-items:center}
+        .hm-mini-btn{min-height:38px;padding:8px 16px;font-size:13px;border-radius:12px}
+        .hm-icon-btn{display:grid;place-items:center;width:40px;height:40px;border-radius:50%}
+        .hm-empty{display:grid;place-items:center;min-height:300px;padding:40px;border:2px dashed var(--hm-border-hover);border-radius:24px;color:var(--hm-text-muted);text-align:center;background:var(--hm-bg-sub)}
+        .hm-empty strong{color:var(--hm-text-main);font-size:18px;margin-bottom:10px}
+        .hm-empty span{display:block;font-size:14px}
         .hm-bulk-bar{flex-wrap:wrap;overflow:hidden;box-sizing:border-box}.hm-bulk-copy{flex:0 1 auto;min-width:0}.hm-bulk-actions{flex:1 1 520px;min-width:0;flex-wrap:wrap;justify-content:flex-end}.hm-bulk-actions>.hm-primary-btn,.hm-bulk-actions>.hm-ghost-btn{flex:0 0 auto;white-space:nowrap}
-        .hm-action-link{background:none;border:none;color:#d8dde6;cursor:pointer;text-align:right;width:100%;font:inherit;padding:8px 10px;border-radius:8px;font-size:12px;display:block}
-        .hm-action-link:hover{background:#1c2129}
-        @media(max-width:900px){.hm-split{display:flex;flex-direction:column-reverse}.hm-sidebar{border-right:0;border-bottom:1px solid #292f39}.hm-shipment-grid{grid-template-columns:1fr}.hm-toolbar,.hm-bulk-bar{align-items:stretch;flex-direction:column}.hm-bulk-actions{justify-content:stretch}.hm-bulk-field,.hm-bulk-actions>.hm-primary-btn,.hm-bulk-actions>.hm-ghost-btn{width:100%}}
+        .hm-action-link{background:none;border:none;color:var(--hm-text-sub);cursor:pointer;text-align:right;width:100%;font:inherit;padding:10px 14px;border-radius:10px;font-size:13px;display:block;transition:0.15s;font-weight:500}
+        .hm-action-link:hover{background:var(--hm-bg-hover);color:var(--hm-text-main)}
+        @media(max-width:900px){.hm-split{display:flex;flex-direction:column-reverse}.hm-sidebar{border-right:0;border-bottom:1px solid var(--hm-border)}.hm-shipment-grid{grid-template-columns:1fr}.hm-toolbar,.hm-bulk-bar{align-items:stretch;flex-direction:column}.hm-bulk-actions{justify-content:stretch}.hm-bulk-field,.hm-bulk-actions>.hm-primary-btn,.hm-bulk-actions>.hm-ghost-btn{width:100%}}
     </style>
 
     <x-filament-actions::modals />

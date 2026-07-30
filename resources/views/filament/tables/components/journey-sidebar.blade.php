@@ -80,6 +80,48 @@
 @endphp
 
 <style>
+    :root {
+        --hm-border: #e2e8f0;
+        --hm-border-hover: #cbd5e1;
+        --hm-bg-page: #ffffff;
+        --hm-bg-hover: #f1f5f9;
+        --hm-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --hm-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        --hm-blue-bg: rgba(59, 130, 246, 0.08);
+        --hm-blue-border: rgba(59, 130, 246, 0.25);
+        --hm-text-main: #0f172a;
+        --hm-text-sub: #334155;
+        --hm-text-muted: #64748b;
+        --hm-badge-red-border: rgba(239, 68, 68, 0.25);
+        --hm-badge-red-bg: rgba(239, 68, 68, 0.1);
+        --hm-badge-red-text: #dc2626;
+        --hm-badge-orange-border: rgba(245, 158, 11, 0.25);
+        --hm-badge-orange-bg: rgba(245, 158, 11, 0.1);
+        --hm-badge-orange-text: #d97706;
+        --hm-step-line: #e2e8f0;
+    }
+
+    .dark {
+        --hm-border: #292929;
+        --hm-border-hover: #3f3f46;
+        --hm-bg-page: #121212;
+        --hm-bg-hover: #1a1a1a;
+        --hm-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+        --hm-shadow-md: 0 8px 20px rgba(0, 0, 0, 0.4);
+        --hm-blue-bg: rgba(59, 130, 246, 0.15);
+        --hm-blue-border: rgba(59, 130, 246, 0.3);
+        --hm-text-main: #f4f4f5;
+        --hm-text-sub: #e4e4e7;
+        --hm-text-muted: #a1a1aa;
+        --hm-badge-red-border: rgba(239, 68, 68, 0.3);
+        --hm-badge-red-bg: rgba(239, 68, 68, 0.15);
+        --hm-badge-red-text: #f87171;
+        --hm-badge-orange-border: rgba(245, 158, 11, 0.3);
+        --hm-badge-orange-bg: rgba(245, 158, 11, 0.15);
+        --hm-badge-orange-text: #fbbf24;
+        --hm-step-line: #27272a;
+    }
+
     .js-sidebar-wrap {
         padding: 24px;
     }

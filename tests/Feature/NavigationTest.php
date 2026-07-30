@@ -23,7 +23,7 @@ function navigationItems(): array
 {
     return [
         'استلام بضاعة' => ReceiveIntoBatch::class,
-        'مسح الطرود' => ScanPackages::class,
+        'تسليم بضاعة' => ScanPackages::class,
         'الشحنات' => ShipmentResource::class,
         'الرحلات' => BatchResource::class,
         'العملاء' => CustomerResource::class,

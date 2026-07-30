@@ -23,6 +23,8 @@ use InvalidArgumentException;
  * @property string|null $source_barcode
  * @property string|null $description
  * @property numeric $weight_kg
+ * @property int|null $custom_rate_per_kg_cents
+ * @property int|null $fixed_charge_cents
  * @property PackageStatus $status
  * @property bool $is_delayed
  * @property string|null $delay_reason
@@ -55,6 +57,7 @@ class Package extends Model
         'shipment_id',
         'weight_kg',
         'custom_rate_per_kg_cents',
+        'fixed_charge_cents',
         'status',
         'source_barcode',
         'description',
@@ -77,6 +80,7 @@ class Package extends Model
             'status' => PackageStatus::class,
             'weight_kg' => 'decimal:4',
             'custom_rate_per_kg_cents' => 'integer',
+            'fixed_charge_cents' => 'integer',
             'is_delayed' => 'boolean',
             'delay_reason_is_public' => 'boolean',
             'delayed_at' => 'datetime',

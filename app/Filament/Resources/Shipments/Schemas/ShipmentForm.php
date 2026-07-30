@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Shipments\Schemas;
 
+use App\Enums\Capability;
 use App\Models\Customer;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Repeater;
@@ -96,6 +97,10 @@ class ShipmentForm
                                     ->step(0.0001)
                                     ->extraInputAttributes(['dir' => 'ltr'])
                                     ->live(onBlur: true)
+                                    ->afterStateUpdated(fn (Get $get, Set $set) => $set(
+                                        '../../final_charge_usd',
+                                        self::calculateTotal($get('../../packages')),
+                                    ))
                                     ->suffix('kg')
                                     ->helperText('الوزن لا يُقرَّب.'),
 
@@ -109,6 +114,63 @@ class ShipmentForm
                                     ->maxLength(255)
                                     ->extraInputAttributes(['dir' => 'ltr', 'style' => 'text-align:left'])
                                     ->helperText('امسح باركود المورّد إن وُجد. لا يحل محل باركود النظام.'),
+
+                                Select::make('pricing_method')
+                                    ->label('طريقة التسعير')
+                                    ->options([
+                                        'per_kg' => 'سعر الكيلو',
+                                        'fixed' => 'مقطوعية (سعر ثابت)',
+                                    ])
+                                    ->default('per_kg')
+                                    ->required(fn (string $operation): bool => self::canEditPricing($operation))
+                                    ->visible(fn (string $operation): bool => self::canEditPricing($operation))
+                                    ->live()
+                                    ->afterStateUpdated(function (?string $state, Get $get, Set $set): void {
+                                        if ($state === 'fixed') {
+                                            $set('custom_rate_per_kg', null);
+                                        } else {
+                                            $set('fixed_charge_usd', null);
+                                        }
+
+                                        $set(
+                                            '../../final_charge_usd',
+                                            self::calculateTotal($get('../../packages')),
+                                        );
+                                    }),
+
+                                TextInput::make('custom_rate_per_kg')
+                                    ->label('سعر الكيلو (دولار)')
+                                    ->numeric()
+                                    ->step('0.01')
+                                    ->minValue(0.01)
+                                    ->prefix('$')
+                                    ->extraInputAttributes(['dir' => 'ltr'])
+                                    ->required(fn (Get $get, string $operation): bool => self::canEditPricing($operation)
+                                        && $get('pricing_method') === 'per_kg')
+                                    ->visible(fn (Get $get, string $operation): bool => self::canEditPricing($operation)
+                                        && $get('pricing_method') === 'per_kg')
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(fn (Get $get, Set $set) => $set(
+                                        '../../final_charge_usd',
+                                        self::calculateTotal($get('../../packages')),
+                                    )),
+
+                                TextInput::make('fixed_charge_usd')
+                                    ->label('السعر المقطوع (دولار)')
+                                    ->numeric()
+                                    ->step('0.01')
+                                    ->minValue(0.01)
+                                    ->prefix('$')
+                                    ->extraInputAttributes(['dir' => 'ltr'])
+                                    ->required(fn (Get $get, string $operation): bool => self::canEditPricing($operation)
+                                        && $get('pricing_method') === 'fixed')
+                                    ->visible(fn (Get $get, string $operation): bool => self::canEditPricing($operation)
+                                        && $get('pricing_method') === 'fixed')
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(fn (Get $get, Set $set) => $set(
+                                        '../../final_charge_usd',
+                                        self::calculateTotal($get('../../packages')),
+                                    )),
                             ])
                             ->columns(3)
                             ->defaultItems(1)
@@ -124,8 +186,113 @@ class ShipmentForm
                                     ->sum(fn ($row) => (float) ($row['weight_kg'] ?? 0));
 
                                 return 'الوزن الإجمالي: '.number_format($total, 4).' كغ';
-                            }),
+                            })
+                            ->mutateRelationshipDataBeforeFillUsing(
+                                fn (array $data): array => self::packageDataForForm($data),
+                            )
+                            ->mutateRelationshipDataBeforeCreateUsing(
+                                fn (array $data): array => self::packageDataForStorage($data),
+                            )
+                            ->mutateRelationshipDataBeforeSaveUsing(
+                                fn (array $data): array => self::packageDataForStorage($data),
+                            ),
+
+                        TextInput::make('final_charge_usd')
+                            ->label('الإجمالي النهائي المطلوب (دولار)')
+                            ->numeric()
+                            ->step('0.01')
+                            ->minValue(0)
+                            ->prefix('$')
+                            ->extraInputAttributes(['dir' => 'ltr'])
+                            ->required(fn (string $operation): bool => self::canEditPricing($operation))
+                            ->visible(fn (string $operation): bool => self::canEditPricing($operation))
+                            ->helperText('محسوب من أسعار الطرود، ويمكن تعديله يدوياً عند الحاجة.'),
                     ]),
             ]);
+    }
+
+    private static function canEditPricing(string $operation): bool
+    {
+        return $operation === 'edit'
+            && (auth()->user()?->hasCapability(Capability::PriceShipments) ?? false);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private static function packageDataForForm(array $data): array
+    {
+        $fixedChargeCents = $data['fixed_charge_cents'] ?? null;
+        $customRateCents = $data['custom_rate_per_kg_cents'] ?? null;
+
+        $data['pricing_method'] = filled($fixedChargeCents) ? 'fixed' : 'per_kg';
+        $data['custom_rate_per_kg'] = filled($customRateCents)
+            ? number_format(((int) $customRateCents) / 100, 2, '.', '')
+            : null;
+        $data['fixed_charge_usd'] = filled($fixedChargeCents)
+            ? number_format(((int) $fixedChargeCents) / 100, 2, '.', '')
+            : null;
+
+        return $data;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private static function packageDataForStorage(array $data): array
+    {
+        if (! (auth()->user()?->hasCapability(Capability::PriceShipments) ?? false)) {
+            unset(
+                $data['pricing_method'],
+                $data['custom_rate_per_kg'],
+                $data['fixed_charge_usd'],
+            );
+
+            return $data;
+        }
+
+        $method = $data['pricing_method'] ?? 'per_kg';
+        $data['custom_rate_per_kg_cents'] = $method === 'per_kg'
+            && filled($data['custom_rate_per_kg'] ?? null)
+                ? (int) round(((float) $data['custom_rate_per_kg']) * 100)
+                : null;
+        $data['fixed_charge_cents'] = $method === 'fixed'
+            && filled($data['fixed_charge_usd'] ?? null)
+                ? (int) round(((float) $data['fixed_charge_usd']) * 100)
+                : null;
+
+        unset(
+            $data['pricing_method'],
+            $data['custom_rate_per_kg'],
+            $data['fixed_charge_usd'],
+        );
+
+        return $data;
+    }
+
+    /**
+     * @param  array<int|string, array<string, mixed>>|null  $packages
+     */
+    private static function calculateTotal(?array $packages): ?string
+    {
+        if (! $packages) {
+            return null;
+        }
+
+        $total = 0.0;
+
+        foreach ($packages as $package) {
+            if (($package['pricing_method'] ?? 'per_kg') === 'fixed') {
+                $total += round((float) ($package['fixed_charge_usd'] ?? 0), 2);
+            } else {
+                $weight = (float) ($package['weight_kg'] ?? 0);
+                $rate = (float) ($package['custom_rate_per_kg'] ?? 0);
+                $total += round($weight * $rate, 2);
+            }
+        }
+
+        return $total > 0 ? number_format($total, 2, '.', '') : null;
     }
 }

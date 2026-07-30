@@ -207,16 +207,13 @@ class ShipmentsTable
                     ManageJourneyAction::make(),
 
                     Action::make('copyTrackingLink')
-                        ->label('رابط التتبع')
+                        ->label('نسخ رابط التتبع')
                         ->icon('heroicon-o-link')
                         ->color('gray')
-                        ->action(function ($record, $livewire): void {
-                            $livewire->dispatch('copy-to-clipboard', text: url('/track/'.$record->public_token));
-                        })
-                        ->extraAttributes(fn ($record): array => [
-                            'x-on:click' => 'navigator.clipboard.writeText('
-                                .json_encode(url('/track/'.$record->public_token)).')',
-                        ]),
+                        ->action(function (Shipment $record, $livewire): void {
+                            $url = url('/track/'.$record->public_token);
+                            $livewire->js('(function(){var t='.json_encode($url).';if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t)}else{var e=document.createElement("textarea");e.value=t;e.style.position="fixed";e.style.left="-9999px";document.body.appendChild(e);e.select();document.execCommand("copy");e.remove()}})()');
+                        }),
 
                     Action::make('printLabels')
                         ->label('طباعة الملصقات')
@@ -275,7 +272,7 @@ class ShipmentsTable
                         }),
 
                     Action::make('whatsappIntake')
-                        ->label('واتساب: رابط التتبع')
+                        ->label('إرسال رابط عبر واتساب')
                         ->icon('heroicon-o-chat-bubble-left-right')
                         ->color('success')
                         ->action(function (Shipment $record, $livewire): void {
@@ -285,7 +282,7 @@ class ShipmentsTable
                         }),
 
                     Action::make('whatsappArrival')
-                        ->label('واتساب: إشعار الوصول')
+                        ->label('إرسال إشعار وصول عبر واتساب')
                         ->icon('heroicon-o-chat-bubble-left-ellipsis')
                         ->color('success')
                         ->visible(fn (Shipment $record): bool => $record->status === ShipmentStatus::ReadyForCollection)

@@ -240,13 +240,13 @@
                                 <!-- WhatsApp Notifications Status -->
                                 <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; font-size: 11px;">
                                     @if (is_null($shipment->intake_notified_at))
-                                        <button type="button" wire:click="mountTableAction('whatsappIntake', '{{ $shipment->id }}')" class="status-btn-action">إرسال إشعار استلام 💬</button>
+                                        <button type="button" wire:click="mountTableAction('whatsappIntake', '{{ $shipment->id }}')" class="status-btn-action">إرسال رابط عبر واتساب 💬</button>
                                     @else
                                         <span class="status-badge-sent">إشعار الاستلام: مرسل ✓</span>
                                     @endif
 
                                     @if (in_array($shipment->status, [App\Enums\ShipmentStatus::PartialAtDestination, App\Enums\ShipmentStatus::ReadyForCollection, App\Enums\ShipmentStatus::PartiallyCollected, App\Enums\ShipmentStatus::Collected]) && is_null($shipment->arrival_notified_at))
-                                        <button type="button" wire:click="mountTableAction('whatsappArrival', '{{ $shipment->id }}')" class="status-btn-action">إرسال إشعار الوصول 💬</button>
+                                        <button type="button" wire:click="mountTableAction('whatsappArrival', '{{ $shipment->id }}')" class="status-btn-action">إرسال إشعار وصول عبر واتساب 💬</button>
                                     @elseif (!is_null($shipment->arrival_notified_at))
                                         <span class="status-badge-sent">إشعار الوصول: مرسل ✓</span>
                                     @endif
@@ -283,9 +283,8 @@
                                                     {{ $shipment->status === \App\Enums\ShipmentStatus::ReadyForCollection ? '✅ تسليم الشحنة للعميل' : '🚚 تسليم الطرود الواصلة' }}
                                                 </button>
                                             @endif
-                                            <button type="button" class="hm-action-link" x-on:click="cardOpen = false" wire:click="mountTableAction('whatsappIntake', '{{ $shipment->id }}')">💬 واتساب: رابط التتبع</button>
                                             @if ($shipment->status === \App\Enums\ShipmentStatus::ReadyForCollection)
-                                                <button type="button" class="hm-action-link" x-on:click="cardOpen = false" wire:click="mountTableAction('whatsappArrival', '{{ $shipment->id }}')">💬 واتساب: إشعار الوصول</button>
+                                                <button type="button" class="hm-action-link" x-on:click="cardOpen = false" wire:click="mountTableAction('whatsappArrival', '{{ $shipment->id }}')">💬 إرسال إشعار وصول عبر واتساب</button>
                                             @endif
                                             @if (auth()->user()?->hasCapability(\App\Enums\Capability::DeleteRecords))
                                                 <hr style="border: none; border-top: 1px solid var(--line); margin: 4px 0;">

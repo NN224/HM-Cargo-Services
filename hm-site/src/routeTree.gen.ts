@@ -16,6 +16,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CoverageRouteImport } from './routes/coverage'
 import { Route as QuoteRouteImport } from './routes/quote'
 import { Route as ServicesRouteImport } from './routes/services'
+import { Route as TrackRouteImport } from './routes/track'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 
@@ -54,6 +55,11 @@ const ServicesRoute = ServicesRouteImport.update({
   path: '/services',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TrackRoute = TrackRouteImport.update({
+  id: '/track',
+  path: '/track',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/coverage': typeof CoverageRoute
   '/quote': typeof QuoteRoute
   '/services': typeof ServicesRoute
+  '/track': typeof TrackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/': typeof BlogIndexRoute
 }
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/coverage': typeof CoverageRoute
   '/quote': typeof QuoteRoute
   '/services': typeof ServicesRoute
+  '/track': typeof TrackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog': typeof BlogIndexRoute
 }
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/coverage': typeof CoverageRoute
   '/quote': typeof QuoteRoute
   '/services': typeof ServicesRoute
+  '/track': typeof TrackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/': typeof BlogIndexRoute
 }
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/coverage'
     | '/quote'
     | '/services'
+    | '/track'
     | '/blog/$slug'
     | '/blog/'
   fileRoutesByTo: FileRoutesByTo
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/coverage'
     | '/quote'
     | '/services'
+    | '/track'
     | '/blog/$slug'
     | '/blog'
   id:
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/coverage'
     | '/quote'
     | '/services'
+    | '/track'
     | '/blog/$slug'
     | '/blog/'
   fileRoutesById: FileRoutesById
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   CoverageRoute: typeof CoverageRoute
   QuoteRoute: typeof QuoteRoute
   ServicesRoute: typeof ServicesRoute
+  TrackRoute: typeof TrackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -194,6 +207,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/track': {
+      id: '/track'
+      path: '/track'
+      fullPath: '/track'
+      preLoaderRoute: typeof TrackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/blog/': {
       id: '/blog/'
       path: '/'
@@ -231,6 +251,7 @@ const rootRouteChildren: RootRouteChildren = {
   CoverageRoute: CoverageRoute,
   QuoteRoute: QuoteRoute,
   ServicesRoute: ServicesRoute,
+  TrackRoute: TrackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

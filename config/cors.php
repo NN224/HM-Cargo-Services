@@ -21,6 +21,7 @@ return [
     'allowed_origins' => [
         'https://hmcargoservices.com',
         'https://www.hmcargoservices.com',
+        'https://glistening-dream-staging.up.railway.app', // Staging Frontend
     ],
 
     'allowed_origins_patterns' => [

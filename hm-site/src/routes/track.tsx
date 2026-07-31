@@ -32,9 +32,8 @@ function TrackPage() {
     navigate({ search: { ref: searchRef }, replace: true });
 
     try {
-      const apiUrl = import.meta.env.DEV
-        ? "http://localhost:8000/api/track/ref/" + encodeURIComponent(searchRef)
-        : "https://system.hmcargoservices.com/api/track/ref/" + encodeURIComponent(searchRef);
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8000" : "https://system.hmcargoservices.com");
+      const apiUrl = `${baseUrl}/api/track/ref/${encodeURIComponent(searchRef)}`;
 
       const res = await fetch(apiUrl);
       if (!res.ok) {

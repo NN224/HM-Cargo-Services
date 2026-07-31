@@ -32,7 +32,9 @@ function TrackPage() {
     navigate({ search: { ref: searchRef }, replace: true });
 
     try {
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8000" : "https://hm-cargo-services-staging.railway.app");
+      const isProduction = window.location.hostname === 'hmcargoservices.com' || window.location.hostname === 'www.hmcargoservices.com';
+      const defaultBaseUrl = isProduction ? "https://system.hmcargoservices.com" : "https://hm-cargo-services-staging.railway.app";
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8000" : defaultBaseUrl);
       const apiUrl = `${baseUrl}/api/track/ref/${encodeURIComponent(searchRef)}`;
 
       const res = await fetch(apiUrl);

@@ -1,7 +1,7 @@
 # Current State — Handoff
 
-**Last updated:** 2026-07-30
-**Tests:** 363 passing, 1211 assertions
+**Last updated:** 2026-07-31
+**Tests:** 367 passing, 1221 assertions
 
 Read this first if you are picking the project up. It says what exists, what
 does not, and what to do next. The binding rules live in [`../AGENTS.md`](../AGENTS.md)
@@ -41,10 +41,7 @@ capability.
 
 ## What it cannot do yet
 
-Operational reports by warehouse, route and date range are not built.
-Production still runs on SQLite rather than PostgreSQL.
-
-The feature set specified for version 1 is otherwise complete. That is not the
+The feature set specified for version 1 is complete. That is not the
 same as ready: none of it has been used against real cargo, and no operator
 has tried the scan flow on a real phone in a real warehouse.
 
@@ -77,24 +74,25 @@ has tried the scan flow on a real phone in a real warehouse.
 | Dashboard — operational counts for all, money for a money-holder | done |
 | Per-employee page locking, enforced centrally (D-026) | done |
 | Operational reports by warehouse, route and date range | done, with screen |
-
-## Not built
-
-- PostgreSQL (Phase 7)
+| PostgreSQL in production (Railway), Postgres-PITR backups | done |
+| Staging environment on Railway (separate DB + app) | done |
+| Production environment on Railway — `system.hmcargoservices.com` + `hmcargoservices.com` | done |
 
 ---
 
 ## Suggested next step
 
-Try it against a real shipment before adding anything else. The feature list
-is close to complete and largely unexercised in the real warehouse context:
-every one of the 325 tests was written by the same session that wrote or
-changed the code it tests. A single real
-shipment — created in Dubai, priced into a batch, scanned in, collected and
-paid — will find more than the next feature would.
+The system is fully built and deployed. The only remaining step is an
+operational trial against real cargo:
 
-Then PostgreSQL in Phase 7, and operational reports if they are still wanted
-once the statement and batch report have been used.
+- Create a real shipment in Dubai and assign it to a batch.
+- Scan packages in at transit and destination warehouses from a real phone.
+- Collect and record payment.
+- Verify the public tracking page from the recipient's phone.
+
+This will expose gaps that 367 automated tests cannot: scan UX on a real
+phone camera, label print quality on a real A4 printer, and WhatsApp
+message delivery in the real flow.
 
 ---
 
@@ -221,10 +219,36 @@ a readable staff reference from a 48-character random public token.
 ## Running it
 
 ```bash
-php artisan serve          # http://127.0.0.1:8000 redirects to /admin
-php artisan test           # 325 passing
-php artisan migrate:fresh --seed   # needs ADMIN_PASSWORD in .env
+php artisan serve                      # http://127.0.0.1:8000 redirects to /admin
+php artisan test                       # 367 passing
+php artisan migrate:fresh --seed       # needs ADMIN_PASSWORD in .env
 ```
 
 The seeder refuses to invent a credential: set `ADMIN_PASSWORD` in `.env` or no
 administrator is created.
+
+---
+
+## Branch strategy
+
+| Branch | Purpose | Auto-deploys to |
+|---|---|---|
+| `production` | Default branch — stable, production-ready code | Production environment on Railway |
+| `staging` | Integration branch — tested before merging to production | Staging environment on Railway |
+
+**Workflow:** develop locally → push to `staging` → verify on staging → merge to `production`.
+
+---
+
+## Deployment environments (Railway)
+
+### Staging
+- **App:** `hm-cargo-services-staging.railway.app` (internal testing)
+- **Database:** PostgreSQL (Railway-managed)
+- **Purpose:** Verify changes before promoting to production
+
+### Production
+- **App (admin):** `system.hmcargoservices.com`
+- **Site (public):** `hmcargoservices.com`
+- **Database:** PostgreSQL (Railway-managed) + **Postgres-PITR** (point-in-time recovery backups, 6.5 MB and growing)
+- **Services on Railway:** `HM-Cargo-Services`, `HM-SITE`, `Postgres`, `Postgres-PITR`

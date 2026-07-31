@@ -32,3 +32,10 @@ Thumbs.db
 sqlite.db
 .DS_Store
 .superpowers/
+
+# hm-site (website subfolder)
+hm-site/node_modules/
+hm-site/.output/
+hm-site/dist/
+hm-site/.env
+hm-site/design-previews/

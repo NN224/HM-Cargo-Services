@@ -50,23 +50,23 @@ function journeyUiShipment(Batch $batch, Customer $customer): Shipment
     ]);
     $shipment->forceFill(['batch_id' => $batch->id])->save();
     $shipment->packages()->create(['weight_kg' => 1, 'status' => PackageStatus::ArrivedOriginAirport]);
-    $shipment->packages()->create(['weight_kg' => 2, 'status' => PackageStatus::InTransit]);
+    $shipment->packages()->create(['weight_kg' => 2, 'status' => PackageStatus::ArrivedTransit]);
 
     return $shipment->fresh();
 }
 
-test('shipment cards show the seven dynamic journey labels without duplicated group heading', function () {
+test('shipment cards show the five dynamic journey labels without retired departure stages', function () {
     journeyUiShipment($this->batch, $this->customer);
 
     Livewire::actingAs($this->employee)
         ->test(ListShipments::class)
         ->assertSee('وصلت مستودع دبي', escape: false)
         ->assertSee('وصلت مطار دبي', escape: false)
-        ->assertSee('غادرت مطار دبي', escape: false)
         ->assertSee('وصلت مطار دمشق', escape: false)
-        ->assertSee('غادرت مطار دمشق', escape: false)
         ->assertSee('وصلت مكتب دمشق', escape: false)
         ->assertSee('استلمها العميل', escape: false)
+        ->assertDontSee('غادرت مطار دبي', escape: false)
+        ->assertDontSee('غادرت مطار دمشق', escape: false)
         ->assertDontSee('الرحلة: الرحلة:', escape: false);
 });
 
@@ -339,16 +339,17 @@ test('administrator can choose a target status for selected shipment bulk update
         ->test(ListShipments::class)
         ->call('toggleVisibleShipments', [$s1->id, $s2->id])
         ->assertSee('الحالة الجديدة', escape: false)
-        ->assertSee('غادرت مطار دبي', escape: false)
-        ->set('bulkTargetStatus', PackageStatus::InTransit->value)
+        ->assertDontSee('غادرت مطار دبي', escape: false)
+        ->assertDontSee('غادرت مطار دمشق', escape: false)
+        ->set('bulkTargetStatus', PackageStatus::ArrivedTransit->value)
         ->call('bulkAdvanceSelectedShipments')
         ->assertNotified('تم تحديث الشحنات المحددة');
 
     expect($component->get('selectedShipmentIds'))->toBe([])
         ->and($component->get('bulkTargetStatus'))->toBeNull()
         ->and(AuditLog::where('reason', 'تصحيح جماعي من شاشة الشحنات')->count())->toBe(4)
-        ->and($s1->packages()->pluck('status')->all())->each->toBe(PackageStatus::InTransit)
-        ->and($s2->packages()->pluck('status')->all())->each->toBe(PackageStatus::InTransit);
+        ->and($s1->packages()->pluck('status')->all())->each->toBe(PackageStatus::ArrivedTransit)
+        ->and($s2->packages()->pluck('status')->all())->each->toBe(PackageStatus::ArrivedTransit);
 });
 
 test('administrator can bulk correct selected shipments back to origin warehouse stage', function () {
@@ -361,7 +362,7 @@ test('administrator can bulk correct selected shipments back to origin warehouse
     ]);
 
     $shipment = journeyUiShipment($this->batch, $this->customer);
-    $shipment->packages()->update(['status' => PackageStatus::InTransit]);
+    $shipment->packages()->update(['status' => PackageStatus::ArrivedTransit]);
 
     Livewire::actingAs($admin)
         ->test(ListShipments::class)
@@ -388,9 +389,9 @@ test('administrator can bulk correct newly created packages to a selected journe
     Livewire::actingAs($admin)
         ->test(ListShipments::class)
         ->call('toggleShipmentSelection', $shipment->id)
-        ->set('bulkTargetStatus', PackageStatus::InTransit->value)
+        ->set('bulkTargetStatus', PackageStatus::ArrivedTransit->value)
         ->call('bulkAdvanceSelectedShipments')
         ->assertNotified('تم تحديث الشحنات المحددة');
 
-    expect($shipment->packages()->pluck('status')->all())->each->toBe(PackageStatus::InTransit);
+    expect($shipment->packages()->pluck('status')->all())->each->toBe(PackageStatus::ArrivedTransit);
 });

@@ -31,7 +31,7 @@ class ScanPackages extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedQrCode;
 
-    protected static ?string $navigationLabel = 'مسح الطرود';
+    protected static ?string $navigationLabel = 'تسليم بضاعة';
 
     protected static ?string $title = 'مسح وصول طرد';
 

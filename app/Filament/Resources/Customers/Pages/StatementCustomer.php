@@ -86,11 +86,11 @@ class StatementCustomer extends ViewRecord
                                 TextEntry::make('description')
                                     ->label('البيان')
                                     ->columnSpan(4),
-                                TextEntry::make('amount')
+                                TextEntry::make('amount_cents')
                                     ->label('المبلغ')
                                     ->formatStateUsing(fn ($state): string => $this->formatUsd((int) $state))
                                     ->columnSpan(2),
-                                TextEntry::make('running')
+                                TextEntry::make('running_balance_cents')
                                     ->label('الرصيد')
                                     ->formatStateUsing(fn ($state): string => $this->formatUsd((int) $state))
                                     ->columnSpan(2),

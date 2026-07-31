@@ -62,7 +62,8 @@
             }
         }
         $progressIdx = $currentStepIdx >= 0 ? $currentStepIdx : ($lastCompletedIdx >= 0 ? $lastCompletedIdx : 0);
-        $progressPercent = empty($steps) ? null : min(100, max(0, round(($progressIdx / 6) * 100)));
+        $progressDenominator = max(count($steps) - 1, 1);
+        $progressPercent = empty($steps) ? null : min(100, max(0, round(($progressIdx / $progressDenominator) * 100)));
         $stageLabel = $steps[$currentStepIdx]['label'] ?? ($steps[$lastCompletedIdx]['label'] ?? null);
 
         return (object) [
@@ -80,137 +81,184 @@
 @endphp
 
 <style>
+    :root {
+        --hm-border: #e2e8f0;
+        --hm-border-hover: #cbd5e1;
+        --hm-bg-page: #ffffff;
+        --hm-bg-hover: #f1f5f9;
+        --hm-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --hm-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        --hm-blue-bg: rgba(59, 130, 246, 0.08);
+        --hm-blue-border: rgba(59, 130, 246, 0.25);
+        --hm-text-main: #0f172a;
+        --hm-text-sub: #334155;
+        --hm-text-muted: #64748b;
+        --hm-badge-red-border: rgba(239, 68, 68, 0.25);
+        --hm-badge-red-bg: rgba(239, 68, 68, 0.1);
+        --hm-badge-red-text: #dc2626;
+        --hm-badge-orange-border: rgba(245, 158, 11, 0.25);
+        --hm-badge-orange-bg: rgba(245, 158, 11, 0.1);
+        --hm-badge-orange-text: #d97706;
+        --hm-step-line: #e2e8f0;
+    }
+
+    .dark {
+        --hm-border: #292929;
+        --hm-border-hover: #3f3f46;
+        --hm-bg-page: #121212;
+        --hm-bg-hover: #1a1a1a;
+        --hm-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+        --hm-shadow-md: 0 8px 20px rgba(0, 0, 0, 0.4);
+        --hm-blue-bg: rgba(59, 130, 246, 0.15);
+        --hm-blue-border: rgba(59, 130, 246, 0.3);
+        --hm-text-main: #f4f4f5;
+        --hm-text-sub: #e4e4e7;
+        --hm-text-muted: #a1a1aa;
+        --hm-badge-red-border: rgba(239, 68, 68, 0.3);
+        --hm-badge-red-bg: rgba(239, 68, 68, 0.15);
+        --hm-badge-red-text: #f87171;
+        --hm-badge-orange-border: rgba(245, 158, 11, 0.3);
+        --hm-badge-orange-bg: rgba(245, 158, 11, 0.15);
+        --hm-badge-orange-text: #fbbf24;
+        --hm-step-line: #27272a;
+    }
+
     .js-sidebar-wrap {
-        padding: 1.25rem 0.875rem;
-        border-right: 1px solid #292f39;
-        background: #0c0f14;
+        padding: 16px;
     }
     .js-list {
         display: flex;
         flex-direction: column;
-        gap: 0.5625rem;
+        gap: 12px;
     }
     .js-card {
         position: relative;
         width: 100%;
-        padding: 0.875rem;
-        border: 1px solid #292f39;
-        border-radius: 0.8125rem;
-        background: #111419;
+        padding: 16px;
+        border: 1px solid var(--hm-border);
+        border-radius: 14px;
+        background: var(--hm-bg-page);
         color: inherit;
         text-align: right;
         cursor: pointer;
-        transition: border-color .16s, background .16s, transform .16s;
-        box-shadow: none;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: var(--hm-shadow-sm);
         user-select: none;
     }
     .js-card:hover {
-        transform: translateY(-1px);
-        border-color: #3a424f;
-        background: #171b21;
+        transform: translateY(-2px);
+        border-color: var(--hm-border-hover);
+        box-shadow: var(--hm-shadow-md);
     }
     .js-card-active {
-        border-color: #4f8cff !important;
-        background: linear-gradient(90deg, transparent, rgba(79,140,255,.09)), #171b21 !important;
-        box-shadow: inset 3px 0 0 #4f8cff !important;
+        border-color: #3b82f6 !important;
+        background: var(--hm-blue-bg) !important;
+        box-shadow: 0 0 0 1px #3b82f6, var(--hm-shadow-md) !important;
     }
     .js-card-row {
         display: flex;
         justify-content: space-between;
-        gap: 0.75rem;
+        gap: 10px;
         align-items: start;
     }
     .js-name {
         display: block;
-        font-size: 0.875rem;
-        font-weight: 850;
-        color: #f7f8fa;
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--hm-text-main);
+        letter-spacing: 0.3px;
+        line-height: 1.4;
     }
     .js-route {
         display: block;
-        margin-top: 0.1875rem;
-        color: #929aa8;
-        font-size: 0.6875rem;
+        margin-top: 4px;
+        color: var(--hm-text-muted);
+        font-size: 11px;
+        font-weight: 500;
     }
     .js-stats {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.375rem;
-        margin-top: 0.75rem;
+        gap: 6px;
+        margin-top: 14px;
     }
     .js-badge {
         display: inline-flex;
-        gap: 0.3125rem;
+        gap: 5px;
         align-items: center;
         min-width: max-content;
-        padding: 0.25rem 0.5rem;
+        padding: 5px 12px;
         border-radius: 9999px;
-        font-size: 0.6875rem;
-        font-weight: 750;
+        font-size: 11px;
+        font-weight: 700;
     }
     .js-badge-neutral {
-        border: 1px solid #292f39;
-        background: #1c2129;
-        color: #929aa8;
+        border: 1px solid var(--hm-border);
+        background: var(--hm-bg-hover);
+        color: var(--hm-text-sub);
     }
     .js-badge-money {
-        border: 1px solid rgba(255,119,119,.25);
-        background: rgba(255,119,119,.12);
-        color: #ffb0b0;
+        border: 1px solid var(--hm-badge-red-border);
+        background: var(--hm-badge-red-bg);
+        color: var(--hm-badge-red-text);
     }
     .js-badge-stage {
-        border: 1px solid rgba(233,200,83,.25);
-        background: rgba(233,200,83,.1);
-        color: #e9c853;
+        border: 1px solid var(--hm-badge-orange-border);
+        background: var(--hm-badge-orange-bg);
+        color: var(--hm-badge-orange-text);
     }
     .js-progress {
         display: block;
-        height: 4px;
-        margin-top: 0.75rem;
+        height: 6px;
+        margin-top: 12px;
         overflow: hidden;
         border-radius: 99px;
-        background: #282d35;
+        background: var(--hm-step-line);
     }
     .js-progress span {
         display: block;
         height: 100%;
         border-radius: inherit;
-        background: #4f8cff;
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
     }
     .js-progress-copy {
         display: flex;
         justify-content: space-between;
-        gap: 0.625rem;
-        margin-top: 0.375rem;
-        color: #666f7d;
-        font-size: 0.625rem;
+        gap: 10px;
+        margin-top: 8px;
+        color: var(--hm-text-muted);
+        font-size: 11px;
+        font-weight: 500;
     }
     .js-sidebar-title {
         display: flex;
         justify-content: space-between;
         align-items: start;
-        gap: 1rem;
-        margin-bottom: 0.875rem;
+        gap: 16px;
+        margin-bottom: 24px;
     }
     .js-sidebar-title h3 {
         margin: 0;
-        font-size: 1rem;
-        color: #f7f8fa;
+        font-size: 18px;
+        color: var(--hm-text-main);
         line-height: 1.35;
+        font-weight: 700;
     }
     .js-sidebar-title p {
-        margin: 0.25rem 0 0;
-        color: #929aa8;
-        font-size: 0.7rem;
+        margin: 4px 0 0;
+        color: var(--hm-text-muted);
+        font-size: 12px;
     }
     .js-sidebar-note {
-        margin-top: 0.875rem;
-        padding: 0.625rem;
-        border-radius: 0.5625rem;
-        background: rgba(255,255,255,.025);
-        color: #666f7d;
-        font-size: 0.625rem;
-        line-height: 1.5;
+        margin-top: 24px;
+        padding: 16px;
+        border-radius: 12px;
+        background: var(--hm-blue-bg);
+        border: 1px solid var(--hm-blue-border);
+        color: var(--hm-text-sub);
+        font-size: 11px;
+        line-height: 1.6;
+        font-weight: 500;
     }
 </style>
 

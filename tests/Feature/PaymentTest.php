@@ -191,6 +191,16 @@ class PaymentTest extends TestCase
             'amount_cents' => -2000,
         ]);
 
+        $reversal = Payment::where('reverses_payment_id', $payment->id)->firstOrFail();
+
+        $this->assertDatabaseHas('audit_logs', [
+            'user_id' => $admin->id,
+            'action' => 'payment_reversed',
+            'auditable_type' => Payment::class,
+            'auditable_id' => $reversal->id,
+            'reason' => 'Customer requested refund',
+        ]);
+
         $this->assertEquals(0, $shipment->fresh()->paid_amount_cents);
     }
 
@@ -217,5 +227,30 @@ class PaymentTest extends TestCase
         Livewire::actingAs($employee)
             ->test(ListPayments::class)
             ->assertTableActionHidden('reverse', $payment);
+    }
+
+    public function test_employee_cannot_reverse_payment_through_the_service(): void
+    {
+        $warehouse = Warehouse::create(['name' => 'Dubai', 'location' => 'UAE']);
+        $employee = User::factory()->create([
+            'role' => UserRole::WarehouseEmployee,
+            'warehouse_id' => $warehouse->id,
+            'capabilities' => [Capability::RecordPayments->value],
+        ]);
+        $customer = $this->createCustomer();
+
+        $payment = app(PaymentService::class)->recordPayment([
+            'customer_id' => $customer->id,
+            'amount_cents' => 1000,
+            'method' => Payment::METHOD_CASH,
+            'collected_at' => now(),
+            'collected_by' => $employee->id,
+            'warehouse_id' => $warehouse->id,
+        ]);
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('تصحيح الدفعات متاح للمدير فقط.');
+
+        app(PaymentService::class)->reversePayment($payment, $employee, 'تصحيح غير مصرح');
     }
 }

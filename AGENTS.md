@@ -39,7 +39,7 @@ The system must remain simpler than the reference dashboard. Do not add generic 
 - A shipment may belong to only one active batch at a time.
 - Package status, shipment status, and batch status are separate state machines.
 - A shipment is completed only after all active packages are collected. A destination warehouse employee may partially collect packages that have arrived while the remaining packages continue in transit per D-029.
-- Normal package journey progress uses seven fixed route-labelled steps per D-030; direct routes do not skip progress positions, and administrators cannot configure a custom workflow engine.
+- Normal package journey progress uses five fixed route-labelled steps per D-031; direct routes do not skip progress positions, and administrators cannot configure a custom workflow engine.
 - Customer credit payments are allocated to the oldest outstanding shipments first unless a payment is explicitly recorded against a particular shipment.
 - Payments may be full or partial and may use cash, Whish, bank transfer, or a manually named other method.
 - Payment reversals must preserve an audit trail. Never hard-delete financial records.
@@ -106,18 +106,20 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
-- php - 8.5
+- php - 8.4
 - filament/filament (FILAMENT) - v5
 - laravel/framework (LARAVEL) - v13
 - laravel/prompts (PROMPTS) - v0
 - livewire/livewire (LIVEWIRE) - v4
 - larastan/larastan (LARASTAN) - v3
 - laravel/boost (BOOST) - v2
+- laravel/dusk (DUSK) - v8
 - laravel/mcp (MCP) - v0
 - laravel/pail (PAIL) - v1
 - laravel/pint (PINT) - v1
 - pestphp/pest (PEST) - v4
 - phpunit/phpunit (PHPUNIT) - v12
+- rector/rector (RECTOR) - v2
 
 ## Skills Activation
 
@@ -204,6 +206,13 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 # Deployment
 
 - Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
+
+=== herd rules ===
+
+# Laravel Herd
+
+- The application is served by Laravel Herd at `https?://[kebab-case-project-dir].test`. Use the `get-absolute-url` tool to generate valid URLs. Never run commands to serve the site. It is always available.
+- Use the `herd` CLI to manage services, PHP versions, and sites (e.g. `herd sites`, `herd services:start <service>`, `herd php:list`). Run `herd list` to discover all available commands.
 
 === tests rules ===
 

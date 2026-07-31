@@ -153,9 +153,9 @@ test('administrator can correct newly created packages in a batch to a target jo
     $pkg = $shipment->packages()->create(['weight_kg' => 5, 'status' => PackageStatus::Created]);
 
     $service = app(PackageJourneyService::class);
-    $service->correctBatch($batch, PackageStatus::InTransit, $this->admin, 'تصحيح إداري', false);
+    $service->correctBatch($batch, PackageStatus::ArrivedTransit, $this->admin, 'تصحيح إداري', false);
 
-    expect($pkg->fresh()->status)->toBe(PackageStatus::InTransit)
+    expect($pkg->fresh()->status)->toBe(PackageStatus::ArrivedTransit)
         ->and(AuditLog::where('action', 'package_journey_corrected')->count())->toBe(1);
 });
 

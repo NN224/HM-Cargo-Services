@@ -50,9 +50,7 @@ test('the package journey projection uses dynamic Arabic route labels', function
     expect(array_column($projection['steps'], 'label'))->toBe([
         'وصلت مستودع دبي',
         'وصلت مطار دبي',
-        'غادرت مطار دبي',
         'وصلت مطار بيروت',
-        'غادرت مطار بيروت',
         'وصلت مكتب دمشق',
         'استلمها العميل',
     ]);
@@ -71,8 +69,8 @@ test('the package journey projection counts split and delayed packages', functio
     ]);
     $shipment = journeyProjectionShipment($route, [
         PackageStatus::ArrivedOriginAirport,
-        PackageStatus::InTransit,
-        PackageStatus::InTransit,
+        PackageStatus::ArrivedTransit,
+        PackageStatus::ArrivedTransit,
     ]);
     $shipment->packages()->latest('id')->firstOrFail()->forceFill([
         'is_delayed' => true,
@@ -104,5 +102,5 @@ test('read only projections use a safe fallback for incomplete route labels', fu
     $projection = app(PackageJourneyProjection::class)->forShipment($shipment);
 
     expect($projection['steps'][1]['label'])->toBe('وصلت غير مضبوط')
-        ->and($projection['steps'][5]['label'])->toBe('وصلت غير مضبوط');
+        ->and($projection['steps'][3]['label'])->toBe('وصلت غير مضبوط');
 });

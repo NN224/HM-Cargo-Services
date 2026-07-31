@@ -92,3 +92,16 @@ test('the correcting row is labelled in words, not as a bare opposite', function
         ->test(ListPayments::class)
         ->assertSee('تصحيح');
 });
+
+test('the correcting row shows the saved correction reason', function () {
+    app(PaymentService::class)->reversePayment(
+        $this->payment,
+        $this->admin,
+        'المبلغ سُجّل على العميل الخطأ'
+    );
+
+    Livewire::actingAs($this->admin)
+        ->test(ListPayments::class)
+        ->assertSee('سبب التصحيح')
+        ->assertSee('المبلغ سُجّل على العميل الخطأ');
+});

@@ -52,14 +52,14 @@ Routes are data, not hard-coded branches. Future routes can be added by an admin
 - `created` - barcode generated; package record exists.
 - `received_origin` - physically accepted at the Dubai warehouse.
 - `arrived_origin_airport` - arrived at the route's configured origin airport.
-- `in_transit` - departed the origin airport.
 - `arrived_transit` - arrived at the route's configured destination airport.
-- `departed_transit` - departed the destination airport toward the delivery office.
 - `arrived_destination` - arrived at the route's configured delivery office.
 - `collected` - released to the recipient after the shipment is eligible for collection.
 - `cancelled` - removed before completion with an audited reason.
 - `missing` - expected but not present at a checkpoint.
 - `damaged` - present but physically damaged.
+
+Legacy package codes `in_transit` and `departed_transit` are retired by D-031. They remain decodable only for append-only historical events; current package rows are normalized to `arrived_origin_airport` and `arrived_transit` respectively.
 
 ### Shipment statuses
 
@@ -100,15 +100,13 @@ Routes are data, not hard-coded branches. Future routes can be added by an admin
 
 ## 6. Transit behavior
 
-For every active route, packages use the fixed seven-step journey approved in D-030:
+For every active route, packages use the fixed five-step journey approved in D-031:
 
 1. Arrived at the origin warehouse.
 2. Arrived at the origin airport.
-3. Departed the origin airport.
-4. Arrived at the destination airport.
-5. Departed the destination airport.
-6. Arrived at the delivery office.
-7. Collected by the recipient.
+3. Arrived at the destination airport.
+4. Arrived at the delivery office.
+5. Collected by the recipient.
 
 For Dubai to Beirut to Syria:
 
@@ -120,7 +118,7 @@ For Dubai to Beirut to Syria:
 6. Packages are scanned at the Syria destination warehouse.
 7. Complete shipments become ready for collection.
 
-Direct routes do not skip journey positions. They still use all seven route-labelled package progress steps so public and staff progress remains consistent.
+Direct routes do not skip journey positions. They use all five route-labelled package progress steps so public and staff progress remains consistent.
 
 ## 7. Destination warehouse workflow
 

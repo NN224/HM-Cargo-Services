@@ -62,12 +62,15 @@ enum PackageStatus: string
         return [
             self::ReceivedOrigin,
             self::ArrivedOriginAirport,
-            self::InTransit,
             self::ArrivedTransit,
-            self::DepartedTransit,
             self::ArrivedDestination,
             self::Collected,
         ];
+    }
+
+    public function isRetiredJourneyStatus(): bool
+    {
+        return in_array($this, [self::InTransit, self::DepartedTransit], true);
     }
 
     public function journeyPosition(): ?int
@@ -82,6 +85,10 @@ enum PackageStatus: string
     {
         $out = [];
         foreach (self::cases() as $case) {
+            if ($case->isRetiredJourneyStatus()) {
+                continue;
+            }
+
             $out[$case->value] = $case->label();
         }
 

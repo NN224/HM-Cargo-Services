@@ -36,7 +36,7 @@ enum LockablePage: string
             self::Warehouses => 'المستودعات',
             self::Users => 'الموظفون',
             self::ReceiveIntoBatch => 'استلام بضاعة',
-            self::ScanPackages => 'مسح الطرود',
+            self::ScanPackages => 'تسليم بضاعة',
         };
     }
 

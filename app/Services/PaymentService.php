@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AuditLog;
 use App\Models\Customer;
 use App\Models\Payment;
 use App\Models\PaymentAllocation;
@@ -110,6 +111,10 @@ class PaymentService
      */
     public function reversePayment(Payment $originalPayment, User $admin, string $reason): Payment
     {
+        if (! $admin->isAdministrator()) {
+            throw new DomainException('تصحيح الدفعات متاح للمدير فقط.');
+        }
+
         return DB::transaction(function () use ($originalPayment, $admin, $reason): Payment {
             $originalPayment = Payment::lockForUpdate()->findOrFail($originalPayment->id);
 
@@ -142,6 +147,26 @@ class PaymentService
             ]);
 
             $reversal->save();
+
+            AuditLog::create([
+                'user_id' => $admin->id,
+                'action' => 'payment_reversed',
+                'auditable_type' => Payment::class,
+                'auditable_id' => $reversal->id,
+                'before' => [
+                    'payment_id' => $originalPayment->id,
+                    'amount_cents' => $originalPayment->amount_cents,
+                    'type' => $originalPayment->type,
+                ],
+                'after' => [
+                    'payment_id' => $reversal->id,
+                    'amount_cents' => $reversal->amount_cents,
+                    'type' => $reversal->type,
+                    'reverses_payment_id' => $originalPayment->id,
+                ],
+                'reason' => $reason,
+                'created_at' => now(),
+            ]);
 
             $allocations = PaymentAllocation::where('payment_id', $originalPayment->id)
                 ->lockForUpdate()

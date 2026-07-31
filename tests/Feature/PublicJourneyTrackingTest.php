@@ -12,7 +12,7 @@ use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Support\Facades\DB;
 
-test('public tracking shows seven safe journey steps and only published reasons', function () {
+test('public tracking shows five safe journey steps without retired departure stages', function () {
     $origin = Warehouse::create(['name' => 'دبي', 'location' => 'الإمارات']);
     $destination = Warehouse::create(['name' => 'دمشق', 'location' => 'سوريا']);
     $route = Route::create([
@@ -41,7 +41,7 @@ test('public tracking shows seven safe journey steps and only published reasons'
     ]);
     $second = $shipment->packages()->create([
         'weight_kg' => 2,
-        'status' => PackageStatus::InTransit,
+        'status' => PackageStatus::ArrivedTransit,
         'is_delayed' => true,
         'delay_reason' => 'PRIVATE-DELAY-REASON',
         'delay_reason_is_public' => true,
@@ -89,11 +89,12 @@ test('public tracking shows seven safe journey steps and only published reasons'
     $response->assertOk()
         ->assertSee('وصل مستودع دبي', escape: false)
         ->assertSee('وصل مطار دبي', escape: false)
-        ->assertSee('غادر مطار دبي', escape: false)
         ->assertSee('وصل مطار دمشق', escape: false)
-        ->assertSee('غادر مطار دمشق', escape: false)
         ->assertSee('وصل مكتب دمشق', escape: false)
         ->assertSee('استلمه العميل', escape: false)
+        ->assertDontSee('غادر مطار دبي', escape: false)
+        ->assertDontSee('غادر مطار دمشق', escape: false)
+        ->assertDontSee('طرد في الطريق', escape: false)
         ->assertSee('تأخر التحميل للرحلة القادمة', escape: false)
         ->assertSee('١ حالياً', escape: false)
         ->assertSee('١ متأخر', escape: false);
@@ -115,5 +116,6 @@ test('public tracking shows seven safe journey steps and only published reasons'
 
     expect($response->viewData('tracking')['journey']['package_count'])->toBe(2)
         ->and($response->viewData('tracking')['journey']['delayed_count'])->toBe(1)
-        ->and($response->viewData('tracking')['journey']['published_events'])->toHaveCount(1);
+        ->and($response->viewData('tracking')['journey']['published_events'])->toHaveCount(1)
+        ->and($response->viewData('tracking')['timeline'])->toHaveCount(1);
 });

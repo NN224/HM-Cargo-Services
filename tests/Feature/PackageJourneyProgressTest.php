@@ -140,7 +140,7 @@ test('one ineligible selected package rolls back the complete operation', functi
         ->and(DB::table('package_status_events')->count())->toBe(0);
 });
 
-test('an employee cannot advance a package outside the assigned journey checkpoint', function () {
+test('an origin employee cannot advance a package into the transit checkpoint', function () {
     $shipment = journeyProgressShipment($this->batch, $this->customer, [
         PackageStatus::ArrivedOriginAirport,
     ]);
@@ -148,7 +148,7 @@ test('an employee cannot advance a package outside the assigned journey checkpoi
     expect(fn () => app(PackageJourneyService::class)->advance(
         $shipment,
         $shipment->packages->modelKeys(),
-        $this->transitEmployee,
+        $this->originEmployee,
     ))->toThrow(DomainException::class, 'غير مخوّل');
 
     expect($shipment->packages->first()->fresh()->status)->toBe(PackageStatus::ArrivedOriginAirport);
@@ -184,7 +184,7 @@ test('an administrator may advance a package without a warehouse assignment', fu
         $admin,
     );
 
-    expect($shipment->packages->first()->fresh()->status)->toBe(PackageStatus::InTransit);
+    expect($shipment->packages->first()->fresh()->status)->toBe(PackageStatus::ArrivedTransit);
 });
 
 test('selected package ids must belong exactly to the shipment', function () {

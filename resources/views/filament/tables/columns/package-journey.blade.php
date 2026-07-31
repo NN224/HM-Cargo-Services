@@ -170,7 +170,7 @@
             }
         }
 
-        if ($currentStepIndex === -1 && $lastCompletedIndex === 6) {
+        if ($packageCount > 0 && $currentStepIndex === -1 && $lastCompletedIndex === count($steps) - 1) {
             $statusType = 'complete';
             $activeStepLabel = '✓ مكتمل وتسلم للعميل';
         } elseif ($currentStepIndex === -1 && $lastCompletedIndex >= 0) {
@@ -179,16 +179,14 @@
         }
     }
 
-    // Short titles for the 7 steps below the line — derived from the route
+    // Short titles for the 5 steps below the line — derived from the route
     $record = $getRecord();
     $route = $record instanceof \App\Models\Shipment ? $record->batch?->route : null;
 
     $defaultShortTitles = [
         'مستودع المبدأ',
         'مطار المبدأ',
-        'مغادرة المبدأ',
         'مطار الوصول',
-        'مغادرة الوصول',
         'مكتب التسليم',
         'استلام العميل'
     ];
@@ -197,17 +195,16 @@
         ? [
             'مستودع ' . ($route->originWarehouse?->name ?? $defaultShortTitles[0]),
             'مطار ' . ($route->origin_airport_name ?? $defaultShortTitles[1]),
-            'مغادرة ' . ($route->origin_airport_name ?? $defaultShortTitles[2]),
-            'مطار ' . ($route->destination_airport_name ?? $defaultShortTitles[3]),
-            'مغادرة ' . ($route->destination_airport_name ?? $defaultShortTitles[4]),
-            $route->delivery_office_name ?? $defaultShortTitles[5],
-            $defaultShortTitles[6],
+            'مطار ' . ($route->destination_airport_name ?? $defaultShortTitles[2]),
+            $route->delivery_office_name ?? $defaultShortTitles[3],
+            $defaultShortTitles[4],
         ]
         : $defaultShortTitles;
 
     // Progress line width percentage (0 to 100)
     $progressIdx = $currentStepIndex >= 0 ? $currentStepIndex : ($lastCompletedIndex >= 0 ? $lastCompletedIndex : 0);
-    $progressPercent = min(100, max(0, ($progressIdx / 6) * 100));
+    $progressDenominator = max(count($steps) - 1, 1);
+    $progressPercent = min(100, max(0, ($progressIdx / $progressDenominator) * 100));
 @endphp
 
 <div class="pj-wrapper">

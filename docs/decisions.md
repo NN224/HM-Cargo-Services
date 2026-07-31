@@ -335,7 +335,7 @@ and only the token-free arrival message is offered as a row action.
 Supersedes the all-or-nothing collection rule in D-015. A warehouse employee may collect the packages that have arrived at the destination (`PackageStatus::ArrivedDestination`) while other packages in the shipment are still in transit. Administrator approval is not required; normal warehouse authorization still applies.
 
 - Only packages that have arrived at destination transition to `PackageStatus::Collected`.
-- Unarrived packages remain in their current status (`InTransit` / `ArrivedTransit`).
+- Unarrived packages remain in their current active journey status (for example `arrived_origin_airport` or `arrived_transit` under D-031).
 - The shipment operational status transitions to `ShipmentStatus::PartiallyCollected`.
 - Payments may be recorded for the partially delivered shipment and allocated normally.
 - Every partial collection records package status events with the acting user, warehouse, and timestamp.
@@ -344,7 +344,7 @@ Supersedes the all-or-nothing collection rule in D-015. A warehouse employee may
 
 **Date:** 2026-07-25
 
-**Status:** Approved by owner-approved package journey design.
+**Status:** Superseded by D-031.
 
 Every normal package now follows one fixed seven-step journey: origin warehouse, origin airport, origin-airport departure, destination airport, destination-airport departure, delivery office, and collection. The workflow order is fixed in code and is not user-editable.
 
@@ -353,3 +353,15 @@ Each route stores the dynamic names for origin airport, destination airport, and
 Package rows and append-only package status events are the operational source of truth. Delay and administrator-correction metadata is recorded as package events, correction reasons are required, and privileged corrections also write append-only audit log rows.
 
 Batch, shipment, and package state machines remain separate. Advancing package journey progress never silently advances or closes a batch.
+
+## D-031: Retire package departure stages from the active journey
+
+**Date:** 2026-07-30
+
+**Status:** Approved by owner confirmation.
+
+The active package journey has five route-labelled positions: origin warehouse, origin airport, destination airport, delivery office, and customer collection. The former `in_transit` and `departed_transit` package positions are removed from staff choices, forward progression, shipment progress bars, and public tracking.
+
+Existing current package rows are normalized without moving them forward: `in_transit` becomes `arrived_origin_airport`, and `departed_transit` becomes `arrived_transit`. Append-only package status events and audit records are preserved. The retired enum values remain decodable only for historical compatibility and are never offered as active workflow choices.
+
+Batch and shipment state machines are unchanged; their transit statuses continue to summarize transport and aggregate package movement.

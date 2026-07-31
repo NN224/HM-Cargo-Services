@@ -64,7 +64,7 @@ function journeyCorrectionShipment(Batch $batch, Customer $customer, array $stat
 }
 
 test('an employee cannot correct a package backward', function () {
-    $shipment = journeyCorrectionShipment($this->batch, $this->customer, [PackageStatus::InTransit]);
+    $shipment = journeyCorrectionShipment($this->batch, $this->customer, [PackageStatus::ArrivedTransit]);
 
     expect(fn () => app(PackageJourneyService::class)->correct(
         $shipment,
@@ -78,8 +78,8 @@ test('an employee cannot correct a package backward', function () {
 
 test('an administrator can move selected packages backward with a private reason', function () {
     $shipment = journeyCorrectionShipment($this->batch, $this->customer, [
-        PackageStatus::InTransit,
-        PackageStatus::InTransit,
+        PackageStatus::ArrivedTransit,
+        PackageStatus::ArrivedTransit,
     ]);
     $selected = $shipment->packages->first();
 
@@ -93,12 +93,12 @@ test('an administrator can move selected packages backward with a private reason
     );
 
     expect($selected->fresh()->status)->toBe(PackageStatus::ArrivedOriginAirport)
-        ->and($shipment->packages->last()->fresh()->status)->toBe(PackageStatus::InTransit)
+        ->and($shipment->packages->last()->fresh()->status)->toBe(PackageStatus::ArrivedTransit)
         ->and(AuditLog::where('action', 'package_journey_corrected')->count())->toBe(1);
 
     $this->assertDatabaseHas('package_status_events', [
         'package_id' => $selected->id,
-        'previous_status' => PackageStatus::InTransit->value,
+        'previous_status' => PackageStatus::ArrivedTransit->value,
         'status' => PackageStatus::ArrivedOriginAirport->value,
         'event_kind' => 'correction',
         'private_reason' => 'أدخلت المرحلة بالخطأ',
@@ -115,7 +115,7 @@ test('an administrator can move selected packages backward with a private reason
 });
 
 test('an administrator correction requires a non-empty reason', function () {
-    $shipment = journeyCorrectionShipment($this->batch, $this->customer, [PackageStatus::InTransit]);
+    $shipment = journeyCorrectionShipment($this->batch, $this->customer, [PackageStatus::ArrivedTransit]);
 
     expect(fn () => app(PackageJourneyService::class)->correct(
         $shipment,
@@ -128,7 +128,7 @@ test('an administrator correction requires a non-empty reason', function () {
 });
 
 test('a published administrator correction writes only a public reason event', function () {
-    $shipment = journeyCorrectionShipment($this->batch, $this->customer, [PackageStatus::InTransit]);
+    $shipment = journeyCorrectionShipment($this->batch, $this->customer, [PackageStatus::ArrivedTransit]);
     $package = $shipment->packages->first();
 
     app(PackageJourneyService::class)->correct(
@@ -149,7 +149,7 @@ test('a published administrator correction writes only a public reason event', f
 });
 
 test('administrator correction rejects non-journey target states', function () {
-    $shipment = journeyCorrectionShipment($this->batch, $this->customer, [PackageStatus::InTransit]);
+    $shipment = journeyCorrectionShipment($this->batch, $this->customer, [PackageStatus::ArrivedTransit]);
 
     expect(fn () => app(PackageJourneyService::class)->correct(
         $shipment,

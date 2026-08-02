@@ -72,11 +72,27 @@ it('returns tracking data by token', function () {
             'route',
             'status',
             'status_label',
-            'progress' => ['arrived', 'total'],
-            'financial' => ['final_charge', 'paid', 'remaining', 'payment_status'],
-            'journey' => ['steps', 'package_count', 'delayed_count'],
-            'timeline',
+            'total_weight_kg',
+            'package_count',
+            'arrived_count',
+            'progress_ratio',
+            'delayed_count',
+            'notices',
+            'packages' => [[
+                'barcode',
+                'description',
+                'weight_kg',
+                'status',
+                'status_label',
+                'stage_label',
+                'is_delayed',
+                'is_exception',
+                'delay_reason',
+                'journey' => [['status', 'label', 'state', 'occurred_at']],
+            ]],
+            'journey' => [['status', 'label', 'completed_count', 'current_count', 'delayed_count']],
         ])
+        ->assertJsonMissingPath('financial')
         ->assertJsonPath('reference', 'HM-2026-000001')
         ->assertJsonPath('status', ShipmentStatus::InTransit->value);
 });
@@ -88,25 +104,28 @@ it('returns 404 for unknown token', function () {
 });
 
 // ---------------------------------------------------------------------------
-// Reference lookup
+// Reference lookup — removed on purpose
 // ---------------------------------------------------------------------------
 
-it('returns tracking data by reference number', function () {
-    getJson('/api/track/ref/HM-2026-000001')
-        ->assertOk()
-        ->assertJsonPath('reference', 'HM-2026-000001');
-});
+/*
+ * References are sequential (HM-2026-000001, -000002, ...). While this
+ * endpoint existed, anyone could walk the range and read a recipient name,
+ * route and outstanding balance for every shipment in the system. It was
+ * removed rather than throttled, because throttling only slows enumeration
+ * down. The route is asserted gone, not the controller method, so that
+ * re-adding it under any implementation fails here.
+ */
+it('no longer resolves a shipment by its readable reference', function (string $path) {
+    getJson($path)->assertNotFound();
+})->with([
+    '/api/track/ref/HM-2026-000001',
+    '/api/track/ref/hm-2026-000001',
+]);
 
-it('reference lookup is case-insensitive', function () {
-    getJson('/api/track/ref/hm-2026-000001')
-        ->assertOk()
-        ->assertJsonPath('reference', 'HM-2026-000001');
-});
+it('has no route registered for reference lookup', function () {
+    $paths = collect(app('router')->getRoutes())->map(fn ($route): string => $route->uri());
 
-it('returns 404 for unknown reference', function () {
-    getJson('/api/track/ref/HM-0000-000000')
-        ->assertNotFound()
-        ->assertJsonPath('error', 'not_found');
+    expect($paths)->not->toContain('api/track/ref/{reference}');
 });
 
 // ---------------------------------------------------------------------------

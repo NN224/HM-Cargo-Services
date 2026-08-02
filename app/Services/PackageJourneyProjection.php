@@ -6,6 +6,7 @@ use App\Enums\PackageStatus;
 use App\Enums\ShipmentStatus;
 use App\Models\Route;
 use App\Models\Shipment;
+use App\Support\JourneyPlaces;
 
 class PackageJourneyProjection
 {
@@ -55,16 +56,18 @@ class PackageJourneyProjection
 
     public function labelFor(?Route $route, PackageStatus $status): string
     {
-        return match ($status) {
-            PackageStatus::ReceivedOrigin => 'وصلت مستودع '.$this->safeLabel($route?->originWarehouse?->name),
-            PackageStatus::ArrivedOriginAirport => 'وصلت '.$this->safeLabel($route?->origin_airport_name),
-            PackageStatus::ArrivedTransit => 'وصلت '.$this->safeLabel($route?->destination_airport_name),
-            PackageStatus::ArrivedDestination => 'وصلت '.$this->safeLabel($route?->delivery_office_name),
-            PackageStatus::Collected => 'استلمها العميل',
-            PackageStatus::InTransit => 'وصلت '.$this->safeLabel($route?->origin_airport_name),
-            PackageStatus::DepartedTransit => 'وصلت '.$this->safeLabel($route?->destination_airport_name),
-            default => 'غير مضبوط',
-        };
+        return $this->places($route)->labelFor($status);
+    }
+
+    /** The same wording the customer is shown, built from one source. */
+    public function places(?Route $route): JourneyPlaces
+    {
+        return new JourneyPlaces(
+            originWarehouse: $route?->originWarehouse?->name,
+            originAirport: $route?->origin_airport_name,
+            destinationAirport: $route?->destination_airport_name,
+            deliveryOffice: $route?->delivery_office_name,
+        );
     }
 
     public function labelForShipment(?Route $route, ShipmentStatus $status): string

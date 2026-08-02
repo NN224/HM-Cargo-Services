@@ -145,31 +145,37 @@ test('public tracking exposes only the safe shipment projection without login', 
         ->assertSee('أحمد م*** ا***', escape: false)
         ->assertSee('دبي ← بيروت ← دمشق', escape: false)
         ->assertSee('وصل بعضها إلى الوجهة', escape: false)
-        ->assertSee('وصل ٢ من ٣', escape: false)
-        ->assertSee('0.6000 كغ', escape: false)
-        ->assertSee('92.50 $', escape: false)
-        ->assertSee('40.00 $', escape: false)
-        ->assertSee('52.50 $', escape: false)
-        ->assertSee('مدفوع جزئياً', escape: false)
-        ->assertSee('يوجد طرد يحتاج متابعة', escape: false)
-        ->assertSee('وصل طرد إلى مستودع دمشق', escape: false)
+        ->assertSee('وصل 2 من 3', escape: false)
+        ->assertSee('0.6 كغ', escape: false)
         ->assertViewMissing('shipment');
 
     expect(array_keys($response->viewData('tracking')))->toBe([
         'reference',
         'recipient',
         'route',
-        'stage',
-        'progress',
-        'total_weight',
-        'final_charge',
-        'paid_amount',
-        'remaining_amount',
-        'payment_status',
-        'timeline',
+        'status',
+        'status_label',
+        'total_weight_kg',
+        'packages',
+        'package_count',
+        'arrived_count',
+        'progress_ratio',
+        'delayed_count',
+        'notices',
         'journey',
-        'qr',
     ]);
+
+    /*
+     * Published on purpose: the customer identifies a box by the barcode
+     * printed on its label and by what is written on it. The supplier's own
+     * barcode is a third party's data and stays out.
+     */
+    foreach ([
+        $this->packages[0]->barcode,
+        $this->packages[0]->description,
+    ] as $published) {
+        $response->assertSee($published, escape: false);
+    }
 
     foreach ([
         '987654321',
@@ -188,9 +194,13 @@ test('public tracking exposes only the safe shipment projection without login', 
         'PAY-PRIVATE-REF',
         'PAYMENT-PRIVATE-NOTE',
         'RCPT-PRIVATE-REF',
-        $this->packages[0]->barcode,
         $this->packages[0]->source_barcode,
-        $this->packages[0]->description,
+        // Charges left the public projection entirely — page and API alike.
+        '92.50',
+        '40.00',
+        '52.50',
+        'المتبقي',
+        'المدفوع',
         'الربح',
         'تكلفة الرحلة',
         'سعر الكيلو',
@@ -201,6 +211,121 @@ test('public tracking exposes only the safe shipment projection without login', 
     }
 
     $this->assertGuest();
+});
+
+/*
+ * Caught by looking at the rendered page, not by a test: a shipment whose
+ * boxes were all sitting at the origin airport drew an empty progress bar,
+ * because the bar was filled from the arrived count. Nothing had arrived, but
+ * plenty had happened.
+ */
+test('progress reflects distance travelled even when nothing has arrived yet', function () {
+    foreach ([$this->packages[0], $this->packages[1], $this->packages[2]] as $package) {
+        $package->forceFill(['status' => PackageStatus::ArrivedOriginAirport->value])->save();
+    }
+
+    $tracking = $this->get(route('tracking.show', $this->shipment->public_token))
+        ->assertOk()
+        ->viewData('tracking');
+
+    // Step 2 of 5 for every package.
+    expect($tracking['arrived_count'])->toBe(0)
+        ->and($tracking['progress_ratio'])->toBe(0.4);
+});
+
+/*
+ * Collection is the last step and the end of the journey at once. Treated as
+ * merely "current", the final dot stayed blue and the bar stopped short, so a
+ * delivered shipment never read as finished.
+ */
+test('a fully delivered shipment reads as complete on every step', function () {
+    foreach ([$this->packages[0], $this->packages[1], $this->packages[2]] as $package) {
+        $package->forceFill(['status' => PackageStatus::Collected->value])->save();
+    }
+
+    $tracking = $this->get(route('tracking.show', $this->shipment->public_token))
+        ->assertOk()
+        ->viewData('tracking');
+
+    $lastStep = end($tracking['journey']);
+
+    expect($tracking['progress_ratio'])->toBe(1.0)
+        ->and($lastStep['completed_count'])->toBe(3)
+        ->and($lastStep['current_count'])->toBe(0);
+
+    foreach ($tracking['packages'] as $package) {
+        expect(array_column($package['journey'], 'state'))
+            ->each->toBe('done');
+    }
+});
+
+test('a cancelled package is left off the public page entirely', function () {
+    $cancelled = $this->packages[3];
+
+    $this->get(route('tracking.show', $this->shipment->public_token))
+        ->assertOk()
+        ->assertDontSee($cancelled->barcode, escape: false)
+        ->assertSee($this->packages[0]->barcode, escape: false);
+});
+
+test('a package held as an exception says so without naming the internal note', function () {
+    $this->packages[2]->forceFill(['status' => PackageStatus::Missing->value])->save();
+
+    $this->get(route('tracking.show', $this->shipment->public_token))
+        ->assertOk()
+        ->assertSee('مفقود', escape: false)
+        ->assertDontSee('ملاحظة داخلية شديدة السرية', escape: false);
+});
+
+/*
+ * PackageJourneyService writes a delay to both the package row and an event,
+ * putting the reason in public_reason or private_reason according to what the
+ * administrator chose. Only the event decides what is published, so these two
+ * tests drive it the way the service does rather than setting columns.
+ */
+test('a delay reason marked public reaches the page once, not once per package', function () {
+    foreach ([$this->packages[0], $this->packages[2]] as $package) {
+        $package->forceFill(['is_delayed' => true])->save();
+
+        DB::table('package_status_events')->insert([
+            'package_id' => $package->id,
+            'status' => $package->status->value,
+            'warehouse_id' => $this->transit->id,
+            'user_id' => $this->employee->id,
+            'scanned_at' => now(),
+            'source' => 'journey_delay',
+            'event_kind' => 'delay',
+            'public_reason' => 'تأخير في التخليص الجمركي',
+        ]);
+    }
+
+    $body = $this->get(route('tracking.show', $this->shipment->public_token))
+        ->assertOk()
+        ->assertSee('تأخير في التخليص الجمركي', escape: false)
+        ->getContent();
+
+    // Two packages, one cause: the banner states it once. The reason still
+    // repeats inside each package's own row, which is the detail, not the
+    // summary.
+    expect(substr_count($body, 'class="notice"'))->toBe(1);
+});
+
+test('a delay reason kept private never reaches the page', function () {
+    DB::table('package_status_events')->insert([
+        'package_id' => $this->packages[2]->id,
+        'status' => $this->packages[2]->status->value,
+        'warehouse_id' => $this->transit->id,
+        'user_id' => $this->employee->id,
+        'scanned_at' => now(),
+        'source' => 'journey_delay',
+        'event_kind' => 'delay',
+        'private_reason' => 'سبب داخلي لا يُنشر',
+        'public_reason' => null,
+    ]);
+
+    $this->get(route('tracking.show', $this->shipment->public_token))
+        ->assertOk()
+        ->assertDontSee('سبب داخلي لا يُنشر', escape: false);
 });
 
 test('a valid package barcode redirects to the parent secure token route', function () {

@@ -87,17 +87,17 @@ test('public tracking shows five safe journey steps without retired departure st
     $response = $this->get(route('tracking.show', $shipment->public_token));
 
     $response->assertOk()
-        ->assertSee('وصل مستودع دبي', escape: false)
-        ->assertSee('وصل مطار دبي', escape: false)
-        ->assertSee('وصل مطار دمشق', escape: false)
-        ->assertSee('وصل مكتب دمشق', escape: false)
-        ->assertSee('استلمه العميل', escape: false)
+        ->assertSee('وصلت مستودع دبي', escape: false)
+        ->assertSee('وصلت مطار دبي', escape: false)
+        ->assertSee('وصلت مطار دمشق', escape: false)
+        ->assertSee('وصلت مكتب دمشق', escape: false)
+        ->assertSee('استلمها العميل', escape: false)
         ->assertDontSee('غادر مطار دبي', escape: false)
         ->assertDontSee('غادر مطار دمشق', escape: false)
         ->assertDontSee('طرد في الطريق', escape: false)
         ->assertSee('تأخر التحميل للرحلة القادمة', escape: false)
-        ->assertSee('١ حالياً', escape: false)
-        ->assertSee('١ متأخر', escape: false);
+        ->assertSee('1 حالياً', escape: false)
+        ->assertSee('1 متأخر', escape: false);
 
     foreach ([
         'user_id',
@@ -114,8 +114,19 @@ test('public tracking shows five safe journey steps without retired departure st
         $response->assertDontSee($forbidden, escape: false);
     }
 
-    expect($response->viewData('tracking')['journey']['package_count'])->toBe(2)
-        ->and($response->viewData('tracking')['journey']['delayed_count'])->toBe(1)
-        ->and($response->viewData('tracking')['journey']['published_events'])->toHaveCount(1)
-        ->and($response->viewData('tracking')['timeline'])->toHaveCount(1);
+    $tracking = $response->viewData('tracking');
+
+    expect($tracking['package_count'])->toBe(2)
+        ->and($tracking['delayed_count'])->toBe(1)
+        ->and($tracking['notices'])->toHaveCount(1)
+        ->and($tracking['journey'])->toHaveCount(5)
+        ->and($tracking['packages'])->toHaveCount(2);
+
+    // The flat per-shipment event list was replaced by a journey per package,
+    // so ten boxes scanned at one warehouse no longer print ten identical rows.
+    foreach ($tracking['packages'] as $package) {
+        expect($package['journey'])->toHaveCount(5)
+            ->and(array_column($package['journey'], 'state'))
+            ->each->toBeIn(['done', 'current', 'upcoming']);
+    }
 });

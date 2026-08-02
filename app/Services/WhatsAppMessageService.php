@@ -38,8 +38,10 @@ class WhatsAppMessageService
             "مرحباً {$name}،",
             "استلمنا شحنتك رقم {$reference}.",
             "تابع حالتها من هنا: {$tracking}",
+            'أو حمّل تطبيقنا للتتبع السريع: https://hmcargoservices.com/track',
         ]);
     }
+
 
     /**
      * The arrival link — to the recipient, carrying the amount due.

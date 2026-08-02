@@ -243,7 +243,7 @@ administrator is created.
 ## Deployment environments (Railway)
 
 ### Staging
-- **App:** `hm-cargo-services-staging.railway.app` (internal testing)
+- **App:** `hm-cargo-services-staging.up.railway.app` (internal testing)
 - **Database:** PostgreSQL (Railway-managed)
 - **Purpose:** Verify changes before promoting to production
 

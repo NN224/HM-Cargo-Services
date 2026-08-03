@@ -55,8 +55,9 @@ class WhatsAppMessageService
      * The recipient decides what to bring and how to collect from this one
      * message, so it carries the cargo facts beside the money: how many
      * packages and how heavy, both counting only the packages still on the
-     * shipment. It closes with the invitation to reply — the message is sent
-     * from the company's own WhatsApp, so "reach us here" needs no number.
+     * shipment. It closes with both office numbers, so the recipient can ask
+     * about delivery at either end of the route. They come from config: the
+     * numbers change, and a number change must not be a deploy.
      */
     public function arrivalMessage(Shipment $shipment): string
     {
@@ -78,6 +79,8 @@ class WhatsAppMessageService
             'شحنتك جاهزة للاستلام.',
             '',
             'للتوصيل ومعلومات أخرى التواصل معنا على الواتساب',
+            'دبي: '.config('company.whatsapp_dubai'),
+            'بيروت: '.config('company.whatsapp_beirut'),
         ]);
     }
 

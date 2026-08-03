@@ -116,6 +116,13 @@ test('the arrival message states the package count, the weight and how to reach 
         'status' => PackageStatus::Cancelled->value,
     ]);
 
+    // Set rather than read: a test that asserts the same config value it
+    // renders proves the label and the order, not just that a lookup happened.
+    config([
+        'company.whatsapp_dubai' => '+971 52 000 0001',
+        'company.whatsapp_beirut' => '+961 81 000 0002',
+    ]);
+
     // Package::booted() recalculates the total on its own shipment instance,
     // so the one held here is stale until refreshed.
     $message = (new WhatsAppMessageService)->arrivalMessage($shipment->refresh());
@@ -130,7 +137,27 @@ test('the arrival message states the package count, the weight and how to reach 
         'شحنتك جاهزة للاستلام.',
         '',
         'للتوصيل ومعلومات أخرى التواصل معنا على الواتساب',
+        'دبي: +971 52 000 0001',
+        'بيروت: +961 81 000 0002',
     ]));
+});
+
+test('the contact numbers come from config, not from the message code', function () {
+    // The numbers change without a deploy. Pinning them in the string would
+    // make every change a code change — the mistake config/company.php was
+    // introduced to stop.
+    $shipment = makeTestShipment('رنا', '+9613000001', 5000, 0,
+        ShipmentStatus::ReadyForCollection->value);
+
+    config([
+        'company.whatsapp_dubai' => '+971 99 999 9999',
+        'company.whatsapp_beirut' => '+961 88 888 8888',
+    ]);
+
+    $message = (new WhatsAppMessageService)->arrivalMessage($shipment);
+
+    expect($message)->toContain('دبي: +971 99 999 9999')
+        ->and($message)->toContain('بيروت: +961 88 888 8888');
 });
 
 test('the arrival message reports zero packages rather than omitting the line', function () {

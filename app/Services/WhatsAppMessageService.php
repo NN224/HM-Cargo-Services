@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Shipment;
+use App\Support\Format;
 
 /**
  * Builds one-click wa.me links with prefilled Arabic messages.
@@ -42,7 +43,6 @@ class WhatsAppMessageService
         ]);
     }
 
-
     /**
      * The arrival link — to the recipient, carrying the amount due.
      */
@@ -51,20 +51,36 @@ class WhatsAppMessageService
         return $this->urlFor($shipment->recipient_phone, $this->arrivalMessage($shipment));
     }
 
+    /**
+     * The recipient decides what to bring and how to collect from this one
+     * message, so it carries the cargo facts beside the money: how many
+     * packages and how heavy, both counting only the packages still on the
+     * shipment. It closes with both office numbers, so the recipient can ask
+     * about delivery at either end of the route. They come from config: the
+     * numbers change, and a number change must not be a deploy.
+     */
     public function arrivalMessage(Shipment $shipment): string
     {
         $name = $shipment->recipient_name;
         $reference = $shipment->reference;
         $warehouse = $shipment->batch?->route?->destinationWarehouse->name ?? 'مستودع الوصول';
+        $packageCount = $shipment->activePackageCount();
+        $weight = Format::weight((string) $shipment->total_weight_kg);
         $total = $this->formatUsd((int) $shipment->final_charge_cents);
         $remaining = $this->formatUsd($shipment->outstandingCents());
 
         return implode("\n", [
             "مرحباً {$name}،",
             "وصلت شحنتك رقم {$reference} إلى {$warehouse}.",
+            "عدد الطرود: {$packageCount}",
+            "الوزن: {$weight}",
             "المبلغ الإجمالي: \${$total}",
             "المبلغ المتبقي: \${$remaining}",
             'شحنتك جاهزة للاستلام.',
+            '',
+            'للتوصيل ومعلومات أخرى التواصل معنا على الواتساب',
+            'دبي: '.config('company.whatsapp_dubai'),
+            'بيروت: '.config('company.whatsapp_beirut'),
         ]);
     }
 

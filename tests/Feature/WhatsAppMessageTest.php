@@ -1,11 +1,13 @@
 <?php
 
+use App\Enums\PackageStatus;
 use App\Enums\ShipmentStatus;
 use App\Enums\UserRole;
 use App\Filament\Resources\Shipments\Pages\ListShipments;
 use App\Filament\Resources\Shipments\Pages\ViewShipment;
 use App\Models\Batch;
 use App\Models\Customer;
+use App\Models\Package;
 use App\Models\Route;
 use App\Models\Shipment;
 use App\Models\User;
@@ -95,6 +97,79 @@ test('the arrival message goes to the recipient with the amount and no tracking 
         ->and($url)->toContain(urlencode('دمشق'))
         ->and($url)->toContain(urlencode('92.50'))
         ->and($url)->not->toContain(urlencode('/track/')); // no tracking link at arrival
+});
+
+test('the arrival message states the package count, the weight and how to reach us', function () {
+    // The recipient decides what to bring and how to collect from this one
+    // message, so it carries the cargo facts (how many, how heavy) beside the
+    // money, and closes with the invitation to reply for delivery.
+    $shipment = makeTestShipment('سامي', '+9613000001', 105000, 0,
+        ShipmentStatus::ReadyForCollection->value);
+
+    Package::create(['shipment_id' => $shipment->id, 'weight_kg' => '5.5000']);
+    Package::create(['shipment_id' => $shipment->id, 'weight_kg' => '3.1500']);
+    // A cancelled package is off the shipment's obligation: it must not be
+    // counted, and its weight must not reach the recipient.
+    Package::create([
+        'shipment_id' => $shipment->id,
+        'weight_kg' => '9.0000',
+        'status' => PackageStatus::Cancelled->value,
+    ]);
+
+    // Set rather than read: a test that asserts the same config value it
+    // renders proves the label and the order, not just that a lookup happened.
+    config([
+        'company.whatsapp_dubai' => '+971 52 000 0001',
+        'company.whatsapp_beirut' => '+961 81 000 0002',
+    ]);
+
+    // Package::booted() recalculates the total on its own shipment instance,
+    // so the one held here is stale until refreshed.
+    $message = (new WhatsAppMessageService)->arrivalMessage($shipment->refresh());
+
+    expect($message)->toBe(implode("\n", [
+        'مرحباً سامي،',
+        "وصلت شحنتك رقم {$shipment->reference} إلى دمشق.",
+        'عدد الطرود: 2',
+        'الوزن: 8.65 كغ',
+        'المبلغ الإجمالي: $1050.00',
+        'المبلغ المتبقي: $1050.00',
+        'شحنتك جاهزة للاستلام.',
+        '',
+        'للتوصيل ومعلومات أخرى التواصل معنا على الواتساب',
+        'دبي: +971 52 000 0001',
+        'بيروت: +961 81 000 0002',
+    ]));
+});
+
+test('the contact numbers come from config, not from the message code', function () {
+    // The numbers change without a deploy. Pinning them in the string would
+    // make every change a code change — the mistake config/company.php was
+    // introduced to stop.
+    $shipment = makeTestShipment('رنا', '+9613000001', 5000, 0,
+        ShipmentStatus::ReadyForCollection->value);
+
+    config([
+        'company.whatsapp_dubai' => '+971 99 999 9999',
+        'company.whatsapp_beirut' => '+961 88 888 8888',
+    ]);
+
+    $message = (new WhatsAppMessageService)->arrivalMessage($shipment);
+
+    expect($message)->toContain('دبي: +971 99 999 9999')
+        ->and($message)->toContain('بيروت: +961 88 888 8888');
+});
+
+test('the arrival message reports zero packages rather than omitting the line', function () {
+    // A shipment with no packages is a data problem, not a reason to send a
+    // differently shaped message the recipient cannot read consistently.
+    $shipment = makeTestShipment('هدى', '+9613000001', 5000, 0,
+        ShipmentStatus::ReadyForCollection->value);
+
+    $message = (new WhatsAppMessageService)->arrivalMessage($shipment);
+
+    expect($message)->toContain('عدد الطرود: 0')
+        ->and($message)->toContain('الوزن: 0 كغ');
 });
 
 test('the arrival message includes the remaining amount when partially paid', function () {

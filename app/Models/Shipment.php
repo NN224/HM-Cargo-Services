@@ -203,6 +203,20 @@ class Shipment extends Model
     }
 
     /**
+     * How many packages still count toward this shipment.
+     *
+     * Shares activePackageStatuses() with recalculateTotalWeight() so a count
+     * and the weight beside it can never disagree about which packages are on
+     * the shipment — a cancelled package is absent from both.
+     */
+    public function activePackageCount(): int
+    {
+        return $this->packages()
+            ->whereIn('status', $this->activePackageStatuses())
+            ->count();
+    }
+
+    /**
      * Recompute the total from the packages themselves.
      *
      * The sum is done by the database rather than in PHP so the decimal

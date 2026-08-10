@@ -20,6 +20,8 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "HM Cargo Services — Moving your cargo forward" },
       { property: "og:description", content: "Reliable logistics, clear visibility, and careful handling from origin to destination." },
       { property: "og:url", content: "/" },
+      { property: "og:image", content: "/og-image.jpg" },
+      { name: "twitter:image", content: "/og-image.jpg" },
     ],
     links: [{ rel: "canonical", href: "/" }],
   }),

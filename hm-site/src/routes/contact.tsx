@@ -10,6 +10,8 @@ export const Route = createFileRoute("/contact")({
       { property: "og:title", content: "Contact — HM Cargo Services" },
       { property: "og:description", content: "Talk to the team that moves your cargo." },
       { property: "og:url", content: "/contact" },
+      { property: "og:image", content: "/og-image.jpg" },
+      { name: "twitter:image", content: "/og-image.jpg" },
     ],
     links: [{ rel: "canonical", href: "/contact" }],
   }),

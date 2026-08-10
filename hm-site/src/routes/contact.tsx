@@ -29,7 +29,7 @@ function ContactPage() {
           <p className="mt-6 max-w-xl text-lg text-muted-foreground">A named contact will respond, not a queue.</p>
         </section>
         <section className="mx-auto max-w-[1200px] px-6 lg:px-10">
-          <div className="grid gap-px border border-[color:var(--border)] bg-[color:var(--border)] md:grid-cols-3">
+          <div className="grid gap-px border border-[color:var(--border)] bg-[color:var(--border)] md:grid-cols-2 lg:grid-cols-4">
             {[
               {
                 label: "General",
@@ -46,13 +46,26 @@ function ContactPage() {
                   { label: "+971 52 153 0190", href: "tel:+971521530190" },
                 ],
               },
+              {
+                label: "Social",
+                contacts: [
+                  { label: "Facebook", href: "https://www.facebook.com/profile.php?id=61577769857365", target: "_blank" },
+                  { label: "Instagram (@hm_cargo2026)", href: "https://www.instagram.com/hm_cargo2026", target: "_blank" },
+                ],
+              },
             ].map((card) => (
               <div key={card.label} className="bg-[#0b0d10] p-10">
                 <p className="eyebrow">{card.label}</p>
                 <p className="mt-5 font-display text-2xl">HM Cargo Services</p>
                 <div className="mt-3 flex flex-col gap-1 text-sm text-muted-foreground">
                   {card.contacts.map((contact) => (
-                    <a key={contact.href} href={contact.href} className="transition-colors hover:text-foreground">
+                    <a
+                      key={contact.href}
+                      href={contact.href}
+                      target={contact.target}
+                      rel={contact.target ? "noopener noreferrer" : undefined}
+                      className="transition-colors hover:text-foreground"
+                    >
                       {contact.label}
                     </a>
                   ))}

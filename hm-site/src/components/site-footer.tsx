@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { Facebook, Instagram } from "lucide-react";
 import fullLogo from "@/assets/hm-logo-symbol.png";
 
 export function SiteFooter() {
@@ -30,6 +31,26 @@ export function SiteFooter() {
                 </a>
               </li>
             </ul>
+            <div className="mt-6 flex items-center gap-3">
+              <a
+                href="https://www.facebook.com/profile.php?id=61577769857365"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="HM Cargo Services Facebook"
+                className="flex h-9 w-9 items-center justify-center rounded-md border border-[color:var(--border)] bg-[#0b0d10] text-muted-foreground transition-colors hover:border-[color:var(--accent)] hover:text-foreground"
+              >
+                <Facebook className="h-4 w-4" />
+              </a>
+              <a
+                href="https://www.instagram.com/hm_cargo2026"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="HM Cargo Services Instagram"
+                className="flex h-9 w-9 items-center justify-center rounded-md border border-[color:var(--border)] bg-[#0b0d10] text-muted-foreground transition-colors hover:border-[color:var(--accent)] hover:text-foreground"
+              >
+                <Instagram className="h-4 w-4" />
+              </a>
+            </div>
           </div>
 
           <FooterCol title="Services" items={[

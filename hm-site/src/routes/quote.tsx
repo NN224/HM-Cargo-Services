@@ -12,6 +12,8 @@ export const Route = createFileRoute("/quote")({
       { property: "og:title", content: "Request a Quote — HM Cargo Services" },
       { property: "og:description", content: "Tell us where your cargo needs to go." },
       { property: "og:url", content: "/quote" },
+      { property: "og:image", content: "/og-image.jpg" },
+      { name: "twitter:image", content: "/og-image.jpg" },
     ],
     links: [{ rel: "canonical", href: "/quote" }],
   }),

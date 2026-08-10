@@ -11,6 +11,8 @@ export const Route = createFileRoute("/coverage")({
       { property: "og:title", content: "Coverage — HM Cargo Services" },
       { property: "og:description", content: "A route network built around real trade lanes." },
       { property: "og:url", content: "/coverage" },
+      { property: "og:image", content: "/og-image.jpg" },
+      { name: "twitter:image", content: "/og-image.jpg" },
     ],
     links: [{ rel: "canonical", href: "/coverage" }],
   }),

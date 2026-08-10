@@ -12,6 +12,8 @@ export const Route = createFileRoute("/services")({
       { property: "og:title", content: "Services — HM Cargo Services" },
       { property: "og:description", content: "A complete cargo operation, coordinated as one." },
       { property: "og:url", content: "/services" },
+      { property: "og:image", content: "/og-image.jpg" },
+      { name: "twitter:image", content: "/og-image.jpg" },
     ],
     links: [{ rel: "canonical", href: "/services" }],
   }),

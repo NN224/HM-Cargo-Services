@@ -216,13 +216,23 @@ export function CinematicJourney() {
             <SceneImage
                 src={sceneContainer}
                 alt="Sealed cargo container in a dark industrial space"
+                title="HM Cargo Sealed Container Logistics"
             />
             <SceneImage
                 src={sceneWarehouse}
                 alt="Dark industrial warehouse with orange guide lights"
+                title="HM Cargo Warehouse & Storage Facilities"
             />
-            <SceneImage src={sceneTruck} alt="Modern cargo truck moving through the night" />
-            <SceneImage src={scenePort} alt="Night port with cranes and a moored cargo vessel" />
+            <SceneImage
+                src={sceneTruck}
+                alt="Modern cargo truck moving through the night"
+                title="HM Cargo Ground Transportation Fleet"
+            />
+            <SceneImage
+                src={scenePort}
+                alt="Night port with cranes and a moored cargo vessel"
+                title="HM Cargo Port Operations & Sea Freight"
+            />
             <SceneMap />
             <SceneArrival />
 
@@ -262,8 +272,11 @@ export function CinematicJourney() {
                             )}
                             {i === 6 && (
                                 <div className="pointer-events-auto mt-10 flex flex-wrap gap-4">
-                                    <Link to="/quote" className="btn-primary">
-                                        Request a Quote
+                                    <Link to="/contact" className="btn-primary">
+                                        Talk to the Operation
+                                    </Link>
+                                    <Link to="/coverage" className="btn-secondary">
+                                        View Coverage
                                     </Link>
                                 </div>
                             )}
@@ -272,35 +285,31 @@ export function CinematicJourney() {
                 </div>
             </div>
 
-            {/* Route progress indicator */}
-            <div className="pointer-events-none absolute left-8 top-1/2 z-30 hidden -translate-y-1/2 lg:block">
-                <div className="relative h-72 w-px bg-[color:var(--border)]">
-                    <div
-                        ref={progressRef}
-                        className="absolute left-0 top-0 w-px bg-[color:var(--accent)]"
-                        style={{ height: "0%" }}
-                    />
-                    {SCENES.map((_, i) => (
-                        <span
-                            key={i}
-                            data-dot
-                            data-active={i === 0 ? "true" : "false"}
-                            className="absolute -left-[3px] block h-1.5 w-1.5 rounded-full bg-[color:var(--text-dim)] data-[active=true]:bg-[color:var(--accent)] transition-colors"
-                            style={{ top: `${(i / (SCENES.length - 1)) * 100}%` }}
-                        />
-                    ))}
-                </div>
-                <p className="mt-6 font-mono text-[0.6rem] uppercase tracking-[0.28em] text-[color:var(--text-dim)] writing-mode-vertical [writing-mode:vertical-rl] rotate-180">
-                    Journey
-                </p>
+            {/* Scroll indicator */}
+            <div className="pointer-events-none absolute bottom-8 left-6 lg:left-16 z-20 flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-[color:var(--accent)] animate-pulse" />
+                <span className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-muted-foreground">
+                    Scroll to navigate journey
+                </span>
             </div>
 
-            {/* Scroll hint */}
-            <div className="pointer-events-none absolute bottom-8 left-1/2 z-30 -translate-x-1/2 text-center">
-                <p className="font-mono text-[0.6rem] uppercase tracking-[0.28em] text-[color:var(--text-dim)]">
-                    Scroll to travel
-                </p>
-                <div className="mx-auto mt-3 h-8 w-px bg-gradient-to-b from-[color:var(--accent)] to-transparent" />
+            {/* Step indicator */}
+            <div
+                ref={progressRef}
+                className="pointer-events-none absolute right-6 lg:right-16 top-1/2 z-20 hidden -translate-y-1/2 flex-col gap-3 lg:flex"
+            >
+                {SCENES.map((_, i) => (
+                    <div
+                        key={i}
+                        data-step-dot
+                        className="relative flex items-center justify-end"
+                    >
+                        <span
+                            className="h-1.5 w-1.5 rounded-full bg-[color:var(--border-strong)] transition-all duration-300"
+                            style={{ top: `${(i / (SCENES.length - 1)) * 100}%` }}
+                        />
+                    </div>
+                ))}
             </div>
         </section>
     );
@@ -313,6 +322,7 @@ function SceneOpening() {
                 <img
                     src={symbolAsset}
                     alt="HM Cargo symbol emerging from darkness"
+                    title="HM Cargo Services Symbol Logo"
                     width={520}
                     height={520}
                     className="h-[36vh] w-auto max-w-[80vw] object-contain opacity-90"
@@ -339,12 +349,13 @@ function SceneOpening() {
     );
 }
 
-function SceneImage({ src, alt }: { src: string; alt: string }) {
+function SceneImage({ src, alt, title }: { src: string; alt: string; title?: string }) {
     return (
         <div data-scene className="scene-layer">
             <img
                 src={src}
                 alt={alt}
+                title={title || alt}
                 width={1600}
                 height={912}
                 className="h-full w-full object-cover"
@@ -362,6 +373,7 @@ function SceneMap() {
             <img
                 src={sceneMap}
                 alt="Dark world map showing HM Cargo global visibility"
+                title="HM Cargo Global Operations Map"
                 width={1600}
                 height={912}
                 className="h-full w-full object-cover"
@@ -421,7 +433,8 @@ function SceneArrival() {
         <div data-scene className="scene-layer flex items-center justify-center bg-[#050607]">
             <img
                 src={symbolAsset}
-                alt=""
+                alt="HM Cargo Services background symbol logo"
+                title="HM Cargo Services — Arrival"
                 aria-hidden
                 className="absolute inset-0 m-auto h-[70vh] w-auto object-contain opacity-[0.06]"
             />

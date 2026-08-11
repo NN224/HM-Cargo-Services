@@ -45,7 +45,8 @@ export function SiteNav() {
                     >
                         <img
                             src={symbolAsset}
-                            alt=""
+                            alt="HM Cargo Services symbol logo"
+                            title="HM Cargo Services — Moving your cargo forward"
                             width={40}
                             height={40}
                             className="h-9 w-9 object-contain"
@@ -88,7 +89,8 @@ export function SiteNav() {
                     <div className="flex items-center justify-between px-6 py-4 border-b border-[color:var(--border)]">
                         <img
                             src={symbolAsset}
-                            alt="HM Cargo"
+                            alt="HM Cargo Services symbol logo"
+                            title="HM Cargo Services — Moving your cargo forward"
                             width={36}
                             height={36}
                             className="h-9 w-9"

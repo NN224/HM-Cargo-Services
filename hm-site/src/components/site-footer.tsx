@@ -10,7 +10,8 @@ export function SiteFooter() {
                     <div>
                         <img
                             src={fullLogo}
-                            alt="HM Cargo Services"
+                            alt="HM Cargo Services logo"
+                            title="HM Cargo Services — Moving your cargo forward"
                             width={220}
                             height={220}
                             className="h-28 w-auto object-contain"

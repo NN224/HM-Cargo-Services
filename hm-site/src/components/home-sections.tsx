@@ -330,7 +330,8 @@ export function BlogPreviewSection() {
                             <div className="aspect-[16/10] overflow-hidden">
                                 <img
                                     src={p.cover}
-                                    alt=""
+                                    alt={p.title}
+                                    title={p.title}
                                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                                     loading="lazy"
                                 />

@@ -72,7 +72,8 @@ function BlogIndex() {
                             <div className="aspect-[16/10] lg:aspect-auto overflow-hidden">
                                 <img
                                     src={featured.cover}
-                                    alt=""
+                                    alt={featured.title}
+                                    title={featured.title}
                                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                                 />
                             </div>
@@ -122,7 +123,8 @@ function BlogIndex() {
                                 <div className="aspect-[16/10] overflow-hidden">
                                     <img
                                         src={p.cover}
-                                        alt=""
+                                        alt={p.title}
+                                        title={p.title}
                                         className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                                         loading="lazy"
                                     />

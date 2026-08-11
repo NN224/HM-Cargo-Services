@@ -14,8 +14,8 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
  * page is gone permanently, and search engines should drop it.
  */
 export const Route = createFileRoute("/track")({
-  beforeLoad: () => {
-    throw redirect({ to: "/", statusCode: 301 });
-  },
-  component: () => null,
+    beforeLoad: () => {
+        throw redirect({ to: "/", statusCode: 301 });
+    },
+    component: () => null,
 });

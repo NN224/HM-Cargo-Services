@@ -21,7 +21,7 @@ export const Route = createFileRoute("/blog/$slug")({
             };
         }
         const { post } = loaderData;
-        const canonicalUrl = `/blog/${params.slug}`;
+        const fullCanonicalUrl = `https://hmcargoservices.com/blog/${params.slug}`;
 
         const jsonLdGraph = post.jsonLd
             ? post.jsonLd
@@ -33,8 +33,15 @@ export const Route = createFileRoute("/blog/$slug")({
                           headline: post.title,
                           description: post.excerpt,
                           author: { "@type": "Organization", name: post.author },
+                          publisher: {
+                              "@type": "Person",
+                              name: "Nabel Al Chaar",
+                              jobTitle: "Founder & Digital Growth Strategist",
+                          },
                           datePublished: post.publishedAt,
-                          image: post.cover,
+                          image: post.cover.startsWith("http")
+                              ? post.cover
+                              : `https://hmcargoservices.com${post.cover}`,
                       },
                       {
                           "@type": "BreadcrumbList",
@@ -55,7 +62,7 @@ export const Route = createFileRoute("/blog/$slug")({
                                   "@type": "ListItem",
                                   position: 3,
                                   name: post.title,
-                                  item: `https://hmcargoservices.com${canonicalUrl}`,
+                                  item: fullCanonicalUrl,
                               },
                           ],
                       },
@@ -74,14 +81,30 @@ export const Route = createFileRoute("/blog/$slug")({
             meta: [
                 { title: `${post.metaTitle || post.title} — HM Cargo Services` },
                 { name: "description", content: post.metaDescription || post.excerpt },
+                { name: "publisher", content: "Nabel Al Chaar — Founder & Digital Growth Strategist" },
+                { name: "robots", content: "index, follow" },
+                {
+                    name: "keywords",
+                    content: `${post.category}, HM Cargo Services, international shipping, ${post.title}`,
+                },
                 { property: "og:title", content: post.ogTitle || post.title },
                 { property: "og:description", content: post.ogDescription || post.excerpt },
                 { property: "og:type", content: "article" },
-                { property: "og:url", content: canonicalUrl },
-                { property: "og:image", content: post.cover },
-                { name: "twitter:image", content: post.cover },
+                { property: "og:url", content: fullCanonicalUrl },
+                {
+                    property: "og:image",
+                    content: post.cover.startsWith("http")
+                        ? post.cover
+                        : `https://hmcargoservices.com${post.cover}`,
+                },
+                {
+                    name: "twitter:image",
+                    content: post.cover.startsWith("http")
+                        ? post.cover
+                        : `https://hmcargoservices.com${post.cover}`,
+                },
             ],
-            links: [{ rel: "canonical", href: canonicalUrl }],
+            links: [{ rel: "canonical", href: fullCanonicalUrl }],
             scripts: [
                 {
                     type: "application/ld+json",

@@ -81,7 +81,10 @@ export const Route = createFileRoute("/blog/$slug")({
             meta: [
                 { title: `${post.metaTitle || post.title} — HM Cargo Services` },
                 { name: "description", content: post.metaDescription || post.excerpt },
-                { name: "publisher", content: "Nabel Al Chaar — Founder & Digital Growth Strategist" },
+                {
+                    name: "publisher",
+                    content: "Nabel Al Chaar — Founder & Digital Growth Strategist",
+                },
                 { name: "robots", content: "index, follow" },
                 {
                     name: "keywords",

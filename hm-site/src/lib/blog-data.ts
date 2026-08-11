@@ -35,6 +35,465 @@ import container from "@/assets/scenes/scene-container.jpg";
 
 export const posts: BlogPost[] = [
     {
+        slug: "cargo-dubai-to-syria",
+        title: "Everything That Goes Into Shipping Cargo From Dubai to Syria",
+        excerpt:
+            "A practical guide to cargo Dubai to Syria: routes, documents, lead times, indicative market costs, and the questions to ask before you book.",
+        category: "Shipping Guides",
+        author: "HM Cargo Editorial",
+        publishedAt: "2026-08-17",
+        readingMinutes: 11,
+        cover: "/media/blog/cargo-dubai-to-syria-featured.webp",
+        featured: true,
+        metaTitle: "Cargo Dubai to Syria: Complete Shipping Guide",
+        metaDescription:
+            "A practical guide to cargo Dubai to Syria: routes, documents, lead times, indicative market costs, and the questions to ask before you book.",
+        ogTitle: "Shipping Cargo From Dubai to Syria: Full Guide",
+        ogDescription:
+            "Routes, paperwork, lead times and indicative market costs for cargo from Dubai to Syria, plus the questions to ask any operator.",
+        pillarTopic: "International freight from the UAE",
+        contentType: "article",
+        body: [
+            {
+                type: "p",
+                text: "Most people who need to move cargo from Dubai to Syria do not fail on price. They fail on handoffs. A shipment leaves a warehouse in Al Quoz, clears an exporter formality, sits at a port, changes hands to a trucking leg, and then goes quiet. Nobody lied to you. The chain simply had four owners and no single person who could tell you where the box was on a Tuesday afternoon.",
+            },
+            {
+                type: "p",
+                text: "The second failure is paperwork. An invoice value that does not match the packing list, a description written in shorthand, a consignee name spelled two ways across two documents — each of these can hold cargo at a border for days. Delays on this lane are rarely dramatic. They are administrative, and they compound, because one missed cutoff pushes you to the next sailing or the next convoy window.",
+            },
+            {
+                type: "quote",
+                text: "A Dubai to Syria shipment is won or lost on documentation and handoff control, not on the freight rate you negotiated.",
+            },
+            {
+                type: "p",
+                text: "This guide covers what the route actually is, how sea and air compare, what documents travel with the cargo, how long to allow, what the market typically charges, and the questions worth asking before you commit. Read it top to bottom if this is your first shipment. Skim to the section you need if it is not.",
+            },
+            {
+                type: "h2",
+                id: "what-does-cargo-dubai-to-syria-actually-mean",
+                text: 'What does "cargo Dubai to Syria" actually mean?',
+            },
+            {
+                type: "p",
+                text: "Cargo Dubai to Syria is the movement of commercial or personal goods from the UAE to a Syrian destination, using sea freight, air freight, or road transport, with customs formalities handled at both the exit and entry points. It is a multi-leg movement rather than a single journey, which is why coordination matters more than any one leg.",
+            },
+            {
+                type: "p",
+                text: "The Dubai side is straightforward in structure. Goods are collected, documented, and exported through a UAE gateway — Jebel Ali for containerised sea freight, Dubai International or Al Maktoum for air, or a land border for road movements. Dubai Customs publishes UAE export procedures and declaration requirements at [dubaicustoms.gov.ae](https://www.dubaicustoms.gov.ae), so the exporter-side rules are public and checkable.",
+            },
+            {
+                type: "p",
+                text: "The Syrian side is where variability lives. Entry point, inspection practice, and clearance timing all shift with the cargo type and the moment. Because of that, an operator who works the lane regularly is worth more than one who quotes it occasionally. HM Cargo Services lists the UAE, Lebanon and Syria as its primary operating markets, which is a different thing from arranging an occasional shipment there.",
+            },
+            {
+                type: "quote",
+                text: "Key takeaway: Dubai to Syria is not one journey. It is a chain of legs and clearances, so the person controlling the handoffs matters more than the person quoting the rate.",
+            },
+            {
+                type: "h2",
+                id: "should-you-send-cargo-to-syria-by-sea-or-by-air",
+                text: "Should you send cargo to Syria by sea or by air?",
+            },
+            {
+                type: "p",
+                text: "Sea freight suits heavy, bulky, or non-urgent cargo to Syria and costs far less per kilo. Air freight suits light, high-value, time-critical, or temperature-sensitive goods and moves in days rather than weeks. Most shippers on this lane default to sea and use air only for the portion that genuinely cannot wait.",
+            },
+            {
+                type: "p",
+                text: "The economics are simple. Sea freight prices on volume and weight together, so a dense pallet travels cheaply. Air freight prices on chargeable weight, which punishes anything bulky and light. A shipment of machine parts often makes sense by air, although the same volume in packaging materials almost never does.",
+            },
+            {
+                type: "p",
+                text: "Timing is the other axis. Sea moves on fixed sailing schedules, which means missing a cutoff costs you a full cycle rather than a day. Air departs far more often, so a missed flight is a smaller loss. HM Cargo Services offers both sea and air freight under its International Cargo service, alongside Ground Transportation for the road legs on either end.",
+            },
+            {
+                type: "table",
+                headers: ["Factor", "Sea freight", "Air freight"],
+                rows: [
+                    [
+                        "Best for",
+                        "Heavy, bulky, non-urgent goods",
+                        "Light, high-value, urgent goods",
+                    ],
+                    ["Pricing basis", "Volume and weight combined", "Chargeable weight"],
+                    ["Schedule", "Fixed sailings, hard cutoffs", "Frequent departures"],
+                    ["Missed-cutoff cost", "A full sailing cycle", "Usually the next flight"],
+                    ["Packing demand", "Higher — longer handling chain", "Lower — fewer touches"],
+                ],
+            },
+            {
+                type: "p",
+                text: "The International Maritime Organization sets the global safety and packaging rules that govern sea movements, including the dangerous goods code, and publishes them at [imo.org](https://www.imo.org). That matters if any part of your consignment is classed as hazardous, because the classification changes your packing, your paperwork, and your booking window.",
+            },
+            {
+                type: "h2",
+                id: "what-documents-does-a-dubai-to-syria-shipment-need",
+                text: "What documents does a Dubai to Syria shipment need?",
+            },
+            {
+                type: "p",
+                text: "Every Dubai to Syria shipment travels with a commercial invoice, a packing list, and a transport document — a bill of lading for sea or an air waybill for air. Certificates of origin and product-specific permits are frequently required on top. The exact set depends on the commodity, so confirm it before you pack rather than after.",
+            },
+            {
+                type: "p",
+                text: "Consistency across those documents matters more than the documents themselves. The consignee name, the goods description, the piece count and the declared value should read identically everywhere. HM Cargo Services names incomplete or inconsistent documentation as the most common cause of shipment delays, in its guide to preparing cargo for international shipping at [Preparing Cargo for International Shipping](https://hmcargoservices.com/blog/preparing-cargo-for-international-shipping).",
+            },
+            {
+                type: "p",
+                text: "A licensed customs broker is not legally required in most destinations, although it usually pays for itself. That is the position HM Cargo Services states, and it holds up practically. A broker who handles a lane weekly recognises a description that will trigger an inspection, which is knowledge you cannot buy on a single shipment.",
+            },
+            {
+                type: "p",
+                text: "Keep one more habit. Photograph the cargo packed and labelled before it leaves your premises. It costs nothing, and it settles condition disputes quickly if anything arrives damaged.",
+            },
+            {
+                type: "image",
+                src: "/media/blog/cargo-dubai-to-syria-1.webp",
+                alt: "A freight worker checking a clipboard beside a strapped and labelled pallet inside a warehouse",
+            },
+            {
+                type: "h2",
+                id: "how-much-lead-time-should-you-allow",
+                text: "How much lead time should you allow?",
+            },
+            {
+                type: "p",
+                text: "Book standard freight 2–3 weeks before the target sailing date, and allow 4–6 weeks for hazardous, oversized, or seasonally constrained cargo. Those are the windows HM Cargo Services publishes. They exist because documentation, permits and space booking all run in sequence, so a late start pushes everything behind it.",
+            },
+            {
+                type: "p",
+                text: "The 2–3 week window is not padding. It covers gathering documents, confirming the commodity classification, booking space, arranging collection, and reaching the port before the cutoff. Any one of those can stall for a day, which is fine when you have slack and expensive when you do not.",
+            },
+            {
+                type: "p",
+                text: "The 4–6 week window applies where a third party has to approve something. Hazardous goods need classification and compliant packing. Oversized cargo needs equipment planned in advance. Seasonal cargo competes for space with everyone else who wants the same weeks, so booking early is the whole strategy.",
+            },
+            {
+                type: "ol",
+                items: [
+                    "**Cargo classification.** Hazardous or restricted goods need a longer approval path, so classify honestly at the start.",
+                    "**Documentation readiness.** Missing or inconsistent paperwork is the single most common delay cause, which is why document prep should begin before packing.",
+                    "**Dimensions and weight.** Oversized or unusually heavy pieces need specific equipment, and that equipment gets booked in advance.",
+                    "**Seasonality.** Peak periods tighten space on both sea and air, so the same shipment needs more lead time in a busy month.",
+                    "**Destination requirements.** Entry-point rules and inspection practice vary, so confirm the destination-side needs before you commit to a date.",
+                    "**Collection distance.** A pickup far from the gateway adds a road leg, and that leg has its own timing risk.",
+                ],
+            },
+            {
+                type: "quote",
+                text: "Key takeaway: Treat the booking window as a sequence, not a buffer. Standard freight wants 2–3 weeks; anything hazardous, oversized or seasonal wants 4–6.",
+            },
+            {
+                type: "h2",
+                id: "what-does-cargo-from-dubai-to-syria-cost",
+                text: "What does cargo from Dubai to Syria cost?",
+            },
+            {
+                type: "p",
+                text: "There is no published price for this lane, because freight is quoted per shipment. Cost is driven by mode, volume, weight, commodity type, and the road legs at either end. Across the market, the ranges below are the shape most quotes take, although your actual number depends entirely on your cargo.",
+            },
+            {
+                type: "table",
+                headers: ["Cost component", "What drives it", "Typical market pattern"],
+                rows: [
+                    [
+                        "Sea freight (LCL)",
+                        "Cubic metres and weight",
+                        "Priced per CBM, with a minimum charge",
+                    ],
+                    [
+                        "Sea freight (FCL)",
+                        "Container size and route",
+                        "Flat rate per 20ft or 40ft box",
+                    ],
+                    ["Air freight", "Chargeable weight", "Priced per kg, multiples of sea rates"],
+                    [
+                        "Customs clearance",
+                        "Declaration complexity",
+                        "Flat fee per declaration, plus duties",
+                    ],
+                    ["Road legs", "Distance and vehicle type", "Priced per trip at each end"],
+                    ["Warehousing", "Days stored and handling", "Priced per pallet or per day"],
+                ],
+            },
+            {
+                type: "p",
+                text: "*Note: These are indicative ranges based on general market practice, not quoted prices, and they vary by cargo, season, and route — confirm current costs directly with the venue before you budget.*",
+            },
+            {
+                type: "p",
+                text: "HM Cargo Services publishes no prices anywhere on its site. Instead, it quotes per shipment and states it responds with a route, a timeline, and a quote — usually the same day. You get that by submitting the [Request a Quote form](https://hmcargoservices.com/quote), or by messaging on [WhatsApp](https://wa.me/971521530190).",
+            },
+            {
+                type: "p",
+                text: 'Vague messages get vague answers. If you send only "how much to Syria", any operator has to guess at mode, volume and commodity, so the number that comes back is worthless. Give the origin, the destination, the cargo type and the estimated weight or volume, because those four fields turn a guess into a quote.',
+            },
+            {
+                type: "h2",
+                id: "how-is-the-shipment-actually-coordinated-end-to-end",
+                text: "How is the shipment actually coordinated end to end?",
+            },
+            {
+                type: "p",
+                text: "Coordination on this lane means one party owning the pickup, the handling, the documentation, and every handoff between carriers and customs. HM Cargo Services describes a three-step process: 01 Request, where you share cargo details and destinations; 02 Coordinate, covering pickup, handling, documentation and every handoff with one point of contact; and 03 Deliver.",
+            },
+            {
+                type: "p",
+                text: 'The value sits in step two. A shipment to Syria changes hands several times, and each change is a chance for information to drop. When one operator holds the whole chain, the answer to "where is it" comes from one place. HM Cargo Services lists Shipment Coordination across carriers, customs and destinations as a named service at [services page](https://hmcargoservices.com/services).',
+            },
+            {
+                type: "p",
+                text: "Warehousing belongs in the same conversation. Cargo often needs to sit somewhere between collection and sailing, especially when you are consolidating from several suppliers. HM Cargo Services lists Warehousing & Handling as one of its six services, which keeps that stage inside the same operation rather than subcontracted out.",
+            },
+            {
+                type: "p",
+                text: "Tracking closes the loop. HM Cargo Services lists Cargo Tracking as a service and describes clear visibility with reliable status updates as one of its stated advantages. That is a different promise from a public tracking portal, so ask what form the updates take before you assume.",
+            },
+            {
+                type: "h2",
+                id: "what-should-you-ask-before-committing-to-an-operator",
+                text: "What should you ask before committing to an operator?",
+            },
+            {
+                type: "p",
+                text: "Before booking cargo from Dubai to Syria, confirm that the operator actually works the lane, that you get one named contact, and that the quote covers every leg rather than the freight alone. These questions separate an operator who runs the route from one who resells it.",
+            },
+            {
+                type: "ul",
+                items: [
+                    "**Is Syria a regular lane for you, or an occasional arrangement?** Regular lanes come with regular handling knowledge, which is what prevents surprises at the destination.",
+                    '**Who is my named contact, and do they stay with the shipment?** HM Cargo Services states that every quote request is answered by a named operations contact, "not a queue".',
+                    "**Does the quote include the road legs at both ends?** A freight-only number looks cheaper until the trucking invoice arrives separately.",
+                    "**What happens if my documents are wrong?** You want someone who checks paperwork before departure rather than after a hold.",
+                    "**How and how often will I get status updates?** Agree the rhythm upfront, because silence feels like a problem even when nothing is wrong.",
+                    '**Who handles customs on each side?** If the answer is "a partner", ask who talks to that partner when something stalls.',
+                    "**Can you handle warehousing if my cargo is ready early?** Consolidating from several suppliers usually means something waits somewhere.",
+                ],
+            },
+            {
+                type: "h2",
+                id: "why-hm-cargo-services-suits-this-route",
+                text: "Why HM CARGO SERVICES suits this route",
+            },
+            {
+                type: "p",
+                text: "HM Cargo Services is a Dubai-based operator whose primary markets are the UAE, Lebanon and Syria, which makes this lane core business rather than an exception. It runs six services — International Cargo, Ground Transportation, Warehousing & Handling, Shipment Coordination, Cargo Tracking and Business Logistics — from one operation, so the handoffs between sea, air, road and storage stay inside a single chain.",
+            },
+            {
+                type: "p",
+                text: 'That structure answers the coordination problem directly. HM Cargo Services describes its network as covering ground, air, sea and warehousing under one operation, with a handling profile matched to each cargo\'s route. Its office is at Office 404, Awqaf Building, Street 8, Al Murar, Deira, Dubai. Coverage is summarised as "UAE, Lebanon, Syria, Worldwide on request", with the United States named among the destinations arranged on request.',
+            },
+            {
+                type: "p",
+                text: "Who this is a strong fit for:",
+            },
+            {
+                type: "ul",
+                items: [
+                    "Businesses shipping regularly between the UAE and Syria, because the lane is a primary market rather than a one-off arrangement",
+                    "Shippers who need sea, air, road and storage handled by one operator instead of several",
+                    "Anyone who wants a named contact for every active shipment rather than a ticket queue",
+                    "Repeat and enterprise shippers, who are served by the Business Logistics programme for tailored supply-chain arrangements",
+                    "Shippers who want a same-day answer, since the stated response is a route, a timeline and a quote — usually the same day",
+                ],
+            },
+            {
+                type: "p",
+                text: "You can read more about the operation at [about page](https://hmcargoservices.com/about), or check the lanes at [coverage page](https://hmcargoservices.com/coverage).",
+            },
+            {
+                type: "h2",
+                id: "frequently-asked-questions-about-dubai-to-syria-cargo",
+                text: "Frequently Asked Questions About Dubai to Syria Cargo",
+            },
+            {
+                type: "h2",
+                id: "the-verdict-on-shipping-dubai-to-syria",
+                text: "The verdict on shipping Dubai to Syria",
+            },
+            {
+                type: "p",
+                text: "Shipping cargo from Dubai to Syria is manageable when you plan the documents early and put one operator in charge of the handoffs. Book standard freight 2–3 weeks out and hazardous or oversized cargo 4–6 weeks out. Choose sea for bulk and air for urgency, then judge operators on lane experience rather than headline rate.",
+            },
+            {
+                type: "p",
+                text: "The lane punishes vagueness at both ends. A precise brief gets a precise quote, and consistent paperwork gets a shipment that keeps moving. That is most of the job.",
+            },
+            {
+                type: "ul",
+                items: [
+                    "Send your cargo details through the [Request a Quote form](https://hmcargoservices.com/quote) for a route, a timeline and a quote — usually the same day",
+                    "Message the team on [WhatsApp](https://wa.me/971521530190) if you want to talk through the route first",
+                    "Reach the office via [contact page](https://hmcargoservices.com/contact), or email info@hmcargoservices.com for general enquiries and quotes@hmcargoservices.com for quotes",
+                    "Review the full service list at [services page](https://hmcargoservices.com/services) before you brief the shipment",
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: "Is Syria one of the countries you actually operate in?",
+                a: 'Yes. HM Cargo Services lists the UAE, Lebanon and Syria as its primary operating markets, and summarises coverage as "UAE, Lebanon, Syria, Worldwide on request". Syria is a core lane rather than an occasional arrangement. Destinations outside the region are arranged on request, based on cargo, route and service required.',
+            },
+            {
+                q: "How is a shipment to Syria coordinated across the different handoffs?",
+                a: "HM Cargo Services runs a three-step process: 01 Request, 02 Coordinate, 03 Deliver. The Coordinate step covers pickup, handling, documentation and every handoff, with one point of contact throughout. Shipment Coordination across carriers, customs and destinations is one of its six named services, so the legs stay inside one operation.",
+            },
+            {
+                q: "Will I have one point of contact for the whole route, or several?",
+                a: 'One. HM Cargo Services states that direct communication with a named contact for every active shipment is one of its four stated advantages. Every quote request is answered by a named operations contact, described on the site as "not a queue". That contact is where your status questions go.',
+            },
+            {
+                q: "How much lead time should I allow for a shipment heading to Syria?",
+                a: "Allow 2–3 weeks before the target sailing date for standard freight, and 4–6 weeks for hazardous, oversized, or seasonally constrained cargo. Those are the windows HM Cargo Services publishes in its guide to preparing cargo for international shipping. Booking earlier gives you slack if a document or permit takes longer than expected.",
+            },
+            {
+                q: "What information about the destination do you need on the quote form?",
+                a: "The Request a Quote form asks for full name, company, email, phone, origin, destination, cargo type, estimated weight or volume, and additional details. The destination field is where the Syrian delivery point goes, and the additional details box is where you note anything unusual about access or timing. HM Cargo Services responds with a route, a timeline, and a quote — usually the same day.",
+            },
+            {
+                q: "How will I know where my cargo is once it has left Dubai?",
+                a: "Cargo Tracking is one of the six services HM Cargo Services names, and clear visibility with reliable status updates is one of its stated advantages. Updates come through the named contact assigned to your shipment. The site does not describe a specific tracking portal or update frequency, so ask your contact what form the updates take when you book.",
+            },
+        ],
+        jsonLd: {
+            "@context": "https://schema.org",
+            "@graph": [
+                {
+                    "@id": "https://hmcargoservices.com/#website",
+                    "@type": "WebSite",
+                    inLanguage: "en",
+                    name: "HM CARGO SERVICES",
+                    publisher: {
+                        "@id": "https://hmcargoservices.com/#business",
+                    },
+                    url: "https://hmcargoservices.com/",
+                },
+                {
+                    "@id": "https://hmcargoservices.com/#business",
+                    "@type": "LocalBusiness",
+                    address: {
+                        "@type": "PostalAddress",
+                        addressLocality: "Dubai, UAE",
+                        addressRegion: "Al Murar, Deira",
+                        streetAddress: "Office 404, Awqaf Building, Street 8",
+                    },
+                    description:
+                        "HM Cargo Services is a Dubai-based logistics operator offering international sea and air freight, ground transportation, warehousing and handling, shipment coordination, cargo tracking, and business logistics programs. Its core trade lanes are the UAE, Lebanon, and Syria, with worldwide shipments arranged on request.",
+                    name: "HM CARGO SERVICES",
+                    url: "https://hmcargoservices.com/",
+                },
+                {
+                    "@id": "https://hmcargoservices.com/blog/cargo-dubai-to-syria#article",
+                    "@type": "Article",
+                    about: {
+                        "@id": "https://hmcargoservices.com/#business",
+                    },
+                    articleSection: "International freight from the UAE",
+                    author: {
+                        "@id": "https://hmcargoservices.com/#business",
+                    },
+                    dateModified: "2026-08-17",
+                    datePublished: "2026-08-17",
+                    description:
+                        "A practical guide to cargo Dubai to Syria: routes, documents, lead times, indicative market costs, and the questions to ask before you book.",
+                    headline: "Cargo Dubai to Syria: Complete Shipping Guide",
+                    inLanguage: "en",
+                    isPartOf: {
+                        "@id": "https://hmcargoservices.com/#website",
+                    },
+                    mainEntityOfPage: {
+                        "@id": "https://hmcargoservices.com/blog/cargo-dubai-to-syria",
+                        "@type": "WebPage",
+                    },
+                    publisher: {
+                        "@id": "https://hmcargoservices.com/#business",
+                    },
+                    wordCount: 2813,
+                },
+                {
+                    "@id": "https://hmcargoservices.com/blog/cargo-dubai-to-syria#breadcrumb",
+                    "@type": "BreadcrumbList",
+                    itemListElement: [
+                        {
+                            "@type": "ListItem",
+                            item: "https://hmcargoservices.com/",
+                            name: "HM CARGO SERVICES",
+                            position: 1,
+                        },
+                        {
+                            "@type": "ListItem",
+                            item: "https://hmcargoservices.com/blog/",
+                            name: "Blog",
+                            position: 2,
+                        },
+                        {
+                            "@type": "ListItem",
+                            item: "https://hmcargoservices.com/blog/cargo-dubai-to-syria",
+                            name: "Everything That Goes Into Shipping Cargo From Dubai to Syria",
+                            position: 3,
+                        },
+                    ],
+                },
+                {
+                    "@id": "https://hmcargoservices.com/blog/cargo-dubai-to-syria#faq",
+                    "@type": "FAQPage",
+                    mainEntity: [
+                        {
+                            "@type": "Question",
+                            acceptedAnswer: {
+                                "@type": "Answer",
+                                text: 'Yes. HM Cargo Services lists the UAE, Lebanon and Syria as its primary operating markets, and summarises coverage as "UAE, Lebanon, Syria, Worldwide on request". Syria is a core lane rather than an occasional arrangement. Destinations outside the region are arranged on request, based on cargo, route and service required.',
+                            },
+                            name: "Is Syria one of the countries you actually operate in?",
+                        },
+                        {
+                            "@type": "Question",
+                            acceptedAnswer: {
+                                "@type": "Answer",
+                                text: "HM Cargo Services runs a three-step process: 01 Request, 02 Coordinate, 03 Deliver. The Coordinate step covers pickup, handling, documentation and every handoff, with one point of contact throughout. Shipment Coordination across carriers, customs and destinations is one of its six named services, so the legs stay inside one operation.",
+                            },
+                            name: "How is a shipment to Syria coordinated across the different handoffs?",
+                        },
+                        {
+                            "@type": "Question",
+                            acceptedAnswer: {
+                                "@type": "Answer",
+                                text: 'One. HM Cargo Services states that direct communication with a named contact for every active shipment is one of its four stated advantages. Every quote request is answered by a named operations contact, described on the site as "not a queue". That contact is where your status questions go.',
+                            },
+                            name: "Will I have one point of contact for the whole route, or several?",
+                        },
+                        {
+                            "@type": "Question",
+                            acceptedAnswer: {
+                                "@type": "Answer",
+                                text: "Allow 2–3 weeks before the target sailing date for standard freight, and 4–6 weeks for hazardous, oversized, or seasonally constrained cargo. Those are the windows HM Cargo Services publishes. Booking earlier gives you slack if a document or permit takes longer than expected.",
+                            },
+                            name: "How much lead time should I allow for a shipment heading to Syria?",
+                        },
+                        {
+                            "@type": "Question",
+                            acceptedAnswer: {
+                                "@type": "Answer",
+                                text: "The Request a Quote form asks for full name, company, email, phone, origin, destination, cargo type, estimated weight or volume, and additional details. The destination field is where the Syrian delivery point goes, and additional details is where you note anything unusual about access or timing. HM Cargo Services responds with a route, a timeline, and a quote — usually the same day.",
+                            },
+                            name: "What information about the destination do you need on the quote form?",
+                        },
+                        {
+                            "@type": "Question",
+                            acceptedAnswer: {
+                                "@type": "Answer",
+                                text: "Cargo Tracking is one of the six services HM Cargo Services names, and clear visibility with reliable status updates is one of its stated advantages. Updates come through the named contact assigned to your shipment. The site does not describe a specific tracking portal or update frequency, so ask your contact what form the updates take.",
+                            },
+                            name: "How will I know where my cargo is once it has left Dubai?",
+                        },
+                    ],
+                },
+            ],
+        },
+    },
+    {
         slug: "shipping-dubai-to-lebanon",
         title: "Dubai to Lebanon Cargo Shipping, Start to Finish",
         excerpt:
@@ -44,7 +503,7 @@ export const posts: BlogPost[] = [
         publishedAt: "2026-08-16",
         readingMinutes: 12,
         cover: "/media/blog/shipping-dubai-to-lebanon-featured.webp",
-        featured: true,
+        featured: false,
         metaTitle: "Shipping Dubai to Lebanon: Complete Cargo Guide",
         metaDescription:
             "A practical guide to shipping Dubai to Lebanon: sea or air, booking lead times, documents, costs and what to ask before you hand over cargo.",

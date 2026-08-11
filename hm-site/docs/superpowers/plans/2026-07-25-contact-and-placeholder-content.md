@@ -25,10 +25,12 @@
 ### Task 1: Contact details
 
 **Files:**
+
 - Modify: `src/components/site-footer.tsx`
 - Modify: `src/routes/contact.tsx`
 
 **Interfaces:**
+
 - Consumes: Existing `SiteFooter` and `ContactPage` React components.
 - Produces: Working `mailto:` and `tel:` links and a consistent postal address.
 
@@ -54,9 +56,9 @@ Replace the footer email placeholder with:
 
 ```tsx
 <li>
-  <a href="mailto:info@hmcargoservices.com" className="transition-colors hover:text-foreground">
-    info@hmcargoservices.com
-  </a>
+    <a href="mailto:info@hmcargoservices.com" className="transition-colors hover:text-foreground">
+        info@hmcargoservices.com
+    </a>
 </li>
 ```
 
@@ -65,42 +67,52 @@ Replace the footer email placeholder with:
 Use a single `contacts` array on every card:
 
 ```tsx
-{[
-  {
-    label: "General",
-    contacts: [{ label: "info@hmcargoservices.com", href: "mailto:info@hmcargoservices.com" }],
-  },
-  {
-    label: "Quotes",
-    contacts: [{ label: "quotes@hmcargoservices.com", href: "mailto:quotes@hmcargoservices.com" }],
-  },
-  {
-    label: "Operations",
-    contacts: [
-      { label: "+961 81 059 063", href: "tel:+96181059063" },
-      { label: "+971 52 153 0190", href: "tel:+971521530190" },
-    ],
-  },
-].map((card) => (
-  <div key={card.label} className="bg-[#0b0d10] p-10">
-    <p className="eyebrow">{card.label}</p>
-    <p className="mt-5 font-display text-2xl">HM Cargo Services</p>
-    <div className="mt-3 flex flex-col gap-1 text-sm text-muted-foreground">
-      {card.contacts.map((contact) => (
-        <a key={contact.href} href={contact.href} className="transition-colors hover:text-foreground">
-          {contact.label}
-        </a>
-      ))}
-    </div>
-  </div>
-))}
+{
+    [
+        {
+            label: "General",
+            contacts: [
+                { label: "info@hmcargoservices.com", href: "mailto:info@hmcargoservices.com" },
+            ],
+        },
+        {
+            label: "Quotes",
+            contacts: [
+                { label: "quotes@hmcargoservices.com", href: "mailto:quotes@hmcargoservices.com" },
+            ],
+        },
+        {
+            label: "Operations",
+            contacts: [
+                { label: "+961 81 059 063", href: "tel:+96181059063" },
+                { label: "+971 52 153 0190", href: "tel:+971521530190" },
+            ],
+        },
+    ].map((card) => (
+        <div key={card.label} className="bg-[#0b0d10] p-10">
+            <p className="eyebrow">{card.label}</p>
+            <p className="mt-5 font-display text-2xl">HM Cargo Services</p>
+            <div className="mt-3 flex flex-col gap-1 text-sm text-muted-foreground">
+                {card.contacts.map((contact) => (
+                    <a
+                        key={contact.href}
+                        href={contact.href}
+                        className="transition-colors hover:text-foreground"
+                    >
+                        {contact.label}
+                    </a>
+                ))}
+            </div>
+        </div>
+    ));
+}
 ```
 
 Replace the office placeholder with:
 
 ```tsx
 <p className="mt-3 text-muted-foreground">
-  Office 404, Awqaf Building, Street 8, Al Murar, Deira, Dubai, UAE
+    Office 404, Awqaf Building, Street 8, Al Murar, Deira, Dubai, UAE
 </p>
 ```
 
@@ -117,11 +129,13 @@ Expected: the general email appears in the footer and Contact page; the quote em
 ### Task 2: Company and coverage copy
 
 **Files:**
+
 - Modify: `src/routes/about.tsx`
 - Modify: `src/routes/coverage.tsx`
 - Modify: `src/components/home-sections.tsx`
 
 **Interfaces:**
+
 - Consumes: Existing `AboutPage`, `CoveragePage`, `IntroSection`, `AdvantagesSection`, and `CoverageSection` components.
 - Produces: Credible company copy and confirmed market coverage without unsupported claims.
 
@@ -141,10 +155,9 @@ Replace the final placeholder block in `AboutPage` with:
 
 ```tsx
 <p className="text-muted-foreground">
-  From regular regional movements to destination-specific international requests,
-  we coordinate each shipment around its route, cargo requirements, and handoffs.
-  Our role is to keep the people, documentation, and movement aligned from origin
-  to arrival.
+    From regular regional movements to destination-specific international requests, we coordinate
+    each shipment around its route, cargo requirements, and handoffs. Our role is to keep the
+    people, documentation, and movement aligned from origin to arrival.
 </p>
 ```
 
@@ -153,11 +166,15 @@ Replace the final placeholder block in `AboutPage` with:
 Delete only these two elements:
 
 ```tsx
-<div className="mt-8"><span className="placeholder-note">Certifications and specific figures — placeholder</span></div>
+<div className="mt-8">
+    <span className="placeholder-note">Certifications and specific figures — placeholder</span>
+</div>
 ```
 
 ```tsx
-<p className="mt-8 text-xs text-muted-foreground"><span className="placeholder-note">Client logos and case studies — placeholder</span></p>
+<p className="mt-8 text-xs text-muted-foreground">
+    <span className="placeholder-note">Client logos and case studies — placeholder</span>
+</p>
 ```
 
 Do not alter the surrounding Intro or Advantages content.
@@ -187,8 +204,8 @@ Use this hero paragraph and remove the detailed-map placeholder:
 
 ```tsx
 <p className="mt-8 max-w-2xl text-lg text-muted-foreground">
-  Our core routes serve the UAE, Lebanon, and Syria, supported by international
-  shipping arrangements for destinations beyond the region when requested.
+    Our core routes serve the UAE, Lebanon, and Syria, supported by international shipping
+    arrangements for destinations beyond the region when requested.
 </p>
 ```
 
@@ -213,6 +230,7 @@ Expected: confirmed markets and international-on-request wording are present.
 ### Task 3: Build and rendered-page verification
 
 **Files:**
+
 - Verify: `src/components/site-footer.tsx`
 - Verify: `src/routes/contact.tsx`
 - Verify: `src/routes/about.tsx`
@@ -220,6 +238,7 @@ Expected: confirmed markets and international-on-request wording are present.
 - Verify: `src/components/home-sections.tsx`
 
 **Interfaces:**
+
 - Consumes: Completed content changes from Tasks 1 and 2.
 - Produces: A type-safe production build and rendered proof on all affected pages.
 

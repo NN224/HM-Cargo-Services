@@ -24,9 +24,11 @@
 ### Task 1: Standalone comparison shell and shared state
 
 **Files:**
+
 - Create: `design-previews/shipment-journey-layouts.html`
 
 **Interfaces:**
+
 - Consumes: The approved specification in `docs/superpowers/specs/2026-07-26-shipment-journey-layout-comparison-design.md`.
 - Produces: `render(): void`, `setLayout(layoutId: string): void`, `selectJourney(journeyId: string): void`, and shared `state` containing `layout`, `journeyId`, `query`, and `selectedShipmentIds`.
 
@@ -38,16 +40,16 @@ between `test-1` and `test-2`, plus a derived `all` selection:
 
 ```js
 const state = {
-  layout: 'cards',
-  journeyId: 'all',
-  query: '',
-  selectedShipmentIds: new Set(),
-  role: 'operator',
+    layout: "cards",
+    journeyId: "all",
+    query: "",
+    selectedShipmentIds: new Set(),
+    role: "operator",
 };
 
 const journeys = [
-  { id: 'test-2', name: 'الرحلة: test 2', route: 'Dubai ← Lebanon', status: 'قيد التجهيز' },
-  { id: 'test-1', name: 'الرحلة: test 1', route: 'Dubai ← Lebanon', status: 'قيد التجهيز' },
+    { id: "test-2", name: "الرحلة: test 2", route: "Dubai ← Lebanon", status: "قيد التجهيز" },
+    { id: "test-1", name: "الرحلة: test 1", route: "Dubai ← Lebanon", status: "قيد التجهيز" },
 ];
 ```
 
@@ -62,14 +64,14 @@ horizontal page overflow.
 
 ```js
 function setLayout(layoutId) {
-  state.layout = layoutId;
-  render();
+    state.layout = layoutId;
+    render();
 }
 
 function selectJourney(journeyId) {
-  state.journeyId = journeyId;
-  state.selectedShipmentIds.clear();
-  render();
+    state.journeyId = journeyId;
+    state.selectedShipmentIds.clear();
+    render();
 }
 ```
 
@@ -97,9 +99,11 @@ git commit -m "feat: add shipment journey layout comparison"
 ### Task 2: Four layout renderers and operational details
 
 **Files:**
+
 - Modify: `design-previews/shipment-journey-layouts.html`
 
 **Interfaces:**
+
 - Consumes: Shared `state`, `journeys`, `shipments`, `filteredShipments()`, and `journeySummary()`.
 - Produces: `renderCardsLayout()`, `renderTableLayout()`, `renderRailLayout()`, and `renderCommandLayout()`, each returning an HTML string.
 
@@ -133,8 +137,8 @@ When search yields no results, render:
 
 ```html
 <div class="empty-state">
-  <strong>لا توجد شحنات مطابقة</strong>
-  <span>جرّب تغيير البحث أو اختيار رحلة أخرى.</span>
+    <strong>لا توجد شحنات مطابقة</strong>
+    <span>جرّب تغيير البحث أو اختيار رحلة أخرى.</span>
 </div>
 ```
 
@@ -162,9 +166,11 @@ git commit -m "feat: complete journey management design variants"
 ### Task 3: Browser verification and handoff
 
 **Files:**
+
 - Modify only if defects are found: `design-previews/shipment-journey-layouts.html`
 
 **Interfaces:**
+
 - Consumes: The finished standalone HTML file.
 - Produces: A visually verified local preview kept open for user comparison.
 

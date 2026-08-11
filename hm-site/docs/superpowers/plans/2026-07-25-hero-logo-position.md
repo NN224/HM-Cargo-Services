@@ -19,9 +19,11 @@
 ### Task 1: Adjust the opening logo position
 
 **Files:**
+
 - Modify: `src/components/cinematic-journey.tsx:242`
 
 **Interfaces:**
+
 - Consumes: Existing `SceneOpening` wrapper and Tailwind utility classes.
 - Produces: A responsive upward visual offset isolated from the GSAP scene layer.
 
@@ -34,13 +36,13 @@ Read the opening logo's rendered bounding rectangle at `http://localhost:8080/` 
 Change the wrapper class from:
 
 ```tsx
-className="relative"
+className = "relative";
 ```
 
 to:
 
 ```tsx
-className="relative -translate-y-[5vh] lg:-translate-y-[7vh]"
+className = "relative -translate-y-[5vh] lg:-translate-y-[7vh]";
 ```
 
 - [ ] **Step 3: Verify the rendered position**

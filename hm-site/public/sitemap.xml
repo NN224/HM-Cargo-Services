@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>/</loc></url>
-  <url><loc>/services</loc></url>
-  <url><loc>/about</loc></url>
-  <url><loc>/coverage</loc></url>
-  <url><loc>/contact</loc></url>
-  <url><loc>/quote</loc></url>
-  <url><loc>/blog</loc></url>
-  <url><loc>/blog/preparing-cargo-for-international-shipping</loc></url>
+  <url><loc>https://hmcargoservices.com/</loc></url>
+  <url><loc>https://hmcargoservices.com/services</loc></url>
+  <url><loc>https://hmcargoservices.com/about</loc></url>
+  <url><loc>https://hmcargoservices.com/coverage</loc></url>
+  <url><loc>https://hmcargoservices.com/contact</loc></url>
+  <url><loc>https://hmcargoservices.com/quote</loc></url>
+  <url><loc>https://hmcargoservices.com/track</loc></url>
+  <url><loc>https://hmcargoservices.com/blog</loc></url>
+  <url><loc>https://hmcargoservices.com/blog/cargo-dubai-to-syria</loc></url>
+  <url><loc>https://hmcargoservices.com/blog/shipping-dubai-to-lebanon</loc></url>
+  <url><loc>https://hmcargoservices.com/blog/preparing-cargo-for-international-shipping</loc></url>
 </urlset>

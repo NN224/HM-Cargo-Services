@@ -299,11 +299,7 @@ export function CinematicJourney() {
                 className="pointer-events-none absolute right-6 lg:right-16 top-1/2 z-20 hidden -translate-y-1/2 flex-col gap-3 lg:flex"
             >
                 {SCENES.map((_, i) => (
-                    <div
-                        key={i}
-                        data-step-dot
-                        className="relative flex items-center justify-end"
-                    >
+                    <div key={i} data-step-dot className="relative flex items-center justify-end">
                         <span
                             className="h-1.5 w-1.5 rounded-full bg-[color:var(--border-strong)] transition-all duration-300"
                             style={{ top: `${(i / (SCENES.length - 1)) * 100}%` }}
